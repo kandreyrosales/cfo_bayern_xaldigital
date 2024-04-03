@@ -1,0 +1,32 @@
+/.DS_Store
+/bin
+/include
+/lib
+/pyvenv.cfg
+# Ignore terraform.tfstate files
+terraform.tfstate
+terraform.tfstate.backup
+
+# Ignore .tfstate files (ignore all *.tfstate files)
+*.tfstate
+
+# Ignore .tfvars files (ignore all *.tfvars files)
+*.tfvars
+
+# Ignore override files as they're usually used to override resources locally and do not need to be committed
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+venv/
+__pycache__/
+utils/.terraform.lock.hcl
+utils/terraform.tfstate
+utils/terraform.tfstate.backup
+.terraform/
+.DS_Store
