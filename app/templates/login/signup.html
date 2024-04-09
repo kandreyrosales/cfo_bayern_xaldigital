@@ -25,9 +25,9 @@
     <link href={{ url_for('static', filename="assets/css/style.css") }} rel="stylesheet">
 </head>
 <body>
-<div class="container_login">
+<div id="container_signup">
     <!-- Page Content  -->
-    <div class="card">
+    <div class="card card_signup">
         <div style="margin-bottom: 20px;margin-top:20px;text-align:center">
             <img src="{{ url_for('static', filename='assets/img/bayer_logo.png') }}" alt="Logo Bayer" class="logo">
         </div>
@@ -39,32 +39,32 @@
                 <p style="color: red;">{{ error }}</p>
             {% endif %}
             <form method="POST" action="{{ url_for('signup') }}">
-                <div class="form-row">
-                    <div class="form-group col-md-6">
+                <div class="row">
+                    <div class="form-group col">
                         <label for="username" class="form_text_login_signup">Correo Electrónico Corporativo</label>
                         <input type="email" class="form-control login_signup_input" id="username" name="username" required>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col">
                         <label for="corp_title" class="form_text_login_signup">Puesto en la Empresa</label>
                         <input type="text" class="form-control login_signup_input" id="corp_title" name="corp_title" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-6">
+                <div class="row">
+                    <div class="form-group col">
                         <label for="password" class="form_text_login_signup">Contraseña</label>
                         <input type="password" class="form-control login_signup_input" id="password" name="password" required>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col">
                         <label for="contact_number" class="form_text_login_signup">Teléfono de Contacto</label>
                         <input type="text" class="form-control login_signup_input" id="contact_number" name="contact_number" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-6">
+                <div class="row">
+                    <div class="form-group col">
                         <label for="confirm_password" class="form_text_login_signup">Confirmar Contraseña</label>
                         <input type="password" class="form-control login_signup_input" id="confirm_password" name="confirm_password" required>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col">
                         <label for="worker_custom_id" class="form_text_login_signup">ID</label>
                         <input type="text" class="form-control login_signup_input" id="worker_custom_id" name="worker_custom_id" required>
                     </div>

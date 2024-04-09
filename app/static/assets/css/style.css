@@ -172,7 +172,11 @@ table tr:last-child td:last-child {
     width: 500px;
 }
 
-.container_login{
+.card_signup {
+    width: 50%;
+}
+
+.container_login, #container_signup{
     font-family: Poppins;
     display: flex;
     justify-content: center;
