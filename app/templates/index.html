@@ -28,7 +28,7 @@
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value">46%</p>
+                                    <p class="percentage_card_value" style="color: #C61A1A">46%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">23 transacciones</div>
@@ -62,7 +62,7 @@
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value">46%</p>
+                                    <p class="percentage_card_value" style="color: #C61A1A">46%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">23 transacciones</div>
@@ -96,7 +96,7 @@
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value">46%</p>
+                                    <p class="percentage_card_value" style="color: #44D300">65%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">23 transacciones</div>
@@ -130,7 +130,7 @@
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value">46%</p>
+                                    <p class="percentage_card_value" style="color: #44D300">65%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">23 transacciones</div>
@@ -167,7 +167,7 @@
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value">46%</p>
+                                    <p class="percentage_card_value" style="color: #44D300">65%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">23 transacciones</div>
@@ -294,6 +294,16 @@
     </div>
 
     <script type="text/javascript">
+        Chart.register(ChartDataLabels);
+        Chart.defaults.set('plugins.datalabels', {
+            color: '#00617F',
+            anchor: 'end',
+            align: 'start',
+            font: {
+                size: 18,
+                family: "Inter"
+            }
+        });
         $(document).ready(function() {
             $('#validador_iva_table').DataTable({
                 searching: false,
@@ -323,14 +333,14 @@
                 }]
             };
             const variations_options = {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false,
-                        }
-                    },
-                    indexAxis: 'y'
-                };
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                indexAxis: 'y'
+            };
 
             const variationChart = new Chart("variationBarsVertical", {
                 type: 'bar',
@@ -356,13 +366,13 @@
                 }]
             };
             const transactions_options = {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false,
-                        }
-                    }
-                };
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+            };
 
             const transactionsChart = new Chart("transactionsBarsHorizontal", {
                 type: 'bar',
