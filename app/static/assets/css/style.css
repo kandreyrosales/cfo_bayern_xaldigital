@@ -1,5 +1,5 @@
-    @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 body {
     font-family: 'Poppins', sans-serif;
     background: #fafafa;
@@ -14,58 +14,58 @@ body {
 
 /* The side navigation menu */
 .sidebar {
-  margin: 0;
-  padding: 0;
-  width: 200px;
-  background-color: white;
-  position: fixed;
-  height: 100%;
-  overflow: auto;
+    margin: 0;
+    padding: 0;
+    width: 200px;
+    background-color: white;
+    position: fixed;
+    height: 100%;
+    overflow: auto;
 }
 
 /* Sidebar links */
 .sidebar a {
-  display: block;
-  color: black;
-  padding: 16px;
-  text-decoration: none;
+    display: block;
+    color: black;
+    padding: 16px;
+    text-decoration: none;
 }
 
 /* Active/current link */
 .sidebar a.active {
-  background-color: #04AA6D;
-  color: white;
+    background-color: #04AA6D;
+    color: white;
 }
 
 /* Links on mouse-over */
 .sidebar a:hover:not(.active) {
-  background-color: #555;
-  color: white;
+    background-color: #555;
+    color: white;
 }
 
 /* Page content. The value of the margin-left property should match the value of the sidebar's width property */
 div.content {
-  margin-left: 200px;
-  height: 100%;
+    margin-left: 200px;
+    height: 100%;
 }
 
 /* On screens that are less than 700px wide, make the sidebar into a topbar */
 @media screen and (max-width: 700px) {
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-  }
-  .sidebar a {float: left;}
-  div.content {margin-left: 0;}
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    .sidebar a {float: left;}
+    div.content {margin-left: 0;}
 }
 
 /* On screens that are less than 400px, display the bar vertically, instead of horizontally */
 @media screen and (max-width: 400px) {
-  .sidebar a {
-    text-align: center;
-    float: none;
-  }
+    .sidebar a {
+        text-align: center;
+        float: none;
+    }
 }
 
 .header {
@@ -97,22 +97,22 @@ table tr th {
 
 /* top-left border-radius */
 table tr:first-child th:first-child {
-  border-top-left-radius: 6px;
+    border-top-left-radius: 6px;
 }
 
 /* top-right border-radius */
 table tr:first-child th:last-child {
-  border-top-right-radius: 6px;
+    border-top-right-radius: 6px;
 }
 
 /* bottom-left border-radius */
 table tr:last-child td:first-child {
-  border-bottom-left-radius: 6px;
+    border-bottom-left-radius: 6px;
 }
 
 /* bottom-right border-radius */
 table tr:last-child td:last-child {
-  border-bottom-right-radius: 6px;
+    border-bottom-right-radius: 6px;
 }
 #navbarSupportedContent{
     margin-left: 10px;
@@ -235,6 +235,8 @@ table tr:last-child td:last-child {
     text-align: center;
     color: #165CA4;
 }
+
+
 
 
 

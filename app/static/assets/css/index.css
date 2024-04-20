@@ -85,3 +85,31 @@
 .tr_style_validador_iva_table, .tr_style_ingresos_table{
     text-align: center;
 }
+
+.filter_label{
+    font-family: Poppins;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: left;
+    color: #FFFFFF;
+}
+
+#calendar_filter {
+    border: 1px solid #FFFFFF;
+    border-radius: 4px;
+    font-family: Poppins;
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
+}
+
+#cfo_reconciliations th{
+    background-color: #0F7093;
+    font-family: Poppins;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+.tr_style_reconciliations_table td{
+    text-align: center;
+}
