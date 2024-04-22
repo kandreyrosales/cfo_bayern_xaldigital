@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import boto3
 import jwt
 from datetime import datetime
@@ -8,7 +8,7 @@ from functools import wraps
 app = Flask(__name__)
 
 app.secret_key = 'xaldigitalcfobayer!'
-AWS_REGION_PREDICTIA = os.getenv("region_aws")
+AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
@@ -219,12 +219,12 @@ def forgot_password():
                                    error="Usuario No Encontrado o Eliminado.", email=email)
         except cognito_client.exceptions.CodeMismatchException as e:
             return render_template('login/reset_password.html',
-                error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
-                      "Intenta de nuevo.",
-                email=email)
+                                   error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
+                                         "Intenta de nuevo.",
+                                   email=email)
         except Exception as e:
             return render_template('login/reset_password.html',
-                error=f"Error: {e}", email=email)
+                                   error=f"Error: {e}", email=email)
     else:
         return render_template('login/reset_password.html')
 
@@ -244,17 +244,65 @@ def send_reset_password_link():
                                    error="Usuario No Encontrado o Eliminado.", email=email)
         except cognito_client.exceptions.CodeDeliveryFailureException as e:
             return render_template('login/send_reset_password_link.html',
-                error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
-                      "Intenta de nuevo.",
-                email=email)
+                                   error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
+                                         "Intenta de nuevo.",
+                                   email=email)
         except Exception as e:
             return render_template('login/send_reset_password_link.html',
-                error=f"Error: {e}", email=email)
+                                   error=f"Error: {e}", email=email)
     else:
         return render_template('login/send_reset_password_link.html')
 
 @app.route('/')
 @token_required
 def index():
-    user_information = cognito_client.get_user(AccessToken=session.get("access_token"))
-    return render_template('index.html')
+    # try:
+    #     cognito_client.get_user(AccessToken=session.get("access_token"))
+    # except cognito_client.exceptions.UserNotFoundException as e:
+    #     return redirect(url_for('logout'))
+    variation_labels = ["Cliente 1", "Cliente 2", "Cliente 3",
+                        "Cliente 4", "Cliente 5", "Cliente 6",
+                        "Cliente 7", "Cliente 8", "Cliente 9", "Cliente 10"]
+    variation_data = [100, 80, 70, 100, 50, 60, 95, 100, 30, 10]
+
+    transactions_labels = ["Totales", "Exitosas", "Revertidas", "Diferencias", "Pendientes"]
+    transactions_data = [100, 50, 60, 30, 70]
+
+
+    return render_template(
+        'index.html',
+        variation_data=variation_data,
+        variation_labels=variation_labels,
+        transactions_labels=transactions_labels,
+        transactions_data=transactions_data
+    )
+
+@app.route('/invoke_lambda_rfc_data', methods=["GET"])
+def invoke_lambda_rfc_data():
+    try:
+        # response = lambda_client.invoke(FunctionName=arn_ids_lambda, InvocationType='RequestResponse')
+        # response_payload = response['Payload'].read()
+        # result = json.loads(response_payload.decode('utf-8'))
+        # if result.get("statusCode") == 200:
+        #     body = json.loads(result["body"])
+        #     return body["unique_ids"]
+        return [
+            "XAAA010101123456",
+            "BAAA010101123456",
+            "XIFF010101123456",
+            "CABD010101123456",
+        ]
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+@app.route('/conciliaciones')
+@token_required
+def reconciliations_data_cfo():
+    # try:
+    #     cognito_client.get_user(AccessToken=session.get("access_token"))
+    # except cognito_client.exceptions.UserNotFoundException as e:
+    #     return redirect(url_for('logout'))
+    return render_template(
+        'reconciliations_data_cfo.html',
+    )

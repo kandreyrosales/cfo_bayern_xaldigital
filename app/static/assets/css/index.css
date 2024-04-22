@@ -117,11 +117,11 @@
 
 
 .vertical-center {
-  margin: 0;
-  position: absolute;
-  top: 50%;
-  -ms-transform: translateY(-50%);
-  transform: translateY(-50%);
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 .title_group_cfo_table{
@@ -131,6 +131,10 @@
     margin-left:10px;
 }
 
-/*#cfo_reconciliations.dataTable th {*/
-/*    width: 100px;*/
-/*}*/
+#cfo_reconciliations.dataTable td {
+    padding: 10px;
+}
+
+td, th {
+      padding: 15px; /* You can adjust the padding as needed */
+    }
