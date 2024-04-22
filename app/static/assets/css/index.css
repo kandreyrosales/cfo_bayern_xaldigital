@@ -101,7 +101,7 @@
     box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
 }
 
-#cfo_reconciliations th{
+#cfo_reconciliations .titles_table th{
     background-color: #0F7093;
     font-family: Poppins;
     font-size: 18px;
@@ -113,3 +113,24 @@
 .tr_style_reconciliations_table td{
     text-align: center;
 }
+
+
+
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.title_group_cfo_table{
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    color: #FFFFFF;
+    margin-left:10px;
+}
+
+/*#cfo_reconciliations.dataTable th {*/
+/*    width: 100px;*/
+/*}*/

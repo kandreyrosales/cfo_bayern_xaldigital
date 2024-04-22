@@ -17,20 +17,38 @@
 
 <nav class="navbar bg-body-tertiary fixed-top">
     <div class="container-fluid" style="background-color: #0075A6">
-        <div class="container">
+        <div class="container-fluid">
             <div class="row" style="height: 80px">
                 <div class="col-md-1">
-                    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+                    <div class="container-fluid">
+                        <div class="vertical-center">
+                            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation" style="background-color: white">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-2" style="margin-top: 5px">
-                    <label for="calendar_filter" style="display: block"><span class="filter_label">Fecha</span></label>
-                    <input type="date" name="calendar_filter" id="calendar_filter">
+                <div class="col-md-3" style="margin-top: 5px">
+                    <div class="row">
+                        <div class="col">
+                        <label for="calendar_filter_start_date" style="display: block"><span class="filter_label">Fecha de Inicio</span></label>
+                        <input type="date" name="calendar_filter_start_date" id="calendar_filter_start_date">
+                    </div>
+                    <div class="col">
+                        <label for="calendar_filter_end_date" style="display: block"><span class="filter_label">Fecha de Fin</span></label>
+                        <input type="date" name="calendar_filter_end_date" id="calendar_filter_end_date">
+                    </div>
+                    </div>
+
                 </div>
+
                 <div class="col-md-2" style="margin-top: 5px">
                     <label style="display: block"><span class="filter_label">RFC</span></label>
                     <select id="rfc_selector"></select>
+                </div>
+                <div class="col-md-2" style="margin-top: 5px">
+                    {#                    <<a href="{{ url_for('index') }}" class="btn vertical-center" id="btn-executive-page" style="border-color: gray">Filtrar <i class="bi bi-search"></i></a>>#}
+                    <button class="btn btn-light vertical-center">Filtrar</button>
                 </div>
             </div>
         </div>
