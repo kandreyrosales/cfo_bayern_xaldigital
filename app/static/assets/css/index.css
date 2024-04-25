@@ -108,6 +108,8 @@
     font-weight: 600;
     text-align: center;
     color: #FFFFFF;
+    padding: 10px 80px;
+    border-color: white;
 }
 
 .tr_style_reconciliations_table td{
@@ -128,13 +130,9 @@
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
     color: #FFFFFF;
-    margin-left:10px;
-}
-
-#cfo_reconciliations.dataTable td {
-    padding: 10px;
+    border: 10px solid white;
 }
 
 td, th {
-      padding: 15px; /* You can adjust the padding as needed */
-    }
+    white-space: nowrap;
+}
