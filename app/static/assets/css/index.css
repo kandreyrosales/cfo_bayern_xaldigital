@@ -1,6 +1,5 @@
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
 .navbar{
     background-color: #0075A6   ;
 }
@@ -13,6 +12,9 @@
     width: 100%;
     padding: 10px;
     text-align: left;
+    font-family: Poppins;
+    font-size: 16px;
+    font-weight: 500;
 }
 
 .custom_btn_navbar:hover{
@@ -137,14 +139,6 @@
     text-align: center;
 }
 
-.vertical-center {
-    margin: 0;
-    position: absolute;
-    top: 50%;
-    -ms-transform: translateY(-50%);
-    transform: translateY(-50%);
-}
-
 .title_group_cfo_table{
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
@@ -154,4 +148,19 @@
 
 td, th {
     white-space: nowrap;
+}
+
+#calendar_filter_start_date, #calendar_filter_end_date{
+    width: 209px;
+    height: 32px;
+}
+
+.select2-selection__rendered {
+    line-height: 32px !important;
+}
+.select2-container .select2-selection--single {
+    height: 32px !important;
+}
+.select2-selection__arrow {
+    height: 32px !important;
 }
