@@ -1,9 +1,13 @@
 import os
+from io import BytesIO
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import boto3
 import jwt
 from datetime import datetime
 from functools import wraps
+import psycopg2
+
+from openpyxl.reader.excel import load_workbook
 
 app = Flask(__name__)
 
@@ -19,6 +23,11 @@ USER_POOL_ID_COGNITO =os.getenv("user_pool")
 cognito_client = boto3.client('cognito-idp', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
 lambda_client = boto3.client('lambda', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
 s3_client = boto3.client('s3', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
+
+db_host = os.getenv("endpoint")
+db_name = os.getenv("db_name", "postgres")
+db_user = os.getenv("username_db", "cfo_user")
+db_password = os.getenv("password_db")
 
 def authenticate_user(username, password):
     try:
@@ -254,7 +263,7 @@ def send_reset_password_link():
         return render_template('login/send_reset_password_link.html')
 
 @app.route('/')
-@token_required
+# @token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -295,14 +304,130 @@ def invoke_lambda_rfc_data():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+def get_conciliations_data():
+    aws_postgres_result = [
+        (1, 'John Doe', 30, 'john@example.com'),
+        (2, 'Jane Smith', 25, 'jane@example.com'),
+        (3, 'Alice Lee', 35, 'alice@example.com')
+    ]
+    result = jsonify(aws_postgres_result)
+    return result.json
 
 @app.route('/conciliaciones')
-@token_required
+# @token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
     return render_template(
-        'reconciliations_data_cfo.html',
+        'reconciliations_data_cfo.html', initial_data_for_table=[]
     )
+
+class DatabaseManagement:
+    def __init__(self):
+        self.connection = self.db_connection()
+    def db_connection(self):
+        db_host = os.getenv("endpoint", "cfo.c9e84g0o4vfs.us-east-1.rds.amazonaws.com")
+        db_name = os.getenv("db_name", "postgres")
+        db_user = os.getenv("username_db", "cfo_user")
+        db_password = os.getenv("password_db", "XalDigital!#$1388")
+
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
+        return conn
+    def insert_cfdi_ingreso_data(self, query_data):
+        cur = self.connection.cursor()
+
+        cur.executemany("INSERT INTO cfdi_ingreso * VALUES (%s)", query_data)
+
+        # Confirm transaction
+        self.connection.commit()
+
+        # Close cursor and connection
+        cur.close()
+        self.connection.close()
+
+@app.route('/vista_subir_archivo')
+def uploadfile():
+    return render_template('uploadfile.html')
+
+@app.route('/subir_archivo', methods=['POST'])
+def subir_archivo():
+    if 'archivo' not in request.files:
+        return 'No se ha enviado ningún archivo'
+
+    archivo = request.files['archivo']
+
+    if archivo.filename == '':
+        return 'No se ha seleccionado ningún archivo'
+
+    # Verificar si el archivo tiene la extensión permitida
+    if not archivo.filename.endswith('.xlsx'):
+        return 'La extensión del archivo no está permitida. Se permiten solo archivos .xlsx'
+
+    stream = BytesIO(archivo.read())
+    workbook = load_workbook(stream)
+    cfdi_ingresos_sheet = workbook.worksheets[0]
+    cfdi_complemento_sheet = workbook.worksheets[1]
+
+    # Prepare bulk insert query template
+    try:
+        column_names = [
+                        "version",
+                        "estado",
+                        "tipo_comprobante",
+                        "nombre",
+                        "rfc",
+                        "fecha_emision",
+                        "folio_interno",
+                        "uuid_fiscal",
+                        "producto_servicio_conforme_sat",
+                        "concepto_del_cfdi",
+                        "moneda",
+                        "metodo_de_pago",
+                        "subtotal",
+                        "descuento",
+                        "iva",
+                        "ieps",
+                        "isr_retenido",
+                        "iva_retenido",
+                        "total_cfdi",
+                        "tipo_de_relacion",
+                        "cfdi_relacionado",]
+        column_names_str = ", ".join(column_names)
+
+    except Exception as e:
+        print(f"Error retrieving column names or constructing query: {e}")
+        exit()
+
+    # Prepare data for bulk insertion
+
+    data_collection = []
+    for row in cfdi_ingresos_sheet.iter_rows(min_row=2, max_col=21):  # Start from the second row (data)
+        if row[0].value == "" or row[0].value is None:
+            continue
+        data_collection.append(f"""{tuple(str(cell.value).replace("'","") if cell.value is not None else '' for cell in row)}""")
+        final_result = ",".join(data_collection)
+
+    insert_query = f"""SET datestyle = dmy; INSERT INTO cfdi_ingreso ({column_names_str}) VALUES {final_result}"""
+    try:
+        conn = psycopg2.connect(
+            dbname=db_name, user=db_user, password=db_password, host=db_host, port=5432)
+        cur = conn.cursor()
+    except Exception as e:
+        print(f"Error connecting to database: {e}")
+        exit()
+
+    # Execute bulk insert using executemany
+    try:
+        cur.execute(insert_query)
+        conn.commit()
+        print(f"Data inserted successfully into table cfdi_ingreso")
+    except Exception as e:
+        print(f"Error inserting data: {e}")
+        conn.rollback()  # Rollback changes in case of errors
