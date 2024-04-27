@@ -127,7 +127,7 @@ def create_tables_rds():
                round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal), 2) as validador_subtotal_validador_iva,
                round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva), 2) as validar_ivas_validador_iva,
                round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps), 2) as validador_ieps_validador_iva,
-               (((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps)) as total_variacion_validador_iva
+               round((((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps)), 2) as total_variacion_validador_iva
             FROM cfdi_ingreso t1
             INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
         """
