@@ -115,14 +115,19 @@ def create_tables_rds():
                t1.ieps as "IEPS",
                t1.total_cfdi as "Total",
                0 as "Depositos",
-               0 as "Subtotal SAP",
-               0 as "IVA SAP",
-               0 as "Total Aplicacion SAP",
-               to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') as "Subtotal SAT",
+               0 as "Subtotal (SAP)",
+               0 as "IVA (SAP)",
+               0 as "Total Aplicacion (SAP)",
+               to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') AS "Subtotal (SAT)",
                t2.uuid_complemento as "UUID RELACIONADO",
-               (t1.iva/t1.subtotal) as "IVA Cobrado % SAT",
-               (t1.ieps/t1.subtotal) as "IEPS Cobrado % SAT",
-               t2.monto as "Monto SAT"
+               round((t1.iva/t1.subtotal), 2) as "IVA Cobrado % (SAT)",
+               round((t1.ieps/t1.subtotal), 2) as "IEPS Cobrado % (SAT)",
+               t2.monto as "Total Aplicacion (SAT)",
+               0 as "Validador Aplicacion Pagos",
+               round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal), 2) as "Validador Subtotal (Validador IVA)",
+               round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva), 2) as "Validar IVAS (Validador IVA)",
+               round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps), 2) as "Validador IEPS (Validador IVA)",
+               (((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps)) as "Total Variacion (Validador IVA)"
             FROM cfdi_ingreso t1
             INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
         """
