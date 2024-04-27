@@ -105,7 +105,24 @@ def create_tables_rds():
         imp_saldo_insoluto NUMERIC
         );""",
         """CREATE OR REPLACE VIEW conciliaciones AS
-            SELECT t1.folio_interno as "Factura Bayer", t1.nombre as "Cliente", t1.tipo_comprobante as "Transaccion", t1.fecha_emision as "Fecha", t1.uuid_fiscal as "UUID"
+            SELECT t1.folio_interno as "Factura Bayer",
+               t1.nombre as "Cliente",
+               t1.tipo_comprobante as "Transaccion",
+               t1.fecha_emision as "Fecha",
+               t1.uuid_fiscal as "UUID",
+               t1.subtotal as "Subtotal",
+               t1.iva as "IVA",
+               t1.ieps as "IEPS",
+               t1.total_cfdi as "Total",
+               0 as "Depositos",
+               0 as "Subtotal SAP",
+               0 as "IVA SAP",
+               0 as "Total Aplicacion SAP",
+               to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') as "Subtotal SAT",
+               t2.uuid_complemento as "UUID RELACIONADO",
+               (t1.iva/t1.subtotal) as "IVA Cobrado % SAT",
+               (t1.ieps/t1.subtotal) as "IEPS Cobrado % SAT",
+               t2.monto as "Monto SAT"
             FROM cfdi_ingreso t1
             INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
         """
