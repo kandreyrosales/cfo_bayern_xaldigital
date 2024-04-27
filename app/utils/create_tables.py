@@ -103,7 +103,13 @@ def create_tables_rds():
         imp_saldo_ant NUMERIC,
         importe_pagado NUMERIC,
         imp_saldo_insoluto NUMERIC
-        );"""]
+        );""",
+        """CREATE OR REPLACE VIEW conciliaciones AS
+            SELECT t1.folio_interno, t1.nombre, t1.tipo_comprobante, t1.fecha_emision, t1.uuid_fiscal
+            FROM cfdi_ingreso t1
+            INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
+        """
+    ]
 
     # Connect to the PostgreSQL database
     try:
