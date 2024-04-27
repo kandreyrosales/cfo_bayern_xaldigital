@@ -2,10 +2,10 @@ import os
 import psycopg2
 
 def create_tables_rds():
-    db_host = os.getenv("endpoint")
+    db_host = os.getenv("endpoint", "cfo.c9e84g0o4vfs.us-east-1.rds.amazonaws.com")
     db_name = os.getenv("db_name", "postgres")
     db_user = os.getenv("username_db","cfo_user")
-    db_password = os.getenv("password_db")
+    db_password = os.getenv("password_db","XalDigital!#$1388")
 
     tables = [
         """CREATE TABLE IF NOT EXISTS cfdi_ingreso (
@@ -73,10 +73,10 @@ def create_tables_rds():
         estado_sat VARCHAR(255),
         version_pagos VARCHAR(255),
         uuid_complemento VARCHAR(255),
-        fecha_timbrado DATE,
+        fecha_timbrado VARCHAR(50) NULL,
         fecha_emision DATE,
         folio VARCHAR(255),
-        serie VARCHAR(255),
+        serie VARCHAR(255) NULL,
         subtotal NUMERIC,
         moneda VARCHAR(255),
         total NUMERIC,
@@ -88,7 +88,8 @@ def create_tables_rds():
         uso_cfdi VARCHAR(255),
         clave_prod_serv VARCHAR(255),
         descripcion VARCHAR(255),
-        fecha_de_pago TIMESTAMP,
+        fecha_de_pago timestamp,
+        forma_de_pago varchar(50),
         moneda_p VARCHAR(5),
         tipo_cambio_p VARCHAR(5),
         monto NUMERIC,

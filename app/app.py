@@ -324,100 +324,116 @@ def reconciliations_data_cfo():
         'reconciliations_data_cfo.html', initial_data_for_table=[]
     )
 
-class DatabaseManagement:
-    def __init__(self):
-        self.connection = self.db_connection()
-    def db_connection(self):
-        db_host = os.getenv("endpoint", "cfo.c9e84g0o4vfs.us-east-1.rds.amazonaws.com")
-        db_name = os.getenv("db_name", "postgres")
-        db_user = os.getenv("username_db", "cfo_user")
-        db_password = os.getenv("password_db", "XalDigital!#$1388")
-
-        conn = psycopg2.connect(
-            host=db_host,
-            database=db_name,
-            user=db_user,
-            password=db_password
-        )
-        return conn
-    def insert_cfdi_ingreso_data(self, query_data):
-        cur = self.connection.cursor()
-
-        cur.executemany("INSERT INTO cfdi_ingreso * VALUES (%s)", query_data)
-
-        # Confirm transaction
-        self.connection.commit()
-
-        # Close cursor and connection
-        cur.close()
-        self.connection.close()
-
 @app.route('/vista_subir_archivo')
 def uploadfile():
     return render_template('uploadfile.html')
+def custom_values_for_insert(data_sheet, max_col: int):
+    # Prepare data for bulk insertion
+    data_collection = []
+    for row in data_sheet.iter_rows(min_row=2, max_col=max_col):  # Start from the second row (data)
+        if row[0].value == "" or row[0].value is None:
+            continue
+        data_collection.append(f"""{tuple(str(cell.value).replace("'","") if cell.value is not None else '' for cell in row)}""")
+    return data_collection
 
 @app.route('/subir_archivo', methods=['POST'])
 def subir_archivo():
     if 'archivo' not in request.files:
         return 'No se ha enviado ningún archivo'
-
     archivo = request.files['archivo']
-
     if archivo.filename == '':
         return 'No se ha seleccionado ningún archivo'
-
     # Verificar si el archivo tiene la extensión permitida
     if not archivo.filename.endswith('.xlsx'):
         return 'La extensión del archivo no está permitida. Se permiten solo archivos .xlsx'
-
     stream = BytesIO(archivo.read())
     workbook = load_workbook(stream)
     cfdi_ingresos_sheet = workbook.worksheets[0]
     cfdi_complemento_sheet = workbook.worksheets[1]
-
     # Prepare bulk insert query template
     try:
-        column_names = [
-                        "version",
-                        "estado",
-                        "tipo_comprobante",
-                        "nombre",
-                        "rfc",
-                        "fecha_emision",
-                        "folio_interno",
-                        "uuid_fiscal",
-                        "producto_servicio_conforme_sat",
-                        "concepto_del_cfdi",
-                        "moneda",
-                        "metodo_de_pago",
-                        "subtotal",
-                        "descuento",
-                        "iva",
-                        "ieps",
-                        "isr_retenido",
-                        "iva_retenido",
-                        "total_cfdi",
-                        "tipo_de_relacion",
-                        "cfdi_relacionado",]
-        column_names_str = ", ".join(column_names)
+        column_names_ingresos = [
+            "version",
+            "estado",
+            "tipo_comprobante",
+            "nombre",
+            "rfc",
+            "fecha_emision",
+            "folio_interno",
+            "uuid_fiscal",
+            "producto_servicio_conforme_sat",
+            "concepto_del_cfdi",
+            "moneda",
+            "metodo_de_pago",
+            "subtotal",
+            "descuento",
+            "iva",
+            "ieps",
+            "isr_retenido",
+            "iva_retenido",
+            "total_cfdi",
+            "tipo_de_relacion",
+            "cfdi_relacionado",]
+        column_names_str_ingresos = ", ".join(column_names_ingresos)
+        column_names_complemento = [
+            "estado_sat",
+            "version_pagos",
+            "uuid_complemento",
+            "fecha_timbrado",
+            "fecha_emision",
+            "folio",
+            "serie",
+            "subtotal",
+            "moneda",
+            "total",
+            "lugar_expedicion",
+            "rfc_emisor",
+            "nombre_emisor",
+            "rfc_receptor",
+            "nombre_receptor",
+            "uso_cfdi",
+            "clave_prod_serv",
+            "descripcion",
+            "fecha_de_pago",
+            "forma_de_pago",
+            "moneda_p",
+            "tipo_cambio_p",
+            "monto",
+            "numero_operacion",
+            "importe_pagado_mo",
+            "id_documento",
+            "serie_dr",
+            "folio_dr",
+            "moneda_dr",
+            "num_parcialidad",
+            "imp_saldo_ant",
+            "importe_pagado",
+            "imp_saldo_insoluto"
+        ]
+        column_names_str_complemento = ", ".join(column_names_complemento)
 
     except Exception as e:
         print(f"Error retrieving column names or constructing query: {e}")
         exit()
 
-    # Prepare data for bulk insertion
+    # Prepare data for bulk insertion CFDI Ingreso sheet
+    data_collection_ingreso = custom_values_for_insert(data_sheet=cfdi_ingresos_sheet, max_col=21)
+    final_result_ingreso_data = ",".join(data_collection_ingreso)
+    # Prepare data for bulk insertion CFDI Complemento sheet
+    data_collection_complemento = custom_values_for_insert(data_sheet=cfdi_complemento_sheet, max_col=33)
+    final_result_complemento_data = ",".join(data_collection_complemento)
 
-    data_collection = []
-    for row in cfdi_ingresos_sheet.iter_rows(min_row=2, max_col=21):  # Start from the second row (data)
-        if row[0].value == "" or row[0].value is None:
-            continue
-        data_collection.append(f"""{tuple(str(cell.value).replace("'","") if cell.value is not None else '' for cell in row)}""")
-        final_result = ",".join(data_collection)
-
-    insert_query = f"""SET datestyle = dmy; INSERT INTO cfdi_ingreso ({column_names_str}) VALUES {final_result}"""
+    insert_query = f"""SET datestyle = dmy; 
+        INSERT INTO cfdi_ingreso ({column_names_str_ingresos}) VALUES {final_result_ingreso_data};
+        INSERT INTO complemento ({column_names_str_complemento}) VALUES {final_result_complemento_data};
+    """
     try:
         conn = psycopg2.connect(
-            dbname=db_name, user=db_user, password=db_password, host=db_host, port=5432)
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=5432)
         cur = conn.cursor()
     except Exception as e:
         print(f"Error connecting to database: {e}")
@@ -427,7 +443,7 @@ def subir_archivo():
     try:
         cur.execute(insert_query)
         conn.commit()
-        print(f"Data inserted successfully into table cfdi_ingreso")
+        print(f"Data inserted successfully into table")
     except Exception as e:
         print(f"Error inserting data: {e}")
         conn.rollback()  # Rollback changes in case of errors
