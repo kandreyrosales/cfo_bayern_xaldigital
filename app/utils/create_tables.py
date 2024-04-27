@@ -7,7 +7,7 @@ def create_tables_rds():
     db_user = os.getenv("username_db","cfo_user")
     db_password = os.getenv("password_db")
 
-    tables = [
+    tables_and_views_queries = [
         """CREATE TABLE IF NOT EXISTS cfdi_ingreso (
               id SERIAL PRIMARY KEY,
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -105,7 +105,7 @@ def create_tables_rds():
         imp_saldo_insoluto NUMERIC
         );""",
         """CREATE OR REPLACE VIEW conciliaciones AS
-            SELECT t1.folio_interno, t1.nombre, t1.tipo_comprobante, t1.fecha_emision, t1.uuid_fiscal
+            SELECT t1.folio_interno as "Factura Bayer", t1.nombre as "Cliente", t1.tipo_comprobante as "Transaccion", t1.fecha_emision as "Fecha", t1.uuid_fiscal as "UUID"
             FROM cfdi_ingreso t1
             INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
         """
@@ -118,8 +118,8 @@ def create_tables_rds():
     except Exception as e:
         print(f"Error connecting to database: {e}")
         exit()
-    # Execute table creation queries
-    for query in tables:
+    # Execute table and views creation with queries
+    for query in tables_and_views_queries:
         try:
             cur.execute(query)
             print("Table created successfully")
