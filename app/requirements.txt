@@ -4,4 +4,3 @@ boto3
 pyjwt
 openpyxl
 psycopg2-binary
-psycopg2
