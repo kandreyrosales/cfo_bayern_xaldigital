@@ -104,11 +104,10 @@ def create_tables_rds():
         importe_pagado NUMERIC,
         imp_saldo_insoluto NUMERIC
         );""",
-        """CREATE OR REPLACE VIEW conciliaciones AS
-            SELECT t1.folio_interno as factura_bayer,
+        """SELECT t1.folio_interno as factura_bayer,
                t1.nombre as cliente,
                t1.tipo_comprobante as transaccion,
-               t1.fecha_emision as fecha,
+               to_char(t1.fecha_emision, 'dd/mm/YYYY') as fecha,
                t1.uuid_fiscal as uuid,
                t1.subtotal as subtotal,
                t1.iva as iva,
@@ -120,14 +119,20 @@ def create_tables_rds():
                0 as total_aplicacion_sap,
                to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') AS subtotal_sat,
                t2.uuid_complemento as uuid_relacionado,
-               round((t1.iva/t1.subtotal), 2) as iva_cobrado_sat,
-               round((t1.ieps/t1.subtotal), 2) as ieps_cobrado_sat,
+               round((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))), 2) as iva_cobrado_sat,
+               round((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))), 2) as ieps_cobrado_sat,
                t2.monto as total_aplicacion_sat,
                0 as validador_aplicacion_pagos,
-               round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal), 2) as validador_subtotal_validador_iva,
-               round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva), 2) as validar_ivas_validador_iva,
-               round(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps), 2) as validador_ieps_validador_iva,
-               round((((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.subtotal))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.iva))+(((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))-(t1.ieps)), 2) as total_variacion_validador_iva
+
+               round((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))-(t1.subtotal), 2) as validador_subtotal_validador_iva,
+               round(((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))))-(t1.iva), 2) as validar_ivas_validador_iva,
+               round(((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))))-t1.ieps, 2) as validador_ieps_validador_iva,
+
+               round(
+                   ((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))-(t1.subtotal))
+                   +(((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))))-(t1.iva))
+                   +(((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))))-t1.ieps), 2)
+                   as total_variacion_validador_iva
             FROM cfdi_ingreso t1
             INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
         """
