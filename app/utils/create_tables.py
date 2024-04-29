@@ -104,7 +104,8 @@ def create_tables_rds():
         importe_pagado NUMERIC,
         imp_saldo_insoluto NUMERIC
         );""",
-        """SELECT t1.folio_interno as factura_bayer,
+        """CREATE OR REPLACE VIEW conciliaciones AS
+            SELECT t1.folio_interno as factura_bayer,
                t1.nombre as cliente,
                t1.tipo_comprobante as transaccion,
                to_char(t1.fecha_emision, 'dd/mm/YYYY') as fecha,

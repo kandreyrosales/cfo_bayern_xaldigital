@@ -263,7 +263,7 @@ def send_reset_password_link():
         return render_template('login/send_reset_password_link.html')
 
 @app.route('/')
-# @token_required
+@token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -314,14 +314,18 @@ def get_conciliations_data():
     return result.json
 
 @app.route('/conciliaciones')
-# @token_required
+@token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
+    conn, cur = connection_db()
+    query_conciliations_view = """select * from conciliaciones;"""
+    rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
+
     return render_template(
-        'reconciliations_data_cfo.html', initial_data_for_table=[]
+        'reconciliations_data_cfo.html', initial_data_for_table=rows_data_view
     )
 
 @app.route('/vista_subir_archivo')
@@ -335,6 +339,44 @@ def custom_values_for_insert(data_sheet, max_col: int):
             continue
         data_collection.append(f"""{tuple(str(cell.value).replace("'","") if cell.value is not None else '' for cell in row)}""")
     return data_collection
+
+def connection_db():
+    try:
+        conn = psycopg2.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=5432)
+        cur = conn.cursor()
+        return conn, cur
+    except Exception as e:
+        print(f"Error connecting to database: {e}")
+        exit()
+
+def get_query_rows(cur, conn, query):
+    try:
+        cur.execute(query)
+        rows = cur.fetchall()  # Fetch all rows
+        # Print fetched rows (optional)
+        return rows
+    except (Exception, psycopg2.Error) as error:
+        print("Error while fetching data from PostgreSQL", error)
+    finally:
+        # Close the connection
+        if conn:
+            cur.close()
+            conn.close()
+        print("PostgreSQL connection is closed")
+def execute_query(cur, conn, query):
+    # Execute bulk insert using executemany
+    try:
+        cur.execute(query)
+        conn.commit()
+        print(f"Data inserted successfully into table")
+    except Exception as e:
+        print(f"Error inserting data: {e}")
+        conn.rollback()  # Rollback changes in case of errors
 
 @app.route('/subir_archivo', methods=['POST'])
 def subir_archivo():
@@ -427,23 +469,7 @@ def subir_archivo():
         INSERT INTO cfdi_ingreso ({column_names_str_ingresos}) VALUES {final_result_ingreso_data};
         INSERT INTO complemento ({column_names_str_complemento}) VALUES {final_result_complemento_data};
     """
-    try:
-        conn = psycopg2.connect(
-            dbname=db_name,
-            user=db_user,
-            password=db_password,
-            host=db_host,
-            port=5432)
-        cur = conn.cursor()
-    except Exception as e:
-        print(f"Error connecting to database: {e}")
-        exit()
+    conn, cur = connection_db()
 
     # Execute bulk insert using executemany
-    try:
-        cur.execute(insert_query)
-        conn.commit()
-        print(f"Data inserted successfully into table")
-    except Exception as e:
-        print(f"Error inserting data: {e}")
-        conn.rollback()  # Rollback changes in case of errors
+    execute_query(cur, conn, insert_query)
