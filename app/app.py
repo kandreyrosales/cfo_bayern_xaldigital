@@ -314,7 +314,7 @@ def get_conciliations_data():
     return result.json
 
 @app.route('/conciliaciones')
-@token_required
+# @token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
