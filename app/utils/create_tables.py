@@ -2,9 +2,9 @@ import os
 import psycopg2
 
 def create_tables_rds():
-    db_host = os.getenv("endpoint")
-    db_name = os.getenv("db_name", "postgres")
-    db_user = os.getenv("username_db","cfo_user")
+    db_host = os.getenv("db_endpoint")
+    db_name = "postgres"
+    db_user = "cfo_user"
     db_password = os.getenv("password_db")
 
     tables_and_views_queries = [

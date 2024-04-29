@@ -24,7 +24,7 @@ cognito_client = boto3.client('cognito-idp', region_name=AWS_REGION_PREDICTIA, a
 lambda_client = boto3.client('lambda', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
 s3_client = boto3.client('s3', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
 
-db_host = os.getenv("endpoint")
+db_host = os.getenv("db_endpoint")
 db_name = "postgres"
 db_user = "cfo_user"
 db_password = os.getenv("password_db")
