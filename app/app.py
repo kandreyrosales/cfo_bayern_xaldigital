@@ -25,8 +25,8 @@ lambda_client = boto3.client('lambda', region_name=AWS_REGION_PREDICTIA, aws_acc
 s3_client = boto3.client('s3', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
 
 db_host = os.getenv("endpoint")
-db_name = os.getenv("db_name", "postgres")
-db_user = os.getenv("username_db", "cfo_user")
+db_name = "postgres"
+db_user = "cfo_user"
 db_password = os.getenv("password_db")
 
 def authenticate_user(username, password):
@@ -346,7 +346,7 @@ def connection_db():
             dbname=db_name,
             user=db_user,
             password=db_password,
-            host=db_host,
+            host=db_host.split(":")[0],
             port=5432)
         cur = conn.cursor()
         return conn, cur
