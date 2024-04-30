@@ -34,39 +34,6 @@ def create_tables_rds():
               cfdi_relacionado VARCHAR(255) NULL
             );
     """,
-        """CREATE TABLE IF NOT EXISTS tabla_resultante (
-                      id SERIAL PRIMARY KEY,
-                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                      factura_bayer VARCHAR(255),
-                      cliente VARCHAR(255),
-                      transaccion VARCHAR(10),
-                      fecha DATE,
-
-                      uuid_xml_facturacion VARCHAR(255),
-                      subtotal_xml_facturacion NUMERIC,
-                      iva_xml_facturacion NUMERIC,
-                      ieps_xml_facturacion NUMERIC,
-                      total_xml_facturacion NUMERIC,
-
-                      depositos_bancos NUMERIC,
-
-                      subtotal_sap NUMERIC,
-                      iva_sap NUMERIC,
-                      total_aplicacion_sap NUMERIC,
-
-                      uuid_relacionado_sat VARCHAR(255),
-                      subtotal_sat NUMERIC,
-                      iva_cobrado_sat NUMERIC,
-                      ieps_cobrado_sat NUMERIC,
-                      total_aplicacion_sat NUMERIC,
-
-                      validador_aplicacion_pagos NUMERIC,
-
-                      validador_subtotal_validador_iva NUMERIC,
-                      validar_ivas_validador_iva NUMERIC,
-                      validador_ieps_validador_iva NUMERIC,
-                      total_variacion_validador_iva NUMERIC
-                    );""",
         """CREATE TABLE IF NOT EXISTS complemento (
             id SERIAL PRIMARY KEY,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -108,18 +75,21 @@ def create_tables_rds():
             SELECT t1.folio_interno as factura_bayer,
                t1.nombre as cliente,
                t1.tipo_comprobante as transaccion,
-               to_char(t1.fecha_emision, 'dd/mm/YYYY') as fecha,
+               t1.fecha_emision as fecha,
                t1.uuid_fiscal as uuid,
                t1.subtotal as subtotal,
                t1.iva as iva,
                t1.ieps as ieps,
                t1.total_cfdi as total,
+
                0 as depositos,
+
                0 as subtotal_sap,
                0 as iva_sap,
                0 as total_aplicacion_sap,
-               to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') AS subtotal_sat,
+
                t2.uuid_complemento as uuid_relacionado,
+               to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') AS subtotal_sat,
                round((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))), 2) as iva_cobrado_sat,
                round((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))), 2) as ieps_cobrado_sat,
                t2.monto as total_aplicacion_sat,

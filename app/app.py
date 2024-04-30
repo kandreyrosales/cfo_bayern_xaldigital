@@ -286,32 +286,16 @@ def index():
         transactions_data=transactions_data
     )
 
-@app.route('/invoke_lambda_rfc_data', methods=["GET"])
-def invoke_lambda_rfc_data():
+@app.route('/get_rfc_list', methods=["GET"])
+def get_rfc_list():
+    conn, cur = connection_db()
+    query_uuid = """select DISTINCT (uuid) from conciliaciones;"""
+    data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
+    new_item = ("Todos", )
     try:
-        # response = lambda_client.invoke(FunctionName=arn_ids_lambda, InvocationType='RequestResponse')
-        # response_payload = response['Payload'].read()
-        # result = json.loads(response_payload.decode('utf-8'))
-        # if result.get("statusCode") == 200:
-        #     body = json.loads(result["body"])
-        #     return body["unique_ids"]
-        return [
-            "XAAA010101123456",
-            "BAAA010101123456",
-            "XIFF010101123456",
-            "CABD010101123456",
-        ]
+        return [new_item]+data_from_db
     except Exception as e:
         return jsonify({'error': str(e)})
-
-def get_conciliations_data():
-    aws_postgres_result = [
-        (1, 'John Doe', 30, 'john@example.com'),
-        (2, 'Jane Smith', 25, 'jane@example.com'),
-        (3, 'Alice Lee', 35, 'alice@example.com')
-    ]
-    result = jsonify(aws_postgres_result)
-    return result.json
 
 @app.route('/conciliaciones')
 # @token_required
@@ -323,10 +307,60 @@ def reconciliations_data_cfo():
     conn, cur = connection_db()
     query_conciliations_view = """select * from conciliaciones;"""
     rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
-
     return render_template(
-        'reconciliations_data_cfo.html', initial_data_for_table=rows_data_view
+        'reconciliations_data_cfo.html',
+        initial_data_for_table=rows_data_view,
     )
+
+@app.route('/get_filtered_data_conciliations', methods=["GET"])
+def get_filtered_data_conciliations():
+    conn, cur = connection_db()
+
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    rfc = request.args.get("rfc")
+
+    if start_date and end_date and rfc and rfc != "all":
+        query_conciliations_view_filtered = f"""
+            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+        depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
+        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
+        validador_subtotal_validador_iva, validar_ivas_validador_iva,
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}';
+        """
+    elif start_date and end_date and rfc and rfc == "all":
+        query_conciliations_view_filtered = f"""
+            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+        depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
+        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
+        validador_subtotal_validador_iva, validar_ivas_validador_iva,
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where fecha BETWEEN '{start_date}' and '{end_date}';
+        """
+    elif not start_date and not end_date and rfc and rfc != 'all':
+        query_conciliations_view_filtered = f"""
+                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+        depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
+        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
+        validador_subtotal_validador_iva, validar_ivas_validador_iva,
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}';
+        """
+    elif not start_date and not end_date and rfc == 'all':
+        query_conciliations_view_filtered = f"""
+                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+        depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
+        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
+        validador_subtotal_validador_iva, validar_ivas_validador_iva,
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones;
+        """
+    else:
+        return jsonify([])
+    result = get_query_rows(
+        cur=cur,
+        conn=conn,
+        query=query_conciliations_view_filtered
+    )
+    return jsonify(result)
+
 
 @app.route('/vista_subir_archivo')
 def uploadfile():

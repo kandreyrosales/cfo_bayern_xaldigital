@@ -37,7 +37,7 @@
                     <select id="rfc_selector"></select>
                 </div>
                 <div class="form-group col-md-3 me-4" style="margin-top: auto;">
-                    <button type="button" class="btn btn-sm btn-light">Filtrar
+                    <button type="button" class="btn btn-sm btn-light" id="search_data_filter_button">Filtrar
                         <i class="bi bi-search"></i>
                     </button>
                 </div>
@@ -71,19 +71,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#rfc_selector').select2({
-            width: '100%',
-            ajax: {
-                url: "{{ url_for('invoke_lambda_rfc_data') }}",
-                processResults: function (data) {
-                    // Transforms the top-level key of the response object from 'items' to 'results'
-                    const results = data.map(id => ({ "id": id, "text": id }));
-                    return {
-                        results
-                    };
-                }
-            }
-        });
+
     });
 </script>
 

@@ -58,13 +58,13 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for row in initial_data_for_table %}
-                            <tr class="tr_style_reconciliations_table">
-                                {% for value in row %}
-                                    <td class="dt-body-center">{{ value }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
+                        {#                        {% for row in initial_data_for_table %}#}
+                        {#                            <tr class="tr_style_reconciliations_table">#}
+                        {#                                {% for value in row %}#}
+                        {#                                    <td class="dt-body-center">{{ value }}</td>#}
+                        {#                                {% endfor %}#}
+                        {#                            </tr>#}
+                        {#                        {% endfor %}#}
                         </tbody>
                     </table>
                 </div>
@@ -74,13 +74,37 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+
+            // Custom AJAX call for RFC List
+            $.ajax({
+                url: "{{ url_for('get_rfc_list') }}",
+                type: 'GET'
+            }).then(function (response) {
+                var results = response.map(id => ({ "id": id, "text": id }));
+                $('#rfc_selector').select2({
+                    width: '100%',
+                    data: results
+                })
+            })
+
+
+            const minEl = $('#calendar_filter_start_date').val();
+            const maxEl = $('#calendar_filter_end_date').val();
+            var url_get_conciliations_view_data = "{{ url_for('get_filtered_data_conciliations') }}"+"?start_date="+minEl+"&end_date="+maxEl+"&rfc=all";
             $("#btn-conciliations-page").css("background-color", "#0F7093");
             $("#btn-conciliations-page").css("color", "#FFFFFF");
-            $('#cfo_reconciliations').DataTable({
+            let table = $('#cfo_reconciliations').DataTable({
                 searching: false,
                 paging: true,
                 info: false,
                 ordering: false,
+                "ajax": {
+                    "type": "GET",
+                    "url": url_get_conciliations_view_data, // Replace with your data endpoint URL
+                    "dataSrc": function (data) {
+                        return data.data || data; // Handle data structure from your API
+                    }
+                },
                 "language": {
                     "sProcessing":    "Procesando...",
                     "sLengthMenu":    "Mostrar _MENU_ registros",
@@ -107,6 +131,67 @@
                 }
             });
 
+            /*$('#rfc_selector').select2({
+                width: '100%',
+                ajax: {
+
+                    processResults: function (data) {
+                        // Transforms the top-level key of the response object from 'items' to 'results'
+                        const results = data.map(id => ({ "id": id, "text": id }));
+                        return {
+                            results
+                        };
+                    }
+                }
+            });*/
+
+            $("#search_data_filter_button").click(function() {
+                var start_date_data = $('#calendar_filter_start_date').val();
+                var end_date_data = $('#calendar_filter_end_date').val();
+                var rfc_data = $("#rfc_selector option:selected").text();
+                if (rfc_data === '' || rfc_data === 'Todos') {
+                    rfc_data = 'all';
+                }
+                var url_get_conciliations = "{{ url_for('get_filtered_data_conciliations') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data;
+                table.destroy();
+                table = $('#cfo_reconciliations').DataTable({
+                searching: false,
+                paging: true,
+                info: false,
+                ordering: false,
+                "ajax": {
+                    "type": "GET",
+                    "url": url_get_conciliations, // Replace with your data endpoint URL
+                    "dataSrc": function (data) {
+                        return data.data || data; // Handle data structure from your API
+                    }
+                },
+                "language": {
+                    "sProcessing":    "Procesando...",
+                    "sLengthMenu":    "Mostrar _MENU_ registros",
+                    "sZeroRecords":   "No se encontraron resultados",
+                    "sEmptyTable":    "Ningún dato disponible en esta tabla",
+                    "sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
+                    "sInfoPostFix":   "",
+                    "sSearch":        "Buscar:",
+                    "sUrl":           "",
+                    "sInfoThousands":  ",",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst":    "Primero",
+                        "sLast":    "Último",
+                        "sNext":    "Siguiente",
+                        "sPrevious": "Anterior"
+                    },
+                    "oAria": {
+                        "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+                        "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                }
+            });
+            });
         });
     </script>
 {% endblock %}
