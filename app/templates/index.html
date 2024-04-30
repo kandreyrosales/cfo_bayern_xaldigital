@@ -142,7 +142,7 @@
                 </div>
             </div>
             <div class="row align-items-start" style="margin-top: 20px">
-                <div class="col-md-3">
+                <div class="col">
                     <div class="card" >
                         <div class="card-body">
 
@@ -177,91 +177,67 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-4">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Validador IVA</h5>
-                            <table id="validador_iva_table" class="table" style="width:100%">
-                                <thead>
-                                <tr style="text-align: center">
-                                    <th><button class="btn btn-primary validador_table_button_headers">Subtotal</button></th>
-                                    <th><button class="btn btn-primary validador_table_button_headers">IVAS</button></th>
-                                    <th><button class="btn btn-primary validador_table_button_headers">Total</button></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr class="tr_style_validador_iva_table">
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                </tr>
-                                <tr class="tr_style_validador_iva_table">
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                </tr>
-                                <tr class="tr_style_validador_iva_table">
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                </tr>
-                                <tr class="tr_style_validador_iva_table">
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                    <td>17.193231</td>
-                                </tr>
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table id="validador_iva_table" class="table">
+                                    <thead>
+                                    <tr style="text-align: center;">
+                                        <th><button class="btn btn-light validador_table_button_headers">Subtotal</button></th>
+                                        <th><button class="btn btn-light validador_table_button_headers">IVAS</button></th>
+                                        <th><button class="btn btn-light validador_table_button_headers">IEPS</button></th>
+                                        <th><button class="btn btn-light validador_table_button_headers">Total</button></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for validador_iva_row in validador_iva_rows %}
+                                        <tr class="tr_style_validador_iva_table">
+                                            {% for validador_iva_cell in validador_iva_row %}
+                                                <td>{{ validador_iva_cell }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-5">
+                <div class="col-4">
                     <div class="card" >
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
-                                <div>
+                                <div class="form-group">
                                     <h5 class="card-title">Ingresos</h5>
                                 </div>
-                                <div>
+                                <div class="form-group">
                                     <p id="more_info_ingresos"><a href="#" style="text-decoration:none;color: #000000;">Ver Más</a></p>
                                 </div>
                             </div>
-                            <table id="ingresos_table" class="table" style="width:100%">
-                                <thead>
-                                <tr style="text-align: center">
-                                    <th><button class="btn btn-primary ingresos_table_button_headers">Transacción</button></th>
-                                    <th><button class="btn btn-primary ingresos_table_button_headers">Cliente</button></th>
-                                    <th><button class="btn btn-primary ingresos_table_button_headers">Factura</button></th>
-                                    <th><button class="btn btn-primary ingresos_table_button_headers">Aplicación</button></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr class="tr_style_ingresos_table">
-                                    <td>Loremip</td>
-                                    <td>Loremip</td>
-                                    <td>22.776129</td>
-                                    <td>10.262379</td>
-                                </tr>
-                                <tr class="tr_style_ingresos_table">
-                                    <td>Loremip</td>
-                                    <td>Loremip</td>
-                                    <td>22.776129</td>
-                                    <td>10.262379</td>
-                                </tr>
-                                <tr class="tr_style_ingresos_table">
-                                    <td>Loremip</td>
-                                    <td>Loremip</td>
-                                    <td>22.776129</td>
-                                    <td>10.262379</td>
-                                </tr>
-                                <tr class="tr_style_ingresos_table">
-                                    <td>Loremip</td>
-                                    <td>Loremip</td>
-                                    <td>22.776129</td>
-                                    <td>10.262379</td>
-                                </tr>
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table id="ingresos_table" class="table spaced-table">
+                                    <thead>
+                                    <tr id="tr_ingresos_table">
+                                        <th><button class="btn btn-light ingresos_table_button_headers">Transacción</button></th>
+                                        <th><button class="btn btn-light ingresos_table_button_headers">Cliente</button></th>
+                                        <th><button class="btn btn-light ingresos_table_button_headers">Factura</button></th>
+                                        <th><button class="btn btn-light ingresos_table_button_headers">Aplicación</button></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for ingresos_row in ingresos_rows %}
+                                        <tr class="tr_style_ingresos_table">
+                                            {% for ingresos_cell in ingresos_row %}
+                                                <td>{{ ingresos_cell }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -306,18 +282,6 @@
             $("#btn-executive-page").css("background-color", "#0F7093");
             $("#btn-executive-page").css("color", "#FFFFFF");
 
-            $('#validador_iva_table').DataTable({
-                searching: false,
-                paging: false,
-                info: false,
-                responsive: true
-            });
-            $('#ingresos_table').DataTable({
-                searching: false,
-                paging: false,
-                info: false,
-                responsive: true
-            });
 
             /* Varations Chart and Data */
             const variation_data = {{ variation_data|tojson }};

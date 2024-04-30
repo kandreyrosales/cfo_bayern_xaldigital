@@ -23,18 +23,20 @@
     transition: .3s ease;
 }
 
-.validador_table_button_headers{
+.validador_table_button_headers, .validador_table_button_headers:hover{
     background: #165CA4;
     font-family: Inter;
     font-size: 14px;
     font-weight: 500;
+    color: #FFFFFF;
 }
 
-.ingresos_table_button_headers{
-    background: #0BBEF0;
+.ingresos_table_button_headers, .ingresos_table_button_headers:hover{
+    background-color: #0BBEF0;
     font-family: Inter;
     font-size: 14px;
     font-weight: 500;
+    color: #FFFFFF;
 }
 
 
@@ -99,7 +101,7 @@
 
 #more_info_ingresos{
     font-family: Poppins;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 400;
     color: #000000;
 }
@@ -148,11 +150,15 @@
 
 td, th {
     white-space: nowrap;
+    text-align: center;
 }
 
 #calendar_filter_start_date, #calendar_filter_end_date{
     width: 209px;
     height: 32px;
+    border-radius: 10px;
+    padding: 5px;
+    border-color: transparent;
 }
 
 .select2-selection__rendered {

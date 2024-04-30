@@ -262,32 +262,69 @@ def send_reset_password_link():
     else:
         return render_template('login/send_reset_password_link.html')
 
-@app.route('/')
-@token_required
+@app.route('/', methods=["GET"])
+# @token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
-    variation_labels = ["Cliente 1", "Cliente 2", "Cliente 3",
-                        "Cliente 4", "Cliente 5", "Cliente 6",
-                        "Cliente 7", "Cliente 8", "Cliente 9", "Cliente 10"]
-    variation_data = [100, 80, 70, 100, 50, 60, 95, 100, 30, 10]
 
     transactions_labels = ["Totales", "Exitosas", "Revertidas", "Diferencias", "Pendientes"]
     transactions_data = [100, 50, 60, 30, 70]
 
+    # Validador IVA chart data
+    conn, cur = connection_db()
+    query_validador_ivas = """
+        select validador_subtotal_validador_iva,  validar_ivas_validador_iva, 
+        validador_ieps_validador_iva, total_variacion_validador_iva 
+        from conciliaciones limit 5;
+    """
+    query_validador_ivas_rows = get_query_rows(
+        conn=conn,
+        cur=cur,
+        query=query_validador_ivas)
+
+    # Ingresos chart data
+    conn, cur = connection_db()
+    query_ingresos = """
+        select transaccion, cliente, factura_bayer, total_aplicacion_sap  from conciliaciones limit 5;
+    """
+    query_ingresos_rows = get_query_rows(
+        conn=conn,
+        cur=cur,
+        query=query_ingresos)
+
+    # Cliente con mayor variacion Chart Data
+    conn, cur = connection_db()
+    query_clientes_mayor_variacion = """
+    select cliente, SUM(total_variacion_validador_iva) as total_variacion_por_cliente
+    from conciliaciones
+    group by cliente
+    order by total_variacion_por_cliente DESC
+    limit 10;"""
+    query_clientes_mayor_variacion_rows = get_query_rows(
+        conn=conn,
+        cur=cur,
+        query=query_clientes_mayor_variacion)
+    variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
+    variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
 
     return render_template(
         'index.html',
         variation_data=variation_data,
         variation_labels=variation_labels,
         transactions_labels=transactions_labels,
-        transactions_data=transactions_data
+        transactions_data=transactions_data,
+        validador_iva_rows=query_validador_ivas_rows,
+        ingresos_rows=query_ingresos_rows
     )
 
 @app.route('/get_rfc_list', methods=["GET"])
 def get_rfc_list():
+    """
+    Getting the RFC list from the Database
+    """
     conn, cur = connection_db()
     query_uuid = """select DISTINCT (uuid) from conciliaciones;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
@@ -326,7 +363,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}';
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}'
         """
     elif start_date and end_date and rfc and rfc == "all":
         query_conciliations_view_filtered = f"""
@@ -342,7 +379,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}';
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}'
         """
     elif not start_date and not end_date and rfc == 'all':
         query_conciliations_view_filtered = f"""
@@ -350,7 +387,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones;
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones
         """
     else:
         return jsonify([])
@@ -365,6 +402,7 @@ def get_filtered_data_conciliations():
 @app.route('/vista_subir_archivo')
 def uploadfile():
     return render_template('uploadfile.html')
+
 def custom_values_for_insert(data_sheet, max_col: int):
     # Prepare data for bulk insertion
     data_collection = []
