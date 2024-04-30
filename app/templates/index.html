@@ -31,7 +31,7 @@
                                     <p class="percentage_card_value" style="color: #C61A1A">46%</p>
                                 </div>
                                 <div class="col">
-                                    <div class="row transactions_card_value">23 transacciones</div>
+                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
                                     <div class="row versus_card_value">26% vs objetivo</div>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                                     <p class="percentage_card_value" style="color: #C61A1A">46%</p>
                                 </div>
                                 <div class="col">
-                                    <div class="row transactions_card_value">23 transacciones</div>
+                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
                                     <div class="row versus_card_value">26% vs objetivo</div>
                                 </div>
                             </div>
@@ -99,7 +99,7 @@
                                     <p class="percentage_card_value" style="color: #44D300">65%</p>
                                 </div>
                                 <div class="col">
-                                    <div class="row transactions_card_value">23 transacciones</div>
+                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
                                     <div class="row versus_card_value">26% vs objetivo</div>
                                 </div>
                             </div>
@@ -133,7 +133,7 @@
                                     <p class="percentage_card_value" style="color: #44D300">65%</p>
                                 </div>
                                 <div class="col">
-                                    <div class="row transactions_card_value">23 transacciones</div>
+                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
                                     <div class="row versus_card_value">26% vs objetivo</div>
                                 </div>
                             </div>
@@ -170,7 +170,7 @@
                                     <p class="percentage_card_value" style="color: #44D300">65%</p>
                                 </div>
                                 <div class="col">
-                                    <div class="row transactions_card_value">23 transacciones</div>
+                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
                                     <div class="row versus_card_value">26% vs objetivo</div>
                                 </div>
                             </div>
@@ -271,8 +271,7 @@
         Chart.register(ChartDataLabels);
         Chart.defaults.set('plugins.datalabels', {
             color: '#00617F',
-            anchor: 'end',
-            align: 'start',
+            display: false,
             font: {
                 size: 18,
                 family: "Inter"
@@ -347,6 +346,13 @@
                 options: transactions_options
             });
             /* End Variation Chart and Data */
+
+            $("#search_data_filter_button").click(function() {
+                let start_date_data = $('#calendar_filter_start_date').val();
+                let end_date_data = $('#calendar_filter_end_date').val();
+                let rfc_data = $("#rfc_selector option:selected").text();
+                location.href="{{ url_for('index') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data;
+            });
         });
     </script>
 {% endblock %}

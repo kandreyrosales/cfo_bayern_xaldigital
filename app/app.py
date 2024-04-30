@@ -269,16 +269,26 @@ def index():
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
-
     transactions_labels = ["Totales", "Exitosas", "Revertidas", "Diferencias", "Pendientes"]
     transactions_data = [100, 50, 60, 30, 70]
 
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    rfc = request.args.get("rfc")
+
+    where_statement = ""
+    if start_date and end_date and rfc:
+        if rfc == "Todos":
+            where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' """
+        else:
+            where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' and rfc='{rfc}' """
+
     # Validador IVA chart data
     conn, cur = connection_db()
-    query_validador_ivas = """
+    query_validador_ivas = f"""
         select validador_subtotal_validador_iva,  validar_ivas_validador_iva, 
         validador_ieps_validador_iva, total_variacion_validador_iva 
-        from conciliaciones limit 5;
+        from conciliaciones {where_statement} limit 5
     """
     query_validador_ivas_rows = get_query_rows(
         conn=conn,
@@ -287,8 +297,8 @@ def index():
 
     # Ingresos chart data
     conn, cur = connection_db()
-    query_ingresos = """
-        select transaccion, cliente, factura_bayer, total_aplicacion_sap  from conciliaciones limit 5;
+    query_ingresos = f"""
+        select transaccion, cliente, factura_bayer, total_aplicacion_sap from conciliaciones {where_statement} limit 5
     """
     query_ingresos_rows = get_query_rows(
         conn=conn,
@@ -297,18 +307,32 @@ def index():
 
     # Cliente con mayor variacion Chart Data
     conn, cur = connection_db()
-    query_clientes_mayor_variacion = """
+    query_clientes_mayor_variacion = f"""
     select cliente, SUM(total_variacion_validador_iva) as total_variacion_por_cliente
     from conciliaciones
+    {where_statement}
     group by cliente
     order by total_variacion_por_cliente DESC
-    limit 10;"""
+    limit 10"""
     query_clientes_mayor_variacion_rows = get_query_rows(
         conn=conn,
         cur=cur,
         query=query_clientes_mayor_variacion)
-    variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
-    variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
+
+    variation_labels = []
+    variation_data = []
+    if query_clientes_mayor_variacion_rows:
+        variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
+        variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
+
+    conn, cur = connection_db()
+
+    transaction_count_query = f"""select count(*) from conciliaciones {where_statement}"""
+    transaction_sum_query_result = get_query_rows(
+        conn=conn,
+        cur=cur,
+        query=transaction_count_query)[0][0]
+
 
     return render_template(
         'index.html',
@@ -317,7 +341,8 @@ def index():
         transactions_labels=transactions_labels,
         transactions_data=transactions_data,
         validador_iva_rows=query_validador_ivas_rows,
-        ingresos_rows=query_ingresos_rows
+        ingresos_rows=query_ingresos_rows,
+        transactions_count = transaction_sum_query_result
     )
 
 @app.route('/get_rfc_list', methods=["GET"])
