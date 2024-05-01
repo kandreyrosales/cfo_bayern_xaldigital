@@ -416,7 +416,6 @@ def get_filtered_data_conciliations():
         """
     else:
         return jsonify([])
-    print(query_conciliations_view_filtered)
     result = get_query_rows(
         cur=cur,
         conn=conn,
