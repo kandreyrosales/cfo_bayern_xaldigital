@@ -281,7 +281,7 @@ def index():
         if rfc == "Todos":
             where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' """
         else:
-            where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' and rfc='{rfc}' """
+            where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' and uuid='{rfc}' """
 
     # Validador IVA chart data
     conn, cur = connection_db()
@@ -308,12 +308,14 @@ def index():
     # Cliente con mayor variacion Chart Data
     conn, cur = connection_db()
     query_clientes_mayor_variacion = f"""
-    select cliente, SUM(total_variacion_validador_iva) as total_variacion_por_cliente
+    select cliente,
+           CASE WHEN SUM(total_variacion_validador_iva) IS NOT NULL
+               THEN SUM(total_variacion_validador_iva) ELSE 0
+               END AS total_variacion_por_cliente
     from conciliaciones
     {where_statement}
     group by cliente
-    order by total_variacion_por_cliente DESC
-    limit 10"""
+    order by total_variacion_por_cliente DESC"""
     query_clientes_mayor_variacion_rows = get_query_rows(
         conn=conn,
         cur=cur,
