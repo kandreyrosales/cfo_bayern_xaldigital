@@ -71,7 +71,8 @@ def create_tables_rds():
         importe_pagado NUMERIC,
         imp_saldo_insoluto NUMERIC
         );""",
-        """CREATE OR REPLACE VIEW conciliaciones AS
+        """
+            CREATE OR REPLACE VIEW conciliaciones AS
             SELECT t1.folio_interno as factura_bayer,
                t1.nombre as cliente,
                t1.tipo_comprobante as transaccion,
@@ -88,24 +89,40 @@ def create_tables_rds():
                0 as iva_sap,
                0 as total_aplicacion_sap,
 
-               t2.uuid_complemento as uuid_relacionado,
-               to_char((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 'FM99G999G999D00') AS subtotal_sat,
-               round((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))), 2) as iva_cobrado_sat,
-               round((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))), 2) as ieps_cobrado_sat,
-               t2.monto as total_aplicacion_sat,
+               CASE
+                   when t2.id_documento IS NOT NULL
+                       THEN t2.id_documento
+                   ELSE 'Sin Complemento'
+               END AS uuid_relacionado,
+
+               round((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 2) as subtotal_sat,
+               round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal), 2) as iva_cobrado_sat,
+               round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal), 2) as ieps_cobrado_sat,
+               t2.importe_pagado as total_aplicacion_sat,
                0 as validador_aplicacion_pagos,
 
-               round((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))-(t1.subtotal), 2) as validador_subtotal_validador_iva,
-               round(((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))))-(t1.iva), 2) as validar_ivas_validador_iva,
-               round(((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))))-t1.ieps, 2) as validador_ieps_validador_iva,
+               CASE WHEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi) = 0
+                THEN 0
+                    ELSE round((t1.subtotal)-((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))), 2)
+                END AS validador_subtotal_validador_iva,
 
-               round(
-                   ((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))-(t1.subtotal))
-                   +(((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))))-(t1.iva))
-                   +(((t1.ieps/t1.subtotal) * ((t1.iva/t1.subtotal)*((t2.monto)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))))-t1.ieps), 2)
-                   as total_variacion_validador_iva
+                CASE WHEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi) = 0
+                THEN 0
+                    ELSE round((t1.iva)-(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal)), 2)
+                END AS validar_ivas_validador_iva,
+
+                CASE WHEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi) = 0
+                THEN 0
+                    ELSE round((t1.ieps)-(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal)), 2)
+                END AS validador_ieps_validador_iva,
+
+               CASE WHEN ROUND(t1.total_cfdi-t2.importe_pagado, 2) > 0
+                THEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi)
+                    ELSE ROUND(t1.total_cfdi-t2.importe_pagado, 2)
+                END AS total_variacion_validador_iva
             FROM cfdi_ingreso t1
-            INNER JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
+            LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento
+            ORDER BY t1.uuid_fiscal ASC;
         """
     ]
 
