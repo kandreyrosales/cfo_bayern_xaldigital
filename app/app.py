@@ -388,7 +388,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date} order by cliente, fecha'
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
         """
     elif start_date and end_date and rfc and rfc == "all":
         query_conciliations_view_filtered = f"""
@@ -404,7 +404,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc} order by cliente, fecha'
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' order by cliente, fecha
         """
     elif not start_date and not end_date and rfc == 'all':
         query_conciliations_view_filtered = f"""
@@ -416,6 +416,7 @@ def get_filtered_data_conciliations():
         """
     else:
         return jsonify([])
+    print(query_conciliations_view_filtered)
     result = get_query_rows(
         cur=cur,
         conn=conn,
