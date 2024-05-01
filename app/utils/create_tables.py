@@ -121,7 +121,6 @@ def create_tables_rds():
                 END AS total_variacion_validador_iva
             FROM cfdi_ingreso t1
             LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
-
         """
     ]
 
