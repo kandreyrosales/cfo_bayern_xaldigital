@@ -89,11 +89,10 @@ def create_tables_rds():
                0 as iva_sap,
                0 as total_aplicacion_sap,
 
-               CASE
-                   when t2.id_documento IS NOT NULL
-                       THEN t2.id_documento
+               CASE WHEN t2.uuid_complemento IS NOT NULL
+                   THEN t2.uuid_complemento
                    ELSE 'Sin Complemento'
-               END AS uuid_relacionado,
+                   END AS uuid_relacionado,
 
                round((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 2) as subtotal_sat,
                round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal), 2) as iva_cobrado_sat,
@@ -121,8 +120,8 @@ def create_tables_rds():
                     ELSE ROUND(t1.total_cfdi-t2.importe_pagado, 2)
                 END AS total_variacion_validador_iva
             FROM cfdi_ingreso t1
-            LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento
-            ORDER BY t1.uuid_fiscal ASC;
+            LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
+
         """
     ]
 

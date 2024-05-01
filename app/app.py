@@ -367,7 +367,7 @@ def reconciliations_data_cfo():
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
     conn, cur = connection_db()
-    query_conciliations_view = """select * from conciliaciones;"""
+    query_conciliations_view = """select * from conciliaciones order by cliente, fecha;"""
     rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
     return render_template(
         'reconciliations_data_cfo.html',
@@ -384,11 +384,11 @@ def get_filtered_data_conciliations():
 
     if start_date and end_date and rfc and rfc != "all":
         query_conciliations_view_filtered = f"""
-            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, uuid, subtotal, iva, ieps, total,
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}'
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date} order by cliente, fecha'
         """
     elif start_date and end_date and rfc and rfc == "all":
         query_conciliations_view_filtered = f"""
@@ -396,15 +396,15 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where fecha BETWEEN '{start_date}' and '{end_date}';
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
         """
     elif not start_date and not end_date and rfc and rfc != 'all':
         query_conciliations_view_filtered = f"""
-                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, uuid, subtotal, iva, ieps, total,
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc}'
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where uuid='{rfc} order by cliente, fecha'
         """
     elif not start_date and not end_date and rfc == 'all':
         query_conciliations_view_filtered = f"""
@@ -412,7 +412,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones order by cliente, fecha
         """
     else:
         return jsonify([])
