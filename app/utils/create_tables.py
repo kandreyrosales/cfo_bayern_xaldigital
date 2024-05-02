@@ -77,6 +77,7 @@ def create_tables_rds():
                t1.nombre as cliente,
                t1.tipo_comprobante as transaccion,
                t1.fecha_emision as fecha,
+               t1.estado as estado,
                t1.uuid_fiscal as uuid,
                t1.subtotal as subtotal,
                t1.iva as iva,

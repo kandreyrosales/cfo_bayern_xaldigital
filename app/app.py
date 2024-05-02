@@ -386,7 +386,7 @@ def get_filtered_data_conciliations():
 
     if start_date and end_date and rfc and rfc != "all":
         query_conciliations_view_filtered = f"""
-            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, uuid, subtotal, iva, ieps, total,
+            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, estado, uuid, subtotal, iva, ieps, total,
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
@@ -394,7 +394,7 @@ def get_filtered_data_conciliations():
         """
     elif start_date and end_date and rfc and rfc == "all":
         query_conciliations_view_filtered = f"""
-            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, uuid, subtotal, iva, ieps, total,
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
@@ -402,7 +402,7 @@ def get_filtered_data_conciliations():
         """
     elif not start_date and not end_date and rfc and rfc != 'all':
         query_conciliations_view_filtered = f"""
-                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, uuid, subtotal, iva, ieps, total,
+                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, estado, uuid, subtotal, iva, ieps, total,
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
@@ -410,7 +410,7 @@ def get_filtered_data_conciliations():
         """
     elif not start_date and not end_date and rfc == 'all':
         query_conciliations_view_filtered = f"""
-                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), uuid, subtotal, iva, ieps, total,
+                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, uuid, subtotal, iva, ieps, total,
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
