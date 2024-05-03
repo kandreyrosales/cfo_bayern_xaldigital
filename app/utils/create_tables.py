@@ -74,7 +74,7 @@ def create_tables_rds():
         """
             CREATE OR REPLACE VIEW conciliaciones AS
             SELECT t1.folio_interno as factura_bayer,
-               t1.nombre as cliente,
+               t1.rfc as cliente,
                t1.tipo_comprobante as transaccion,
                t1.fecha_emision as fecha,
                t1.estado as estado,
