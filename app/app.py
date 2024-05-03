@@ -263,12 +263,12 @@ def send_reset_password_link():
         return render_template('login/send_reset_password_link.html')
 
 @app.route('/', methods=["GET"])
-@token_required
+# @token_required
 def index():
-    try:
-        cognito_client.get_user(AccessToken=session.get("access_token"))
-    except cognito_client.exceptions.UserNotFoundException as e:
-        return redirect(url_for('logout'))
+    # try:
+    #     cognito_client.get_user(AccessToken=session.get("access_token"))
+    # except cognito_client.exceptions.UserNotFoundException as e:
+    #     return redirect(url_for('logout'))
     transactions_labels = ["Totales", "Exitosas", "Revertidas", "Diferencias", "Pendientes"]
     transactions_data = [100, 50, 60, 30, 70]
 
@@ -353,7 +353,7 @@ def get_rfc_list():
     Getting the RFC list from the Database
     """
     conn, cur = connection_db()
-    query_uuid = """select DISTINCT (cliente) from conciliaciones;"""
+    query_uuid = """select DISTINCT (rfc) from conciliaciones ;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
     new_item = ("Todos", )
     try:
@@ -362,12 +362,12 @@ def get_rfc_list():
         return jsonify({'error': str(e)})
 
 @app.route('/conciliaciones')
-@token_required
+# @token_required
 def reconciliations_data_cfo():
-    try:
-        cognito_client.get_user(AccessToken=session.get("access_token"))
-    except cognito_client.exceptions.UserNotFoundException as e:
-        return redirect(url_for('logout'))
+    # try:
+    #     cognito_client.get_user(AccessToken=session.get("access_token"))
+    # except cognito_client.exceptions.UserNotFoundException as e:
+    #     return redirect(url_for('logout'))
     conn, cur = connection_db()
     query_conciliations_view = """select * from conciliaciones order by cliente, fecha;"""
     rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
@@ -390,7 +390,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where cliente='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where rfc='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
         """
     elif start_date and end_date and rfc and rfc == "all":
         query_conciliations_view_filtered = f"""
@@ -406,7 +406,7 @@ def get_filtered_data_conciliations():
         depositos, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
         iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
         validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where cliente='{rfc}' order by cliente, fecha
+        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where rfc='{rfc}' order by cliente, fecha
         """
     elif not start_date and not end_date and rfc == 'all':
         query_conciliations_view_filtered = f"""
@@ -497,8 +497,8 @@ def subir_archivo():
             "version",
             "estado",
             "tipo_comprobante",
-            "nombre",
             "rfc",
+            "nombre",
             "fecha_emision",
             "folio_interno",
             "uuid_fiscal",

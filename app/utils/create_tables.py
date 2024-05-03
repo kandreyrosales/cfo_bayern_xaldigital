@@ -14,8 +14,8 @@ def create_tables_rds():
               version VARCHAR(50),
               estado VARCHAR(50),
               tipo_comprobante VARCHAR(50),
-              nombre VARCHAR(255),
               rfc VARCHAR(255),
+              nombre VARCHAR(255),
               fecha_emision DATE,
               folio_interno VARCHAR(255),
               uuid_fiscal VARCHAR(255),
@@ -74,15 +74,16 @@ def create_tables_rds():
         """
             CREATE OR REPLACE VIEW conciliaciones AS
             SELECT t1.folio_interno as factura_bayer,
-               t1.rfc as cliente,
+               t1.nombre as cliente,
                t1.tipo_comprobante as transaccion,
+               t1.rfc as rfc,
                t1.fecha_emision as fecha,
                t1.estado as estado,
                t1.uuid_fiscal as uuid,
-               t1.subtotal as subtotal,
-               t1.iva as iva,
-               t1.ieps as ieps,
-               t1.total_cfdi as total,
+               to_char(t1.subtotal, 'FM99G999G999') AS subtotal,
+               to_char(t1.iva, 'FM99G999G999') AS iva,
+               to_char(t1.ieps, 'FM99G999G999') as ieps,
+               to_char(t1.total_cfdi, 'FM99G999G999') as total,
 
                0 as depositos,
 
@@ -95,7 +96,7 @@ def create_tables_rds():
                    ELSE 'Sin Complemento'
                    END AS uuid_relacionado,
 
-               round((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 2) as subtotal_sat,
+               to_char(round((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 2), 'FM99G999G999') as subtotal_sat,
                round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal), 2) as iva_cobrado_sat,
                round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal), 2) as ieps_cobrado_sat,
                t2.importe_pagado as total_aplicacion_sat,
