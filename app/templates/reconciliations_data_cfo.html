@@ -100,8 +100,10 @@
             // Initial URL for datatable
             let url_get_conciliations_view_data = "{{ url_for('get_filtered_data_conciliations') }}"+"?start_date="+minEl+"&end_date="+maxEl+"&rfc=all";
 
-            $("#btn-conciliations-page").css("background-color", "#0F7093");
+            // initial color of buttons
+            $("#btn-conciliations-page").css("background-color", "#0075A6");
             $("#btn-conciliations-page").css("color", "#FFFFFF");
+            $(".rect_conciliaciones_icon").attr("stroke", "white");
 
             let table = $('#cfo_reconciliations').DataTable({
                 searching: false,

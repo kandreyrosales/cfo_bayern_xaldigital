@@ -278,9 +278,10 @@
             }
         });
         $(document).ready(function() {
-            $("#btn-executive-page").css("background-color", "#0F7093");
+            // initial color of buttons
+            $("#btn-executive-page").css("background-color", "#0075A6");
             $("#btn-executive-page").css("color", "#FFFFFF");
-
+            $(".rect_resumen_icon").attr("stroke", "white");
 
             /* Varations Chart and Data */
             const variation_data = {{ variation_data|tojson }};

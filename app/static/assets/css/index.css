@@ -17,10 +17,22 @@
     font-weight: 500;
 }
 
-.custom_btn_navbar:hover{
+.custom_btn_navbar_resumen:hover{
     background-color: #0075A6;
     color: #FFFFFF;
     transition: .3s ease;
+    .rect_resumen_icon{
+        stroke: white;
+    };
+}
+
+.custom_btn_navbar_conciliaciones:hover{
+    background-color: #0075A6;
+    color: #FFFFFF;
+    transition: .3s ease;
+    .rect_conciliaciones_icon{
+        stroke: white;
+    };
 }
 
 .validador_table_button_headers, .validador_table_button_headers:hover{
@@ -170,3 +182,13 @@ td, th {
 .select2-selection__arrow {
     height: 32px !important;
 }
+
+.btn-close{
+    --bs-btn-close-bg:'';
+    opacity: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;  border: none;
+}
+
