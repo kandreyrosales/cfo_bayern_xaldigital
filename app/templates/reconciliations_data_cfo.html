@@ -94,6 +94,20 @@
                 }
             };
 
+            // Retrieve data for filters
+            const start_date = localStorage.getItem('start_date');
+            const end_date = localStorage.getItem('end_date');
+            const rfc = localStorage.getItem('rfc');
+            if (start_date !== null){
+                $('#calendar_filter_start_date').val(start_date);
+                $('#calendar_filter_end_date').val(end_date);
+            }
+            if(rfc !== null){
+                $('#rfc_selector').val(rfc).trigger('change'); // Select option by value
+                $('#rfc_selector option:first').prop('selected', true).trigger('change');
+            }
+            /* End retrieving data for filters */
+
             let minEl = $('#calendar_filter_start_date').val();
             let maxEl = $('#calendar_filter_end_date').val();
 
@@ -127,7 +141,12 @@
                 if (rfc_data === '' || rfc_data === 'Todos') {
                     rfc_data = 'all';
                 }
-                // dt-body-center
+
+                // Store data for filters
+                localStorage.setItem('start_date', start_date_data);
+                localStorage.setItem('end_date', end_date_data);
+                localStorage.setItem('rfc', rfc_data);
+
                 let url_get_conciliations = "{{ url_for('get_filtered_data_conciliations') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data;
                 table.destroy();
                 table = $('#cfo_reconciliations').DataTable({

@@ -278,12 +278,26 @@
             }
         });
         $(document).ready(function() {
+            // Retrieve data for filters
+            const start_date = localStorage.getItem('start_date');
+            const end_date = localStorage.getItem('end_date');
+            const rfc = localStorage.getItem('rfc');
+            if (start_date !== null){
+                 $('#calendar_filter_start_date').val(start_date);
+                $('#calendar_filter_end_date').val(end_date);
+            }
+            if(rfc !== null){
+                $('#rfc_selector').val(rfc).trigger('change'); // Select option by value
+                $('#rfc_selector option:first').prop('selected', true).trigger('change');
+            }
+            /* End retrieving data for filters */
+
             // initial color of buttons
             $("#btn-executive-page").css("background-color", "#0075A6");
             $("#btn-executive-page").css("color", "#FFFFFF");
             $(".rect_resumen_icon").attr("stroke", "white");
 
-            /* Varations Chart and Data */
+            /* Variations Chart and Data */
             const variation_data = {{ variation_data|tojson }};
             const labels_variation_data = {{ variation_labels|tojson }};
             const canvas_variations = document.getElementById("variationBarsVertical");
@@ -352,6 +366,12 @@
                 let start_date_data = $('#calendar_filter_start_date').val();
                 let end_date_data = $('#calendar_filter_end_date').val();
                 let rfc_data = $("#rfc_selector option:selected").text();
+
+                // Store data for filters
+                localStorage.setItem('start_date', start_date_data);
+                localStorage.setItem('end_date', end_date_data);
+                localStorage.setItem('rfc', rfc_data);
+
                 location.href="{{ url_for('index') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data;
             });
         });
