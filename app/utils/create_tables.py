@@ -71,6 +71,53 @@ def create_tables_rds():
         importe_pagado NUMERIC,
         imp_saldo_insoluto NUMERIC
         );""",
+
+        """
+        CREATE TABLE IF NOT EXISTS iva_cobrado_bcs (
+            id SERIAL PRIMARY KEY,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        doc_number VARCHAR(255),
+        account VARCHAR(255),
+        doc_type VARCHAR(255),
+        clrng_date date,
+        text VARCHAR(255) NULL,
+        reference VARCHAR(255),
+        billing_doc VARCHAR(255),
+        trading_partner numeric,
+        
+        doc_number_2 VARCHAR(255),
+        clearing_doc VARCHAR(255),
+        tax_code VARCHAR(255),
+        doc_date date,
+        posting_date date,
+        amount_in_local_curr numeric,
+        amount_in_doc_curr numeric,
+        doc_curr VARCHAR(255),
+        eff_exchange_rate numeric,
+        
+        ano numeric,
+        llave VARCHAR(255),
+        base_16 numeric,
+        cero_nacional numeric,
+        cero_extranjero numeric,
+        
+        iva numeric,
+        ieps numeric,
+        iva_retenido numeric,
+        total_factura numeric,
+        diferencia numeric,
+        
+        ieps_base_iva numeric,
+        
+        nombre VARCHAR(255),
+        pais VARCHAR(255),
+        ieps_tasa_6 numeric,
+        ieps_tasa_7 numeric,
+        total_ieps numeric,
+        diferencia_2 numeric
+        );
+        """,
+
         """
             CREATE OR REPLACE VIEW conciliaciones AS
             SELECT t1.folio_interno as factura_bayer,
@@ -86,9 +133,13 @@ def create_tables_rds():
                to_char(t1.total_cfdi, 'FM99G999G999') as total,
 
                0 as depositos,
+               '' as nombre_del_banco,
 
+               '' as document_number_sap,
+               '' as clearing_document_sap,
                0 as subtotal_sap,
                0 as iva_sap,
+               0 as ieps_sap,
                0 as total_aplicacion_sap,
 
                CASE WHEN t2.uuid_complemento IS NOT NULL
