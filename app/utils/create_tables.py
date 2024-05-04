@@ -190,7 +190,17 @@ def create_tables_rds():
                    SELECT doc_number from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS document_number_sap,
-               '' as clearing_document_sap,
+               
+               CASE WHEN EXISTS(
+                   SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
+               )THEN (
+                   SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
+                   )
+               ELSE(
+                   SELECT clearing_doc from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                   )
+               END AS clearing_document_sap,
+               
                0 as subtotal_sap,
                0 as iva_sap,
                0 as ieps_sap,
