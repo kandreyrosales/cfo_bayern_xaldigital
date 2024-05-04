@@ -181,7 +181,15 @@ def create_tables_rds():
                0 as depositos,
                '' as nombre_del_banco,
 
-               '' as document_number_sap,
+               CASE WHEN EXISTS(
+                   SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
+               )THEN (
+                   SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
+                   )
+               ELSE(
+                   SELECT doc_number from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                   )
+               END AS document_number_sap,
                '' as clearing_document_sap,
                0 as subtotal_sap,
                0 as iva_sap,
