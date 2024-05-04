@@ -119,6 +119,52 @@ def create_tables_rds():
         """,
 
         """
+                CREATE TABLE IF NOT EXISTS analisis_iva_cobrado_bhc (
+                    id SERIAL PRIMARY KEY,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                doc_number VARCHAR(255),
+                account VARCHAR(255),
+                reference numeric null,
+                doc_type VARCHAR(255),
+                doc_number_2 VARCHAR(255),
+                clrng_date date,
+                assignment_text VARCHAR(255) NULL,
+                text_analisis_iva_cobrado VARCHAR(255) NULL,
+                clearing_doc VARCHAR(255) NULL,
+                billing_doc VARCHAR(255),
+                tx VARCHAR(255) null,
+                amount_in_local_curr numeric NULL,
+                local_curr VARCHAR(255) NULL,
+                doc_date date,
+                posting_date date,
+                amount_in_dc numeric NULL,
+                diff VARCHAR(255) NULL,
+                ano numeric NULL,
+                
+                llave VARCHAR(255),
+                base_16 numeric NULL,
+                cero_nacional numeric NULL,
+                cero_extranjero numeric NULL,
+                
+                iva numeric NULL,
+                ieps numeric NULL,
+                iva_retenido numeric NULL,
+                total_factura numeric NULL,
+                diferencia numeric NULL,
+                empty_col_1 VARCHAR(255) NULL,
+                ieps_base_iva numeric NULL,
+        
+                nombre VARCHAR(255),
+                pais VARCHAR(255),
+                tasa_9 numeric NULL,
+                tasa_7 numeric NULL,
+                tasa_6 numeric NULL,
+                
+                total_ieps numeric NULL,
+                diferencia_2 numeric NULL);
+                """,
+
+        """
             CREATE OR REPLACE VIEW conciliaciones AS
             SELECT t1.folio_interno as factura_bayer,
                t1.nombre as cliente,

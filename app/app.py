@@ -485,6 +485,7 @@ def subir_archivo():
     cfdi_ingresos_sheet = workbook.worksheets[0]
     cfdi_complemento_sheet = workbook.worksheets[1]
     iva_cobrado_sheet = workbook.worksheets[2]
+    analisis_iva_cobrado_sheet = workbook.worksheets[3]
     # Prepare bulk insert query template
     try:
         column_names_ingresos = [
@@ -585,6 +586,46 @@ def subir_archivo():
         ]
         column_names_str_iva_cobrado = ", ".join(column_names_iva_cobrado_table)
 
+        column_names_analisis_iva_cobrado = [
+            "doc_number",
+            "account",
+            "reference",
+            "doc_type",
+            "doc_number_2",
+            "clrng_date",
+            "assignment_text",
+            "text_analisis_iva_cobrado",
+            "clearing_doc",
+            "billing_doc",
+            "tx",
+            "amount_in_local_curr",
+            "local_curr",
+            "doc_date",
+            "posting_date",
+            "amount_in_dc",
+            "diff",
+            "ano",
+            "llave",
+            "base_16",
+            "cero_nacional",
+            "cero_extranjero",
+            "iva",
+            "ieps",
+            "iva_retenido",
+            "total_factura",
+            "diferencia",
+            "empty_col_1",
+            "ieps_base_iva",
+            "nombre",
+            "pais",
+            "tasa_9",
+            "tasa_7",
+            "tasa_6",
+            "total_ieps",
+            "diferencia_2"
+        ]
+        column_names_str_analisis_iva_cobrado = ", ".join(column_names_analisis_iva_cobrado)
+
     except Exception as e:
         print(f"Error retrieving column names or constructing query: {e}")
         exit()
@@ -598,11 +639,17 @@ def subir_archivo():
     # Prepare data for bulk insertion IVA Cobrado BCS sheet
     data_collection_iva_cobrado_table = custom_values_for_insert(data_sheet=iva_cobrado_sheet, max_col=34)
     final_result_iva_cobrado_data = ",".join(data_collection_iva_cobrado_table)
+    # Prepare data for bulk insertion Analisis IVA Cobrado BHC sheet
+    data_collection_analisis_iva_cobrado_table = custom_values_for_insert(data_sheet=analisis_iva_cobrado_sheet, max_col=36)
+    final_result_analisis_iva_cobrado_data = ",".join(data_collection_analisis_iva_cobrado_table)
+
+
 
     insert_query = f"""SET datestyle = dmy; 
         INSERT INTO cfdi_ingreso ({column_names_str_ingresos}) VALUES {final_result_ingreso_data};
         INSERT INTO complemento ({column_names_str_complemento}) VALUES {final_result_complemento_data};
         INSERT INTO iva_cobrado_bcs ({column_names_str_iva_cobrado}) VALUES {final_result_iva_cobrado_data};
+        INSERT INTO analisis_iva_cobrado_bhc ({column_names_str_analisis_iva_cobrado}) VALUES {final_result_analisis_iva_cobrado_data};
     """
     conn, cur = connection_db()
     try:
