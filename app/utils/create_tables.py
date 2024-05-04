@@ -119,6 +119,28 @@ def create_tables_rds():
         """,
 
         """
+        CREATE TABLE IF NOT EXISTS resumen_iva_traslado (
+            id SERIAL PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ano_doc VARCHAR(255),
+            sum_of_amount_in_local_cur numeric,
+            row_labels VARCHAR(255),
+            sum_of_amount_in_local_cur_2 numeric
+        );
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS resumen_iva_retenido (
+            id SERIAL PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ano_doc VARCHAR(255),
+            sum_of_amount_in_local_cur numeric,
+            row_labels VARCHAR(255),
+            sum_of_amount_in_local_cur_2 numeric
+        );
+        """,
+
+        """
             CREATE OR REPLACE VIEW conciliaciones AS
             SELECT t1.folio_interno as factura_bayer,
                t1.nombre as cliente,
