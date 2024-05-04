@@ -384,37 +384,30 @@ def get_filtered_data_conciliations():
     end_date = request.args.get("end_date")
     rfc = request.args.get("rfc")
 
+    select_table_fields = """SELECT factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
+            uuid, subtotal, iva, ieps, total,
+            depositos, nombre_del_banco, 
+            document_number_sap, clearing_document_sap, subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
+            uuid_relacionado, subtotal_sat, iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, 
+            validador_aplicacion_pagos,
+            validador_subtotal_validador_iva, validar_ivas_validador_iva,
+            validador_ieps_validador_iva, total_variacion_validador_iva"""
+
     if start_date and end_date and rfc and rfc != "all":
         query_conciliations_view_filtered = f"""
-            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, estado, uuid, subtotal, iva, ieps, total,
-        depositos, nombre_del_banco, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
-        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
-        validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where rfc='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
+            {select_table_fields} from conciliaciones where rfc='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
         """
     elif start_date and end_date and rfc and rfc == "all":
         query_conciliations_view_filtered = f"""
-            select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, uuid, subtotal, iva, ieps, total,
-        depositos, nombre_del_banco, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
-        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
-        validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
+            {select_table_fields} from conciliaciones where fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
         """
     elif not start_date and not end_date and rfc and rfc != 'all':
         query_conciliations_view_filtered = f"""
-                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY') as fecha, estado, uuid, subtotal, iva, ieps, total,
-        depositos, nombre_del_banco, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
-        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
-        validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones where rfc='{rfc}' order by cliente, fecha
+                {select_table_fields} from conciliaciones where rfc='{rfc}' order by cliente, fecha
         """
     elif not start_date and not end_date and rfc == 'all':
         query_conciliations_view_filtered = f"""
-                select factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, uuid, subtotal, iva, ieps, total,
-        depositos, nombre_del_banco, subtotal_sap, iva_sap, total_aplicacion_sap, uuid_relacionado, subtotal_sat,
-        iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, validador_aplicacion_pagos,
-        validador_subtotal_validador_iva, validar_ivas_validador_iva,
-        validador_ieps_validador_iva, total_variacion_validador_iva from conciliaciones order by cliente, fecha
+                {select_table_fields} from conciliaciones order by cliente, fecha
         """
     else:
         return jsonify([])
@@ -491,6 +484,7 @@ def subir_archivo():
     workbook = load_workbook(stream)
     cfdi_ingresos_sheet = workbook.worksheets[0]
     cfdi_complemento_sheet = workbook.worksheets[1]
+    iva_cobrado_sheet = workbook.worksheets[2]
     # Prepare bulk insert query template
     try:
         column_names_ingresos = [
@@ -553,6 +547,44 @@ def subir_archivo():
         ]
         column_names_str_complemento = ", ".join(column_names_complemento)
 
+        column_names_iva_cobrado_table = [
+            "doc_number",
+            "account",
+            "doc_type",
+            "clrng_date",
+            "text_iva_cobrado",
+            "reference",
+            "billing_doc",
+            "trading_partner",
+            "doc_number_2",
+            "clearing_doc",
+            "tax_code",
+            "doc_date",
+            "posting_date",
+            "amount_in_local_curr",
+            "amount_in_doc_curr",
+            "doc_curr",
+            "eff_exchange_rate",
+            "ano",
+            "llave",
+            "base_16",
+            "cero_nacional",
+            "cero_extranjero",
+            "iva",
+            "ieps",
+            "iva_retenido",
+            "total_factura",
+            "diferencia",
+            "ieps_base_iva",
+            "nombre",
+            "pais",
+            "ieps_tasa_6",
+            "ieps_tasa_7",
+            "total_ieps",
+            "diferencia_2"
+        ]
+        column_names_str_iva_cobrado = ", ".join(column_names_iva_cobrado_table)
+
     except Exception as e:
         print(f"Error retrieving column names or constructing query: {e}")
         exit()
@@ -563,12 +595,18 @@ def subir_archivo():
     # Prepare data for bulk insertion CFDI Complemento sheet
     data_collection_complemento = custom_values_for_insert(data_sheet=cfdi_complemento_sheet, max_col=33)
     final_result_complemento_data = ",".join(data_collection_complemento)
+    # Prepare data for bulk insertion IVA Cobrado BCS sheet
+    data_collection_iva_cobrado_table = custom_values_for_insert(data_sheet=iva_cobrado_sheet, max_col=34)
+    final_result_iva_cobrado_data = ",".join(data_collection_iva_cobrado_table)
 
     insert_query = f"""SET datestyle = dmy; 
         INSERT INTO cfdi_ingreso ({column_names_str_ingresos}) VALUES {final_result_ingreso_data};
         INSERT INTO complemento ({column_names_str_complemento}) VALUES {final_result_complemento_data};
+        INSERT INTO iva_cobrado_bcs ({column_names_str_iva_cobrado}) VALUES {final_result_iva_cobrado_data};
     """
     conn, cur = connection_db()
-
-    # Execute bulk insert using executemany
-    execute_query(cur, conn, insert_query)
+    try:
+        # Execute bulk insert using executemany
+        execute_query(cur, conn, insert_query)
+    except Exception as err:
+        print(err)

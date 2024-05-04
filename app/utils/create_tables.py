@@ -17,7 +17,7 @@ def create_tables_rds():
               rfc VARCHAR(255),
               nombre VARCHAR(255),
               fecha_emision DATE,
-              folio_interno VARCHAR(255),
+              folio_interno numeric null,
               uuid_fiscal VARCHAR(255),
               producto_servicio_conforme_sat VARCHAR(255) NULL,
               concepto_del_cfdi TEXT NULL,
@@ -42,7 +42,7 @@ def create_tables_rds():
         uuid_complemento VARCHAR(255),
         fecha_timbrado VARCHAR(50) NULL,
         fecha_emision DATE,
-        folio VARCHAR(255),
+        folio varchar(255) null,
         serie VARCHAR(255) NULL,
         subtotal NUMERIC,
         moneda VARCHAR(255),
@@ -64,7 +64,7 @@ def create_tables_rds():
         importe_pagado_mo VARCHAR(255) NULL,
         id_documento VARCHAR(255),
         serie_dr VARCHAR(255),
-        folio_dr VARCHAR(255),
+        folio_dr numeric null,
         moneda_dr VARCHAR(5),
         num_parcialidad VARCHAR(255) NULL,
         imp_saldo_ant NUMERIC,
@@ -80,63 +80,41 @@ def create_tables_rds():
         account VARCHAR(255),
         doc_type VARCHAR(255),
         clrng_date date,
-        text VARCHAR(255) NULL,
-        reference VARCHAR(255),
+        text_iva_cobrado VARCHAR(255) NULL,
+        reference numeric null,
         billing_doc VARCHAR(255),
-        trading_partner numeric,
+        trading_partner VARCHAR(255) NULL,
         
         doc_number_2 VARCHAR(255),
         clearing_doc VARCHAR(255),
         tax_code VARCHAR(255),
         doc_date date,
         posting_date date,
-        amount_in_local_curr numeric,
-        amount_in_doc_curr numeric,
+        amount_in_local_curr numeric NULL,
+        amount_in_doc_curr numeric NULL,
         doc_curr VARCHAR(255),
-        eff_exchange_rate numeric,
+        eff_exchange_rate numeric NULL,
         
-        ano numeric,
+        ano numeric NULL,
         llave VARCHAR(255),
-        base_16 numeric,
-        cero_nacional numeric,
-        cero_extranjero numeric,
+        base_16 numeric NULL,
+        cero_nacional numeric NULL,
+        cero_extranjero numeric NULL,
         
-        iva numeric,
-        ieps numeric,
-        iva_retenido numeric,
-        total_factura numeric,
-        diferencia numeric,
+        iva numeric NULL,
+        ieps numeric NULL,
+        iva_retenido numeric NULL,
+        total_factura numeric NULL,
+        diferencia numeric NULL,
         
-        ieps_base_iva numeric,
+        ieps_base_iva numeric NULL,
         
         nombre VARCHAR(255),
         pais VARCHAR(255),
-        ieps_tasa_6 numeric,
-        ieps_tasa_7 numeric,
-        total_ieps numeric,
-        diferencia_2 numeric
-        );
-        """,
-
-        """
-        CREATE TABLE IF NOT EXISTS resumen_iva_traslado (
-            id SERIAL PRIMARY KEY,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            ano_doc VARCHAR(255),
-            sum_of_amount_in_local_cur numeric,
-            row_labels VARCHAR(255),
-            sum_of_amount_in_local_cur_2 numeric
-        );
-        """,
-
-        """
-        CREATE TABLE IF NOT EXISTS resumen_iva_retenido (
-            id SERIAL PRIMARY KEY,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            ano_doc VARCHAR(255),
-            sum_of_amount_in_local_cur numeric,
-            row_labels VARCHAR(255),
-            sum_of_amount_in_local_cur_2 numeric
+        ieps_tasa_6 numeric NULL,
+        ieps_tasa_7 numeric NULL,
+        total_ieps numeric NULL,
+        diferencia_2 numeric NULL
         );
         """,
 
