@@ -264,7 +264,7 @@ def send_reset_password_link():
         return render_template('login/send_reset_password_link.html')
 
 @app.route('/', methods=["GET"])
-@token_required
+# @token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -363,7 +363,7 @@ def get_rfc_list():
         return jsonify({'error': str(e)})
 
 @app.route('/conciliaciones')
-@token_required
+# @token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -385,10 +385,10 @@ def get_filtered_data_conciliations():
     end_date = request.args.get("end_date")
     rfc = request.args.get("rfc")
 
-    select_table_fields = """SELECT rfc, factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
+    select_table_fields = """SELECT rfc, CAST(factura_bayer AS BIGINT), cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
             uuid, subtotal, iva, ieps, total,
             depositos, nombre_del_banco, 
-            document_number_sap, clearing_document_sap, subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
+            CAST(document_number_sap as BIGINT), CAST(clearing_document_sap AS BIGINT), subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
             uuid_relacionado, subtotal_sat, iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, 
             validador_aplicacion_pagos,
             validador_subtotal_validador_iva, validar_ivas_validador_iva,
