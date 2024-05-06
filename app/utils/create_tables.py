@@ -163,7 +163,44 @@ def create_tables_rds():
                 total_ieps numeric NULL,
                 diferencia_2 numeric NULL);
                 """,
-
+        """
+        CREATE TABLE IF NOT EXISTS BANCOS(
+            id              SERIAL PRIMARY KEY,
+            created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            nombre          VARCHAR(255),
+            document_number VARCHAR(255),
+            depositos       NUMERIC
+        );
+        """,
+        """
+        INSERT INTO BANCOS (depositos, nombre, document_number) VALUES
+            (1384805.03,'Banamex 503292','5020000395.0'),
+            (24659857.02,'IHBank','5020000514.0'),
+            (0,'IHBank','5020000509.0'),
+            (0,'IHBank','5020000511.0'),
+            (0,'IHBank','5020000513.0'),
+            (0,'IHBank','5020000512.0'),
+            (0,'IHBank','2020022279.0'),
+            (93785895.34,'IHBank','5020000482.0'),
+            (0,'IHBank','5020000486.0'),
+            (0,'IHBank','5020000490.0'),
+            (0,'IHBank','5020000535.0'),
+            (0,'IHBank','5020000494.0'),
+            (0,'IHBank','5020000499.0'),
+            (0,'IHBank','5020000498.0'),
+            (0,'IHBank','5020000542.0'),
+            (0,'IHBank','5020000472.0'),
+            (0,'IHBank','5020000500.0'),
+            (0,'IHBank','2030004907.0'),
+            (2449391.04,'Banamex 503292','2020022388.0'),
+            (0,'Banamex 503292' ,'2020022390.0'),
+            (0,'Banamex 503292' ,'2020023308.0'),
+            (0,'Banamex 503292' ,'2020022389.0'),
+            (0,'Banamex 503292' ,'2020023310.0'),
+            (0,'Banamex 503292' ,'2020023309.0'),
+            (581386.00,'IHBank','2020023793.0'),
+            (0,'IHBank','2020023787.0');
+        """,
         """
             CREATE OR REPLACE VIEW conciliaciones AS
             SELECT
@@ -179,8 +216,48 @@ def create_tables_rds():
     to_char(t1.ieps, '$99G999G999')  as ieps,
     to_char(t1.total_cfdi, '$99G999G999') as total,
 
-    0 as depositos,
-    '' as nombre_del_banco,
+    -- ESPECIAL CASE FOR PROTOTYPE
+    CASE WHEN EXISTS(
+        SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
+    )THEN (
+        SELECT to_char(depositos, '$99G999G999')
+        from BANCOS bank
+        WHERE bank.document_number IN (
+            SELECT doc_number
+            from iva_cobrado_bcs
+            where reference=t1.folio_interno
+        )
+    )
+    ELSE(
+            SELECT to_char(depositos, '$99G999G999') from BANCOS bank
+            WHERE bank.document_number IN (
+                SELECT doc_number
+                from analisis_iva_cobrado_bhc
+                where reference=t1.folio_interno
+            )
+        )
+    END AS depositos,
+
+    CASE WHEN EXISTS(
+        SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
+    )THEN (
+        SELECT nombre
+        from BANCOS bank
+        WHERE bank.document_number IN (
+            SELECT doc_number
+            from iva_cobrado_bcs
+            where reference=t1.folio_interno
+        )
+    )
+    ELSE(
+            SELECT nombre from BANCOS bank
+            WHERE bank.document_number IN (
+                SELECT doc_number
+                from analisis_iva_cobrado_bhc
+                where reference=t1.folio_interno
+            )
+        )
+    END AS nombre_del_banco,
 
     CASE WHEN EXISTS(
         SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
