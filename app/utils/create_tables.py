@@ -386,7 +386,7 @@ def create_tables_rds():
                 ELSE format_price(ROUND(t1.total_cfdi-t2.importe_pagado, 2))
                 END AS total_variacion_validador_iva
             FROM cfdi_ingreso t1
-                 LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
+            LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
         """
     ]
 
