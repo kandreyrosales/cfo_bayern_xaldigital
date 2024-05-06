@@ -129,9 +129,10 @@
 
             let table = $('#cfo_reconciliations').DataTable({
                 pageLength: 50,
+                responsive: true,
                 paging: true,
+                scrollCollapse: true,
                 scrollY: '300px',
-                scrollX: true,
                 searching: false,
                 info: false,
                 ordering: false,
@@ -162,9 +163,10 @@
                 table.destroy();
                 table = $('#cfo_reconciliations').DataTable({
                     pageLength: 50,
+                    responsive: true,
                     paging: true,
                     scrollY: '300px',
-                    scrollX: true,
+                    scrollCollapse: true,
                     searching: false,
                     info: false,
                     ordering: false,
