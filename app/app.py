@@ -362,7 +362,7 @@ def get_rfc_list():
         return jsonify({'error': str(e)})
 
 @app.route('/conciliaciones')
-@token_required
+# @token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -384,7 +384,7 @@ def get_filtered_data_conciliations():
     end_date = request.args.get("end_date")
     rfc = request.args.get("rfc")
 
-    select_table_fields = """SELECT factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
+    select_table_fields = """SELECT rfc, factura_bayer, cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
             uuid, subtotal, iva, ieps, total,
             depositos, nombre_del_banco, 
             document_number_sap, clearing_document_sap, subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
