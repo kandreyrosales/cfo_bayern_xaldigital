@@ -173,10 +173,10 @@ def create_tables_rds():
                t1.fecha_emision as fecha,
                t1.estado as estado,
                t1.uuid_fiscal as uuid,
-               t1.subtotal AS subtotal,
-               t1.iva AS iva,
-               t1.ieps as ieps,
-               t1.total_cfdi as total,
+               to_char(t1.subtotal, 'FM99G999G999') AS subtotal,
+               to_char(t1.iva, 'FM99G999G999') AS iva,
+               to_char(t1.ieps, 'FM99G999G999')  as ieps,
+               to_char(t1.total_cfdi, 'FM99G999G999') as total,
 
                0 as depositos,
                '' as nombre_del_banco,
@@ -190,7 +190,7 @@ def create_tables_rds():
                    SELECT doc_number from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS document_number_sap,
-               
+
                CASE WHEN EXISTS(
                    SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
@@ -200,44 +200,44 @@ def create_tables_rds():
                    SELECT clearing_doc from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS clearing_document_sap,
-               
+
                CASE WHEN EXISTS(
                    SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
-                   SELECT base_16 + cero_nacional+ cero_extranjero from iva_cobrado_bcs where reference=t1.folio_interno
+                   SELECT to_char(base_16 + cero_nacional+ cero_extranjero, 'FM99G999G999') from iva_cobrado_bcs where reference=t1.folio_interno
                    )
                ELSE(
-                    SELECT base_16 + cero_nacional+ cero_extranjero from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                    SELECT to_char(base_16 + cero_nacional+ cero_extranjero, 'FM99G999G999') from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS subtotal_sap,
-               
+
                CASE WHEN EXISTS(
                    SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
-                   SELECT iva from iva_cobrado_bcs where reference=t1.folio_interno
+                   SELECT to_char(iva, 'FM99G999G999') from iva_cobrado_bcs where reference=t1.folio_interno
                    )
                ELSE(
-                    SELECT iva from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                    SELECT to_char(iva, 'FM99G999G999') from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS iva_sap,
-               
+
                CASE WHEN EXISTS(
                    SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
-                   SELECT ieps from iva_cobrado_bcs where reference=t1.folio_interno
+                   SELECT to_char(ieps, 'FM99G999G999') from iva_cobrado_bcs where reference=t1.folio_interno
                    )
                ELSE(
-                    SELECT ieps from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                    SELECT to_char(ieps, 'FM99G999G999') from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS ieps_sap,
-               
+
                CASE WHEN EXISTS(
                    SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
-                   SELECT base_16 + cero_nacional+ cero_extranjero + iva + ieps from iva_cobrado_bcs where reference=t1.folio_interno
+                   SELECT to_char(base_16 + cero_nacional+ cero_extranjero + iva + ieps, 'FM99G999G999') from iva_cobrado_bcs where reference=t1.folio_interno
                    )
                ELSE(
-                    SELECT base_16 + cero_nacional+ cero_extranjero + iva + ieps from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                    SELECT to_char(base_16 + cero_nacional+ cero_extranjero + iva + ieps, 'FM99G999G999') from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS total_aplicacion_sap,
 
@@ -247,53 +247,53 @@ def create_tables_rds():
                    END AS uuid_relacionado,
 
                CASE WHEN t2.importe_pagado IS NOT NULL
-               THEN round((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 2)
-               ELSE 0
+               THEN to_char(round((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))), 2), 'FM99G999G999')
+               ELSE '0'
                END AS subtotal_sat,
-               
+
                CASE WHEN t2.importe_pagado IS NOT NULL
-               THEN round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal), 2)
-               ELSE 0
+               THEN to_char(round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal), 2), 'FM99G999G999')
+               ELSE '0'
                END AS iva_cobrado_sat,
-               
+
                CASE WHEN t2.importe_pagado IS NOT NULL
-               THEN round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal), 2)
-               ELSE 0
+               THEN to_char(round(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal), 2), 'FM99G999G999')
+               ELSE '0'
                END AS ieps_cobrado_sat,
-               
+
                CASE WHEN t2.importe_pagado IS NOT NULL
-               THEN t2.importe_pagado
-               ELSE 0
+               THEN to_char(t2.importe_pagado, 'FM99G999G999')
+               ELSE '0'
                END AS total_aplicacion_sat,
-               
+
                0 as validador_aplicacion_pagos,
 
                CASE
-               WHEN t2.importe_pagado IS NULL THEN 0 
+               WHEN t2.importe_pagado IS NULL THEN '0'
                WHEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi) = 0
-                THEN 0
-                    ELSE round((t1.subtotal)-((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))), 2)
+                THEN '0'
+                    ELSE to_char(round((t1.subtotal)-((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal)))), 2), 'FM99G999G999')
                 END AS validador_subtotal_validador_iva,
 
                 CASE
-                WHEN t2.importe_pagado IS NULL THEN 0 
+                WHEN t2.importe_pagado IS NULL THEN '0'
                 WHEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi) = 0
-                THEN 0
-                    ELSE round((t1.iva)-(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal)), 2)
+                THEN '0'
+                    ELSE to_char(round((t1.iva)-(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.iva/t1.subtotal)), 2), 'FM99G999G999')
                 END AS validar_ivas_validador_iva,
 
-                CASE 
-                WHEN t2.importe_pagado IS NULL THEN 0 
+                CASE
+                WHEN t2.importe_pagado IS NULL THEN '0'
                 WHEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi) = 0
-                THEN 0
-                    ELSE round((t1.ieps)-(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal)), 2)
+                THEN '0'
+                    ELSE to_char(round((t1.ieps)-(((t2.importe_pagado)/(1+((t1.iva/t1.subtotal)+(t1.ieps/t1.subtotal))))*(t1.ieps/t1.subtotal)), 2), 'FM99G999G999')
                 END AS validador_ieps_validador_iva,
 
-               CASE 
-               WHEN t2.importe_pagado IS NULL THEN 0
+               CASE
+               WHEN t2.importe_pagado IS NULL THEN '0'
                WHEN ROUND(t1.total_cfdi-t2.importe_pagado, 2) > 0
-                THEN (ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi)
-                    ELSE ROUND(t1.total_cfdi-t2.importe_pagado, 2)
+                THEN TO_CHAR((ROUND(t1.total_cfdi-t2.importe_pagado, 2)+t2.importe_pagado)-(t1.total_cfdi), 'FM99G999G999')
+                    ELSE TO_CHAR(ROUND(t1.total_cfdi-t2.importe_pagado, 2), 'FM99G999G999')
                 END AS total_variacion_validador_iva
             FROM cfdi_ingreso t1
             LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
