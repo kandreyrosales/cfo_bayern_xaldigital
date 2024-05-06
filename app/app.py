@@ -8,6 +8,7 @@ from functools import wraps
 import psycopg2
 
 from openpyxl.reader.excel import load_workbook
+from openpyxl import Workbook
 
 app = Flask(__name__)
 
@@ -657,3 +658,14 @@ def subir_archivo():
         execute_query(cur, conn, insert_query)
     except Exception as err:
         print(err)
+
+# def export_data_conciliaciones():
+#     start_date = request.args.get("start_date")
+#     end_date = request.args.get("end_date")
+#     rfc = request.args.get("rfc")
+#     # Create a new Excel workbook
+#     wb = Workbook()
+#     # Add a worksheet
+#     ws = wb.active
+#     ws.title = f"CFO Data {rfc} from {start_date} to {end_date}"  # Set worksheet title
+
