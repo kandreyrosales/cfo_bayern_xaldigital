@@ -387,10 +387,9 @@ def get_filtered_data_conciliations():
 
     select_table_fields = """SELECT rfc, CAST(factura_bayer AS BIGINT), cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
             uuid, subtotal, iva, ieps, total,
-            depositos, nombre_del_banco, 
+            depositos, nombre_del_banco, validador_aplicacion_pagos, 
             CAST(document_number_sap as BIGINT), CAST(clearing_document_sap AS BIGINT), subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
             uuid_relacionado, subtotal_sat, iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, 
-            validador_aplicacion_pagos,
             validador_subtotal_validador_iva, validar_ivas_validador_iva,
             validador_ieps_validador_iva, total_variacion_validador_iva"""
 

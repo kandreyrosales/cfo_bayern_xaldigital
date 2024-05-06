@@ -356,7 +356,7 @@ def create_tables_rds():
                  ELSE '$0'
                 END AS total_aplicacion_sat,
         
-            0 as validador_aplicacion_pagos,
+            '$0' as validador_aplicacion_pagos,
         
             CASE
                 WHEN t2.importe_pagado IS NULL THEN '$0'
