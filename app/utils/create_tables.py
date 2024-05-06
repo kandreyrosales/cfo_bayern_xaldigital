@@ -184,20 +184,20 @@ def create_tables_rds():
                CASE WHEN EXISTS(
                    SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
-                   SELECT doc_number from iva_cobrado_bcs where reference=t1.folio_interno
+                   SELECT CAST(doc_number AS NUMERIC) from iva_cobrado_bcs where reference=t1.folio_interno
                    )
                ELSE(
-                   SELECT doc_number from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                   SELECT CAST(doc_number AS NUMERIC) from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS document_number_sap,
 
                CASE WHEN EXISTS(
                    SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
                )THEN (
-                   SELECT clearing_doc from iva_cobrado_bcs where reference=t1.folio_interno
+                   SELECT CAST(clearing_doc AS NUMERIC) from iva_cobrado_bcs where reference=t1.folio_interno
                    )
                ELSE(
-                   SELECT clearing_doc from analisis_iva_cobrado_bhc where reference=t1.folio_interno
+                   SELECT CAST(clearing_doc AS NUMERIC) from analisis_iva_cobrado_bhc where reference=t1.folio_interno
                    )
                END AS clearing_document_sap,
 
@@ -297,6 +297,7 @@ def create_tables_rds():
                 END AS total_variacion_validador_iva
             FROM cfdi_ingreso t1
             LEFT JOIN complemento t2 ON t1.uuid_fiscal = t2.id_documento;
+
         """
     ]
 
