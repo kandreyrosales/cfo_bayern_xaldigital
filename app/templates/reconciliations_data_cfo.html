@@ -125,14 +125,20 @@
             $("#btn-conciliations-page").css("color", "#FFFFFF");
             $(".rect_conciliaciones_icon").attr("stroke", "white");
 
-
+            // Formula to adjust ScrollY in datatable with actual size of page
+            let value_for_scroll = '300px';
+            if ($(document).height() > 800 && $(document).height() <1500){
+                value_for_scroll = "500px";
+            }else if($(document).height() > 1500){
+                value_for_scroll = "700px";
+            }
 
             let table = $('#cfo_reconciliations').DataTable({
                 pageLength: 50,
                 responsive: true,
                 paging: true,
                 scrollCollapse: true,
-                scrollY: '300px',
+                scrollY: value_for_scroll,
                 searching: false,
                 info: false,
                 ordering: false,
@@ -165,7 +171,7 @@
                     pageLength: 50,
                     responsive: true,
                     paging: true,
-                    scrollY: '300px',
+                    scrollY: value_for_scroll,
                     scrollCollapse: true,
                     searching: false,
                     info: false,
