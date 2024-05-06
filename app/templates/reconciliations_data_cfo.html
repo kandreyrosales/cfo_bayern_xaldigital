@@ -2,7 +2,7 @@
 {% block content %}
     <div class="row">
         <div class="container-fluid">
-            <div class="row align-items-start" style="margin-top: 20px">
+            <div class="row align-items-start">
                 <div class="col">
                     <table id="cfo_reconciliations" class="display" style="width:100%">
                         <thead>
@@ -21,47 +21,47 @@
                             <th colspan="4" class="title_group_cfo_table" style="background-color: #83D333; text-align: center">Validador IVA</th>
                         </tr>
                         <tr class="titles_table">
-                            <th>RFC</th>
-                            <th>Factura</th>
-                            <th>Cliente</th>
-                            <th>Transacción</th>
-                            <th>Fecha</th>
-                            <th>Estado</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">RFC</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Factura</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Cliente</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Transacción</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Fecha</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Estado</th>
 
                             <!-- XML Facturacion -->
-                            <th>UUID</th>
-                            <th>Subtotal</th>
-                            <th>IVA</th>
-                            <th>IEPS</th>
-                            <th>Total</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">UUID</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Subtotal</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IVA</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IEPS</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Total</th>
 
 
-                            <th>Depósitos</th>
-                            <th>Nombre del Banco</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Depósitos</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Nombre del Banco</th>
 
                             <!-- SAP FBL5 -->
-                            <th>Document Number</th>
-                            <th>Clearing Document</th>
-                            <th>Subtotal</th>
-                            <th>IVA</th>
-                            <th>IEPS</th>
-                            <th>Total Aplicación</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Document Number</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Clearing Document</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Subtotal</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IVA</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IEPS</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Total Aplicación</th>
 
                             <!-- SAT XML COMPLEMENTO DE PAGO -->
-                            <th>UUID Relacionado</th>
-                            <th>Subtotal</th>
-                            <th>IVA Cobrado %</th>
-                            <th>IEPS Cobrado %</th>
-                            <th>Total Aplicación</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">UUID Relacionado</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Subtotal</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IVA Cobrado %</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IEPS Cobrado %</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Total Aplicación</th>
 
                             <!-- VALIDADOR APLICACIÓN DE PAGOS -->
-                            <th></th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;"></th>
 
                             <!-- SAT XML COMPLEMENTO DE PAGO -->
-                            <th>Validador Subtotal</th>
-                            <th>Validador IVAS</th>
-                            <th>Validador IEPS</th>
-                            <th>Total Variación</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Validador Subtotal</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Validador IVAS</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Validador IEPS</th>
+                            <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Total Variación</th>
 
                         </tr>
                         </thead>
@@ -125,9 +125,14 @@
             $("#btn-conciliations-page").css("color", "#FFFFFF");
             $(".rect_conciliaciones_icon").attr("stroke", "white");
 
+
+
             let table = $('#cfo_reconciliations').DataTable({
-                searching: false,
+                pageLength: 50,
                 paging: true,
+                scrollY: '300px',
+                scrollX: true,
+                searching: false,
                 info: false,
                 ordering: false,
                 "ajax": {
@@ -156,8 +161,11 @@
                 let url_get_conciliations = "{{ url_for('get_filtered_data_conciliations') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data;
                 table.destroy();
                 table = $('#cfo_reconciliations').DataTable({
-                    searching: false,
+                    pageLength: 50,
                     paging: true,
+                    scrollY: '300px',
+                    scrollX: true,
+                    searching: false,
                     info: false,
                     ordering: false,
                     "ajax": {
