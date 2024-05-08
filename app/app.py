@@ -264,7 +264,7 @@ def send_reset_password_link():
         return render_template('login/send_reset_password_link.html')
 
 @app.route('/', methods=["GET"])
-@token_required
+# @token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
