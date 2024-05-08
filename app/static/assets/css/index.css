@@ -93,6 +93,14 @@
     text-align: center;
 }
 
+.tr_bancos_table td{
+    font-family: Inter;
+    font-size: 14px;
+    font-weight: 700;
+    color: #727272;
+    text-align: center;
+}
+
 .tr_style_validador_ieps_table td{
     font-family: Inter;
     font-size: 14px;
