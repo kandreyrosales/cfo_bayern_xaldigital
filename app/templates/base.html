@@ -36,6 +36,10 @@
                     <label style="display: block"><span class="filter_label">RFC</span></label>
                     <select id="rfc_selector"></select>
                 </div>
+                <div class="form-group col-md-5 me-4">
+                    <label style="display: block"><span class="filter_label">Cliente</span></label>
+                    <select id="customer_name_selector"></select>
+                </div>
                 <div class="form-group col-md-3 me-4" style="margin-top: auto;">
                     <button type="button" class="btn btn-sm btn-light" id="search_data_filter_button">Filtrar
                         <i class="bi bi-search"></i>
@@ -114,6 +118,18 @@
         }).then(function (response) {
             var results = response.map(id => ({ "id": id, "text": id }));
             $('#rfc_selector').select2({
+                width: '100%',
+                data: results
+            })
+        });
+
+        // Custom AJAX call for Customer Name List
+        $.ajax({
+            url: "{{ url_for('get_customer_name_list') }}",
+            type: 'GET'
+        }).then(function (response) {
+            var results = response.map(id => ({ "id": id, "text": id }));
+            $('#customer_name_selector').select2({
                 width: '100%',
                 data: results
             })

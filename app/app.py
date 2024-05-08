@@ -270,51 +270,54 @@ def index():
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
-    transactions_labels = ["Totales", "Exitosas", "Revertidas", "Diferencias", "Pendientes"]
+    transactions_labels = ["Totales", "Exitosas", "Fallidas", "Fallidas sin CFDI", "Falta emitir Complemento"]
     transactions_data = [100, 50, 60, 30, 70]
 
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
     rfc = request.args.get("rfc")
+    customer = request.args.get("customer")
 
-    where_statement = ""
-    if start_date and end_date and rfc:
-        if rfc == "Todos":
-            where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' """
-        else:
-            where_statement = f""" where fecha BETWEEN '{start_date}' and '{end_date}' and rfc='{rfc}' """
+    where_statement_sql, filters_present = generate_filter_sql(
+        start_date=start_date,
+        end_date=end_date,
+        rfc=rfc,
+        customer=customer
+    )
 
-    # Validador IVA chart data
+    # Validador IVA table data
     conn, cur = connection_db()
     query_validador_ivas = f"""
-        select validador_subtotal_validador_iva,  validar_ivas_validador_iva, 
-        validador_ieps_validador_iva, total_variacion_validador_iva 
-        from conciliaciones {where_statement} limit 5
+        select iva_cobrado_sat,  iva, validar_ivas_validador_iva
+        from dashboard {where_statement_sql} limit 5
     """
     query_validador_ivas_rows = get_query_rows(
         conn=conn,
         cur=cur,
         query=query_validador_ivas)
 
-    # Ingresos chart data
+    # Validador IEPS table data
     conn, cur = connection_db()
-    query_ingresos = f"""
-        select transaccion, cliente, factura_bayer, total_aplicacion_sap from conciliaciones {where_statement} limit 5
+    query_validador_ieps = f"""
+        select ieps_cobrado_sat,  ieps, validador_ieps_validador_iva
+        from dashboard {where_statement_sql} limit 5
     """
-    query_ingresos_rows = get_query_rows(
+    query_validador_ieps_rows = get_query_rows(
         conn=conn,
         cur=cur,
-        query=query_ingresos)
+        query=query_validador_ieps)
 
     # Cliente con mayor variacion Chart Data
     conn, cur = connection_db()
     query_clientes_mayor_variacion = f"""
     select cliente,
-           CASE WHEN SUM(total_variacion_validador_iva) IS NOT NULL
-               THEN SUM(total_variacion_validador_iva) ELSE 0
-               END AS total_variacion_por_cliente
-    from conciliaciones
-    {where_statement}
+       CASE 
+            WHEN SUM(total_variacion_validador_iva) > 0 
+                THEN round(SUM(total_variacion_validador_iva), 2) 
+            ELSE 0
+       END AS total_variacion_por_cliente
+    from conciliaciones_raw_data
+    {where_statement_sql}
     group by cliente
     order by total_variacion_por_cliente DESC"""
     query_clientes_mayor_variacion_rows = get_query_rows(
@@ -330,7 +333,7 @@ def index():
 
     conn, cur = connection_db()
 
-    transaction_count_query = f"""select count(*) from conciliaciones {where_statement}"""
+    transaction_count_query = 0
     transaction_sum_query_result = get_query_rows(
         conn=conn,
         cur=cur,
@@ -344,7 +347,7 @@ def index():
         transactions_labels=transactions_labels,
         transactions_data=transactions_data,
         validador_iva_rows=query_validador_ivas_rows,
-        ingresos_rows=query_ingresos_rows,
+        ingresos_rows=[],
         transactions_count = transaction_sum_query_result
     )
 
@@ -355,6 +358,21 @@ def get_rfc_list():
     """
     conn, cur = connection_db()
     query_uuid = """select DISTINCT (rfc) from conciliaciones ;"""
+    data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
+    new_item = ("Todos", )
+    try:
+        return [new_item]+data_from_db
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+@app.route('/get_customer_name_list', methods=["GET"])
+def get_customer_name_list():
+    """
+    Getting customer names list from the Database
+    """
+    conn, cur = connection_db()
+    query_uuid = """select DISTINCT (cliente) from conciliaciones ;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
     new_item = ("Todos", )
     try:
@@ -377,6 +395,35 @@ def reconciliations_data_cfo():
         initial_data_for_table=rows_data_view,
     )
 
+def generate_filter_sql(start_date, end_date, rfc, customer):
+    """
+    Smart query for Where statement using variables from the page
+    """
+    where_query = """WHERE """
+    query_date_range = f"""fecha BETWEEN '{start_date}' and '{end_date}' """
+    query_rfc = f""" rfc='{rfc}' """
+    query_customer = f""" cliente='{customer}' """
+
+    field_flag = False
+    if start_date and end_date:
+        field_flag = True
+        where_query += f"{query_date_range}"
+    if rfc and rfc != 'all':
+        if field_flag:
+            where_query += f" AND {query_rfc}"
+        else:
+            where_query += f"{query_rfc}"
+        field_flag = True
+    if customer and customer != 'all':
+        if field_flag:
+            where_query += f" AND {query_customer}"
+        else:
+            where_query += f"{query_customer}"
+            field_flag = True
+    if field_flag:
+        return where_query, True
+    return where_query, False
+
 @app.route('/get_filtered_data_conciliations', methods=["GET"])
 def get_filtered_data_conciliations():
     conn, cur = connection_db()
@@ -384,33 +431,30 @@ def get_filtered_data_conciliations():
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
     rfc = request.args.get("rfc")
+    customer = request.args.get("customer")
 
     select_table_fields = """SELECT rfc, CAST(factura_bayer AS BIGINT), cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
             uuid, subtotal, iva, ieps, total,
-            depositos, nombre_del_banco, validador_aplicacion_pagos, 
+            depositos, nombre_del_banco, to_char(fecha_deposito, 'DD/MM/YYYY'), validador_aplicacion_pagos, 
             CAST(document_number_sap as BIGINT), CAST(clearing_document_sap AS BIGINT), subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
             uuid_relacionado, subtotal_sat, iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, 
             validador_subtotal_validador_iva, validar_ivas_validador_iva,
             validador_ieps_validador_iva, total_variacion_validador_iva"""
 
-    if start_date and end_date and rfc and rfc != "all":
+    where_statement_sql, filters_present = generate_filter_sql(
+        start_date=start_date,
+        end_date=end_date,
+        rfc=rfc,
+        customer=customer
+    )
+    if filters_present:
         query_conciliations_view_filtered = f"""
-            {select_table_fields} from conciliaciones where rfc='{rfc}' and fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
-        """
-    elif start_date and end_date and rfc and rfc == "all":
-        query_conciliations_view_filtered = f"""
-            {select_table_fields} from conciliaciones where fecha BETWEEN '{start_date}' and '{end_date}' order by cliente, fecha
-        """
-    elif not start_date and not end_date and rfc and rfc != 'all':
-        query_conciliations_view_filtered = f"""
-                {select_table_fields} from conciliaciones where rfc='{rfc}' order by cliente, fecha
-        """
-    elif not start_date and not end_date and rfc == 'all':
-        query_conciliations_view_filtered = f"""
-                {select_table_fields} from conciliaciones order by cliente, fecha
+            {select_table_fields} from conciliaciones {where_statement_sql} order by cliente, fecha
         """
     else:
-        return jsonify([])
+        query_conciliations_view_filtered = f"""
+                    {select_table_fields} from conciliaciones order by cliente, fecha
+                """
     result = get_query_rows(
         cur=cur,
         conn=conn,
@@ -642,8 +686,6 @@ def subir_archivo():
     # Prepare data for bulk insertion Analisis IVA Cobrado BHC sheet
     data_collection_analisis_iva_cobrado_table = custom_values_for_insert(data_sheet=analisis_iva_cobrado_sheet, max_col=36)
     final_result_analisis_iva_cobrado_data = ",".join(data_collection_analisis_iva_cobrado_table)
-
-
 
     insert_query = f"""SET datestyle = dmy; 
         INSERT INTO cfdi_ingreso ({column_names_str_ingresos}) VALUES {final_result_ingreso_data};

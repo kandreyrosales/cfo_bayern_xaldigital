@@ -72,112 +72,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="col">
-                    <div class="card" >
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h5 class="card-title">IVA SAP</h5>
-                                </div>
-                                <div>
-                                    <div class="custom_icon_rectangle">
-                                        <img src="{{ url_for('static', filename='assets/img/vat.png') }}" alt="Logo IVA SAP" class="logo">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <p class="second_value_card">00000</p>
-                            </div>
-                            <div class="row">
-                                <p class="date_card_value">03-04-2024</p>
-                            </div>
-                            <div class="row">
-
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <p class="percentage_card_value" style="color: #44D300">65%</p>
-                                </div>
-                                <div class="col">
-                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
-                                    <div class="row versus_card_value">26% vs objetivo</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card" >
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h5 class="card-title">IVA SAT</h5>
-                                </div>
-                                <div>
-                                    <div class="custom_icon_rectangle">
-                                        <img src="{{ url_for('static', filename='assets/img/iva_sat.png') }}" alt="Logo IVA SAT" class="logo">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <p class="second_value_card">00000</p>
-                            </div>
-                            <div class="row">
-                                <p class="date_card_value">03-04-2024</p>
-                            </div>
-                            <div class="row">
-
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <p class="percentage_card_value" style="color: #44D300">65%</p>
-                                </div>
-                                <div class="col">
-                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
-                                    <div class="row versus_card_value">26% vs objetivo</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="row align-items-start" style="margin-top: 20px">
-                <div class="col-3">
-                    <div class="card" >
-                        <div class="card-body">
-
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h5 class="card-title">IEPS</h5>
-                                </div>
-                                <div>
-                                    <div class="custom_icon_rectangle">
-                                        <img src="{{ url_for('static', filename='assets/img/vat.png') }}" alt="Logo IEPS" class="logo">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <p class="second_value_card">00000</p>
-                            </div>
-                            <div class="row">
-                                <p class="date_card_value">03-04-2024</p>
-                            </div>
-                            <div class="row">
-
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <p class="percentage_card_value" style="color: #44D300">65%</p>
-                                </div>
-                                <div class="col">
-                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
-                                    <div class="row versus_card_value">26% vs objetivo</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-4">
+                <div class="col-6">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Validador IVA</h5>
@@ -205,7 +102,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-5">
+                <div class="col-6">
                     <div class="card" >
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
@@ -278,10 +175,12 @@
             }
         });
         $(document).ready(function() {
+
             // Retrieve data for filters
             const start_date = localStorage.getItem('start_date');
             const end_date = localStorage.getItem('end_date');
             const rfc = localStorage.getItem('rfc');
+            const customer_name = localStorage.getItem('customer_name');
             if (start_date !== null){
                  $('#calendar_filter_start_date').val(start_date);
                 $('#calendar_filter_end_date').val(end_date);
@@ -289,6 +188,10 @@
             if(rfc !== null){
                 $('#rfc_selector').val(rfc).trigger('change'); // Select option by value
                 $('#rfc_selector option:first').prop('selected', true).trigger('change');
+            }
+            if(customer_name !== null){
+                $('#customer_name_selector').val(rfc).trigger('change'); // Select option by value
+                $('#customer_name_selector option:first').prop('selected', true).trigger('change');
             }
             /* End retrieving data for filters */
 
@@ -366,13 +269,21 @@
                 let start_date_data = $('#calendar_filter_start_date').val();
                 let end_date_data = $('#calendar_filter_end_date').val();
                 let rfc_data = $("#rfc_selector option:selected").text();
+                let customer_name_data = $("#customer_name_selector option:selected").text();
+                if (rfc_data === '' || rfc_data === 'Todos') {
+                    rfc_data = 'all';
+                }
+                if (customer_name_data === '' || customer_name_data === 'Todos') {
+                    customer_name_data = 'all';
+                }
 
                 // Store data for filters
                 localStorage.setItem('start_date', start_date_data);
                 localStorage.setItem('end_date', end_date_data);
                 localStorage.setItem('rfc', rfc_data);
+                localStorage.setItem('customer_name', customer_name_data);
 
-                location.href="{{ url_for('index') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data;
+                location.href="{{ url_for('index') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data + "&customer=" + customer_name_data;
             });
         });
     </script>
