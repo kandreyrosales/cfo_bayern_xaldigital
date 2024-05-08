@@ -209,7 +209,7 @@ def create_tables_rds():
           IF price = 0 THEN
             RETURN '$0';
           ELSE
-            RETURN to_char(price, '$99G999G999D00');
+            RETURN to_char(price, 'FM$999,999,999.00');
           END IF;
         END;
         $$ LANGUAGE plpgsql;
