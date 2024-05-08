@@ -18,17 +18,17 @@
                             </div>
 
                             <div class="row">
-                                <p class="second_value_card">00000</p>
+                                <p class="second_value_card">$122.861.334.43</p>
                             </div>
-                            <div class="row">
-                                <p class="date_card_value">03-04-2024</p>
-                            </div>
+{#                            <div class="row">#}
+{#                                <p class="date_card_value">03-04-2024</p>#}
+{#                            </div>#}
                             <div class="row">
 
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value" style="color: #C61A1A">46%</p>
+                                    <p class="percentage_card_value" style="color: #89D329">100%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
@@ -43,7 +43,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h5 class="card-title">Banco</h5>
+                                    <h5 class="card-title">Banamex</h5>
                                 </div>
                                 <div>
                                     <div class="custom_icon_rectangle">
@@ -52,17 +52,51 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <p class="second_value_card">00000</p>
+                                <p class="second_value_card">$3.834.196</p>
                             </div>
-                            <div class="row">
-                                <p class="date_card_value">03-04-2024</p>
-                            </div>
+{#                            <div class="row">#}
+{#                                <p class="date_card_value">03-04-2024</p>#}
+{#                            </div>#}
                             <div class="row">
 
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <p class="percentage_card_value" style="color: #C61A1A">46%</p>
+                                    <p class="percentage_card_value" style="color: #89D329">3%</p>
+                                </div>
+                                <div class="col">
+                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
+                                    <div class="row versus_card_value">26% vs objetivo</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card" >
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title">IH Bank</h5>
+                                </div>
+                                <div>
+                                    <div class="custom_icon_rectangle">
+                                        <img src="{{ url_for('static', filename='assets/img/banco.png') }}" alt="Logo Banco" class="logo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <p class="second_value_card">$119.035.431</p>
+                            </div>
+{#                            <div class="row">#}
+{#                                <p class="date_card_value">03-04-2024</p>#}
+{#                            </div>#}
+                            <div class="row">
+
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <p class="percentage_card_value" style="color: #89D329">97%</p>
                                 </div>
                                 <div class="col">
                                     <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
@@ -82,9 +116,8 @@
                                 <table id="validador_iva_table" class="table">
                                     <thead>
                                     <tr style="text-align: center;">
-                                        <th><button class="btn btn-light validador_table_button_headers">Subtotal</button></th>
-                                        <th><button class="btn btn-light validador_table_button_headers">IVAS</button></th>
-                                        <th><button class="btn btn-light validador_table_button_headers">IEPS</button></th>
+                                        <th><button class="btn btn-light validador_table_button_headers">IVA Cobrado %</button></th>
+                                        <th><button class="btn btn-light validador_table_button_headers">IVA</button></th>
                                         <th><button class="btn btn-light validador_table_button_headers">Total</button></th>
                                     </tr>
                                     </thead>
@@ -107,27 +140,26 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div class="form-group">
-                                    <h5 class="card-title">Ingresos</h5>
+                                    <h5 class="card-title">Validador IEPS</h5>
                                 </div>
                                 <div class="form-group">
                                     <p id="more_info_ingresos"><a href="#" style="text-decoration:none;color: #000000;">Ver Más</a></p>
                                 </div>
                             </div>
                             <div class="table-responsive">
-                                <table id="ingresos_table" class="table spaced-table">
+                                <table id="validador_ieps_table" class="table spaced-table">
                                     <thead>
-                                    <tr id="tr_ingresos_table">
-                                        <th><button class="btn btn-light ingresos_table_button_headers">Transacción</button></th>
-                                        <th><button class="btn btn-light ingresos_table_button_headers">Cliente</button></th>
-                                        <th><button class="btn btn-light ingresos_table_button_headers">Factura</button></th>
-                                        <th><button class="btn btn-light ingresos_table_button_headers">Aplicación</button></th>
+                                    <tr id="tr_validador_ieps_table">
+                                        <th><button class="btn btn-light validador_ieps_table_button_headers">IEPS Cobrado %</button></th>
+                                        <th><button class="btn btn-light validador_ieps_table_button_headers">IEPS</button></th>
+                                        <th><button class="btn btn-light validador_ieps_table_button_headers">Total</button></th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for ingresos_row in ingresos_rows %}
-                                        <tr class="tr_style_ingresos_table">
-                                            {% for ingresos_cell in ingresos_row %}
-                                                <td>{{ ingresos_cell }}</td>
+                                    {% for validador_ieps_row in validador_ieps_rows %}
+                                        <tr class="tr_style_validador_ieps_table">
+                                            {% for ieps_cell in validador_ieps_row %}
+                                                <td>{{ ieps_cell }}</td>
                                             {% endfor %}
                                         </tr>
                                     {% endfor %}
@@ -143,7 +175,7 @@
                 <div class="col">
                     <div class="card" >
                         <div class="card-body">
-                            <h5 class="card-title">Cliente con mayor variación</h5>
+                            <h5 class="card-title">Variación Ingresos vs Cobros</h5>
                             <div>
                                 <canvas id="variationBarsVertical"></canvas>
                             </div>
@@ -156,6 +188,16 @@
                             <h5 class="card-title">Transacciones</h5>
                             <div>
                                 <canvas id="transactionsBarsHorizontal"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card" >
+                        <div class="card-body">
+                            <h5 class="card-title">Cliente con mayor Ingreso</h5>
+                            <div>
+                                <canvas id="ingresosBarsVertical"></canvas>
                             </div>
                         </div>
                     </div>
@@ -232,6 +274,41 @@
                 options: variations_options
             });
             /* End Variation Chart and Data */
+
+            /* Ingresos Chart and Data */
+            const ingreso_data = {{ ingresos_chart_data|tojson }};
+            const labels_ingresos_data = {{ ingresos_chart_labels|tojson }};
+            const canvas_ingresos = document.getElementById("ingresosBarsVertical");
+            const ctx_ingresos_chart = canvas_ingresos.getContext("2d");
+            const gradient_ingresos = ctx_ingresos_chart.createLinearGradient(0, 0, 0, 400);
+            gradient_ingresos.addColorStop(0, "#00BCFF");
+            gradient_ingresos.addColorStop(1, "#89D329");
+            const ingresos_data = {
+                labels: labels_ingresos_data,
+                datasets: [{
+                    label: 'Ingresos',
+                    data: ingreso_data,
+                    backgroundColor: gradient_ingresos
+                }]
+            };
+            const ingresos_options = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                indexAxis: 'y'
+            };
+
+            const ingresosChart = new Chart("ingresosBarsVertical", {
+                type: 'bar',
+                data: ingresos_data,
+                options: ingresos_options
+            });
+            /* End Ingresos Chart and Data */
+
+
 
             /* Transactions Chart and Data */
             const transactions_data_list = {{ transactions_data|tojson }};

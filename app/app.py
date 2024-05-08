@@ -271,7 +271,7 @@ def index():
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
     transactions_labels = ["Totales", "Exitosas", "Fallidas", "Fallidas sin CFDI", "Falta emitir Complemento"]
-    transactions_data = [100, 50, 60, 30, 70]
+    transactions_data = [35, 26, 6, 1, 3]
 
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
@@ -284,6 +284,9 @@ def index():
         rfc=rfc,
         customer=customer
     )
+    if not filters_present:
+        where_statement_sql = ""
+
 
     # Validador IVA table data
     conn, cur = connection_db()
@@ -307,38 +310,61 @@ def index():
         cur=cur,
         query=query_validador_ieps)
 
-    # Cliente con mayor variacion Chart Data
+    # # Cliente con mayor variacion Chart Data
+    # conn, cur = connection_db()
+    # query_clientes_mayor_variacion = f"""
+    # select cliente,
+    #    CASE
+    #         WHEN SUM(total_variacion_validador_iva) > 0
+    #             THEN round(SUM(total_variacion_validador_iva), 2)
+    #         ELSE 0
+    #    END AS total_variacion_por_cliente
+    # from conciliaciones_raw_data
+    # {where_statement_sql}
+    # group by cliente
+    # order by total_variacion_por_cliente DESC"""
+    # query_clientes_mayor_variacion_rows = get_query_rows(
+    #     conn=conn,
+    #     cur=cur,
+    #     query=query_clientes_mayor_variacion)
+    #
+    # variation_labels = []
+    # variation_data = []
+    # if query_clientes_mayor_variacion_rows:
+    #     variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
+    #     variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
+
+    variation_labels = ["MONSANTO COMERCIAL", "Bayer AG Crop Science", "TIENDAS SORIANA",
+                        "2022 ENVIRONMENTAL SCIENCE", "Bayer HealthCare LLC Consumer Care Division"]
+    variation_data = [93.79, 24.66, 2.45, 1.38, 0.58]
+
     conn, cur = connection_db()
-    query_clientes_mayor_variacion = f"""
-    select cliente,
-       CASE 
-            WHEN SUM(total_variacion_validador_iva) > 0 
-                THEN round(SUM(total_variacion_validador_iva), 2) 
-            ELSE 0
-       END AS total_variacion_por_cliente
-    from conciliaciones_raw_data
-    {where_statement_sql}
-    group by cliente
-    order by total_variacion_por_cliente DESC"""
-    query_clientes_mayor_variacion_rows = get_query_rows(
-        conn=conn,
-        cur=cur,
-        query=query_clientes_mayor_variacion)
-
-    variation_labels = []
-    variation_data = []
-    if query_clientes_mayor_variacion_rows:
-        variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
-        variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
-
-    conn, cur = connection_db()
-
-    transaction_count_query = 0
     transaction_sum_query_result = get_query_rows(
         conn=conn,
         cur=cur,
-        query=transaction_count_query)[0][0]
+        query=f"""select count(*) from cfdi_ingreso;"""
+    )[0][0]
 
+    conn, cur = connection_db()
+    ingresos_totales_query = """select SUM(total_cfdi) FROM cfdi_ingreso;"""
+    ingresos_totales_query_result = get_query_rows(
+        conn=conn,
+        cur=cur,
+        query=ingresos_totales_query
+    )[0][0]
+
+
+    conn, cur = connection_db()
+    ingresos_data_chart_query = """
+        select cliente, sum(depositos) as total from conciliaciones_raw_data
+        group by cliente order by total DESC;"""
+    ingresos_data_chart_query_result = get_query_rows(
+        conn=conn,
+        cur=cur,
+        query=ingresos_data_chart_query
+    )
+    ingresos_chart_labels = [row[0] for row in ingresos_data_chart_query_result]
+    ingresos_chart_data = [row[1] for row in ingresos_data_chart_query_result]
 
     return render_template(
         'index.html',
@@ -347,8 +373,11 @@ def index():
         transactions_labels=transactions_labels,
         transactions_data=transactions_data,
         validador_iva_rows=query_validador_ivas_rows,
-        ingresos_rows=[],
-        transactions_count = transaction_sum_query_result
+        validador_ieps_rows=query_validador_ieps_rows,
+        transactions_count = transaction_sum_query_result,
+        ingresos_totales = ingresos_totales_query_result,
+        ingresos_chart_data = ingresos_chart_data,
+        ingresos_chart_labels = ingresos_chart_labels
     )
 
 @app.route('/get_rfc_list', methods=["GET"])

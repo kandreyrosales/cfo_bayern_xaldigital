@@ -43,7 +43,7 @@
     color: #FFFFFF;
 }
 
-.ingresos_table_button_headers, .ingresos_table_button_headers:hover{
+.validador_ieps_table_button_headers, .validador_ieps_table_button_headers:hover{
     background-color: #0BBEF0;
     font-family: Inter;
     font-size: 14px;
@@ -93,7 +93,7 @@
     text-align: center;
 }
 
-.tr_style_ingresos_table td{
+.tr_style_validador_ieps_table td{
     font-family: Inter;
     font-size: 14px;
     font-weight: 700;
@@ -119,7 +119,7 @@
 }
 
 
-.tr_style_validador_iva_table, .tr_style_ingresos_table{
+.tr_style_validador_iva_table, .tr_style_validador_ieps_table{
     text-align: center;
 }
 
