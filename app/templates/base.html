@@ -26,21 +26,25 @@
             <form class="d-flex">
                 <div class="form-group me-4">
                     <label for="calendar_filter_start_date" style="display: block"><span class="filter_label">Fecha de Inicio</span></label>
-                    <input type="date" name="calendar_filter_start_date" id="calendar_filter_start_date">
+                    <input type="date" name="calendar_filter_start_date" id="calendar_filter_start_date" lang="es-MX">
                 </div>
                 <div class="form-group me-4">
-                    <label for="calendar_filter_end_date" style="display: block"><span class="filter_label">Fecha de Fin</span></label>
+                    <label for="calendar_filter_end_date" style="display: block"><span class="filter_label" lang="es-MX">Fecha de Fin</span></label>
                     <input type="date" name="calendar_filter_end_date" id="calendar_filter_end_date">
                 </div>
-                <div class="form-group col-md-5 me-4">
+                <div class="form-group me-4">
                     <label style="display: block"><span class="filter_label">RFC</span></label>
-                    <select id="rfc_selector"></select>
+                    <select id="rfc_selector" style="width: 150px"></select>
                 </div>
-                <div class="form-group col-md-5 me-4">
+                <div class="form-group me-4">
                     <label style="display: block"><span class="filter_label">Cliente</span></label>
-                    <select id="customer_name_selector"></select>
+                    <select id="customer_name_selector" style="width: 180px"></select>
                 </div>
-                <div class="form-group col-md-3 me-4" style="margin-top: auto;">
+                <div class="form-group me-4">
+                    <label for="calendar_filter_value_date_start_date" style="display: block"><span class="filter_label">Mes Cobranza</span></label>
+                    <input type="month" value="2024-04" name="calendar_filter_value_date_start_date" id="calendar_filter_value_date_start_date" lang="es-MX">
+                </div>
+                <div class="form-group me-4" style="margin-top: auto;">
                     <button type="button" class="btn btn-sm btn-light" id="search_data_filter_button">Filtrar
                         <i class="bi bi-search"></i>
                     </button>
@@ -118,7 +122,7 @@
         }).then(function (response) {
             var results = response.map(id => ({ "id": id, "text": id }));
             $('#rfc_selector').select2({
-                width: '100%',
+                width: 'resolve',
                 data: results
             })
         });
@@ -130,7 +134,7 @@
         }).then(function (response) {
             var results = response.map(id => ({ "id": id, "text": id }));
             $('#customer_name_selector').select2({
-                width: '100%',
+                width: 'resolve',
                 data: results
             })
         })

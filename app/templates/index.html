@@ -20,12 +20,6 @@
                             <div class="row">
                                 <p class="second_value_card">$122,861,334.43</p>
                             </div>
-{#                            <div class="row">#}
-{#                                <p class="date_card_value">03-04-2024</p>#}
-{#                            </div>#}
-                            <div class="row">
-
-                            </div>
                             <div class="row">
                                 <div class="col">
                                     <p class="percentage_card_value" style="color: #89D329">100%</p>
@@ -43,7 +37,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h5 class="card-title">Banamex</h5>
+                                    <h5 class="card-title">Bancos</h5>
                                 </div>
                                 <div>
                                     <div class="custom_icon_rectangle">
@@ -52,62 +46,36 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <p class="second_value_card">$3,834,196</p>
-                            </div>
-{#                            <div class="row">#}
-{#                                <p class="date_card_value">03-04-2024</p>#}
-{#                            </div>#}
-                            <div class="row">
-
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <p class="percentage_card_value" style="color: #89D329">3%</p>
-                                </div>
-                                <div class="col">
-                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
-                                    <div class="row versus_card_value">100% vs objetivo</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card" >
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h5 class="card-title">IH Bank</h5>
-                                </div>
-                                <div>
-                                    <div class="custom_icon_rectangle">
-                                        <img src="{{ url_for('static', filename='assets/img/banco.png') }}" alt="Logo Banco" class="logo">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <p class="second_value_card">$119,035,431</p>
-                            </div>
-{#                            <div class="row">#}
-{#                                <p class="date_card_value">03-04-2024</p>#}
-{#                            </div>#}
-                            <div class="row">
-
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <p class="percentage_card_value" style="color: #89D329">97%</p>
-                                </div>
-                                <div class="col">
-                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
-                                    <div class="row versus_card_value">100% vs objetivo</div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                        <tr style="text-align: center;">
+                                            <th><button class="btn btn-light validador_table_button_headers">Nombre</button></th>
+                                            <th><button class="btn btn-light validador_table_button_headers">$</button></th>
+                                            <th><button class="btn btn-light validador_table_button_headers">% Objetivo</button></th>
+                                            <th><button class="btn btn-light validador_table_button_headers">Transacciones</button></th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr class="tr_style_validador_iva_table">
+                                            <td>Banamex</td>
+                                            <td>$3,834,196</td>
+                                            <td>3%</td>
+                                            <td>6</td>
+                                        </tr>
+                                        <tr class="tr_style_validador_iva_table">
+                                            <td>IH Bank</td>
+                                            <td>$119,035,431</td>
+                                            <td>97%</td>
+                                            <td>4</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row align-items-start" style="margin-top: 20px">
                 <div class="col">
                     <div class="card" >
                         <div class="card-body">
@@ -118,6 +86,9 @@
                         </div>
                     </div>
                 </div>
+
+            </div>
+            <div class="row align-items-start" style="margin-top: 20px">
                 <div class="col">
                     <div class="card">
                         <div class="card-body">
@@ -225,7 +196,7 @@
             const rfc = localStorage.getItem('rfc');
             const customer_name = localStorage.getItem('customer_name');
             if (start_date !== null){
-                 $('#calendar_filter_start_date').val(start_date);
+                $('#calendar_filter_start_date').val(start_date);
                 $('#calendar_filter_end_date').val(end_date);
             }
             if(rfc !== null){
@@ -258,11 +229,11 @@
                     data: variation_data,
                     backgroundColor: gradient_variations
                 },
-                {
-                    label: 'Variación',
-                    data: variation_data,
-                    backgroundColor: "#727272"
-                }]
+                    {
+                        label: 'Variación',
+                        data: variation_data,
+                        backgroundColor: "#727272"
+                    }]
             };
             const variations_options = {
                 responsive: true,

@@ -176,7 +176,7 @@ def create_tables_rds():
         """
         INSERT INTO BANCOS (depositos, nombre, document_number, value_date) VALUES
             (1384805.03,'Banamex 503292',5020000395, '19/12/2023'),
-            (246598572.00,'IHBank',5020000514, '28/12/2023'),
+            (24659857.02,'IHBank',5020000514, '28/12/2023'),
             (0,'IHBank',5020000509, null),
             (0,'IHBank',5020000511, null),
             (0,'IHBank',5020000513, null),
