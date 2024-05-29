@@ -207,3 +207,19 @@ td, th {
     align-items: center;  /* Centers content vertically */
     justify-content: center;  /* Centers content horizontally */
 }
+
+.chart-container {
+  width: 350px; /* Default width for larger screens */
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    width: 350px; /* Adjust width for smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    width: 100%; /* Set to 100% for very small screens */
+  }
+}
