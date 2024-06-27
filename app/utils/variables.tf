@@ -40,13 +40,13 @@ variable "bucket_name" {
 variable "accessKeyId" {
  type        = string
  description = "accessKeyId AWS"
- default     = "AKIATHHFBO3MRWNZG7PA"
+ default     = "dsffsdfsdfsdf"
 }
 
 variable "secretAccessKey" {
  type        = string
  description = "secretAccessKey AWS"
- default     = "zUTkeYFTFSQbEXTwfP0CABoa3o/PM44XfmlovN2p"
+ default     = "asdasdasdasdasd"
 }
 
 variable "ssh_key_pair_name" {
