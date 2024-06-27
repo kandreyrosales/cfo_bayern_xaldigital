@@ -9,7 +9,7 @@ variable "region_aws" {
 variable "aws_account_number" {
  type        = string
  description = "AWS Account Number"
- default     = "221671159513"
+ default     = ""
 }
 
 variable "cognito_pool_name" {
@@ -40,13 +40,13 @@ variable "bucket_name" {
 variable "accessKeyId" {
  type        = string
  description = "accessKeyId AWS"
- default     = "dsffsdfsdfsdf"
+ default     = ""
 }
 
 variable "secretAccessKey" {
  type        = string
  description = "secretAccessKey AWS"
- default     = "asdasdasdasdasd"
+ default     = ""
 }
 
 variable "ssh_key_pair_name" {
