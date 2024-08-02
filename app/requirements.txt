@@ -4,3 +4,6 @@ boto3
 pyjwt
 openpyxl
 psycopg2-binary
+redis
+celery
+pandas

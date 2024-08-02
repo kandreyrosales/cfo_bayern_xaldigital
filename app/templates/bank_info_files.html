@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="ms-5 me-5">
+      <h3 class="text-center text_font mb-3">Importador de archivos Bancarios Semanal</h3>
+        <form action="/subir_info_bancos" method="post" enctype="multipart/form-data">
+            <div class="d-flex flex-row mb-3">
+                <div class="row">
+                {% for bank in banks %}
+                    <div class="col-3 mt-3">
+                        <p class="form-label text_font fw-bold mb-0">{{bank|upper}}</p>
+                        <input
+                                class="form-control btn-outline-light btn-sm rounded-3 input_button"
+                                type="file"
+                                name="bank"
+                                accept=".pdf"
+                                required>
+                    </div>
+                {% endfor %}
+            </div>
+            </div>
+            <div  class="col">
+                <input class="btn btn-light validador_ieps_table_button_headers" type="submit" value="Subir Archivos">
+            </div>
+        </form>
+        {% if error %}
+            <p class="text-danger">{{ error }}</p>
+        {% endif %}
+        {% if success %}
+            <p class="text-success">{{ success }}</p>
+        {% endif %}
+{% endblock%}

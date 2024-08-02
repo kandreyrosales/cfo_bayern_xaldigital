@@ -7,28 +7,38 @@ from datetime import datetime
 from functools import wraps
 import psycopg2
 
-from openpyxl.reader.excel import load_workbook
-from openpyxl import Workbook
+
+from controllers.upload_files import UploadFilesController
 
 app = Flask(__name__)
+
+
 
 app.secret_key = 'xaldigitalcfobayer!'
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
-CLIENT_ID_COGNITO =os.getenv("client_id")
-USER_POOL_ID_COGNITO =os.getenv("user_pool")
+CLIENT_ID_COGNITO = os.getenv("client_id")
+USER_POOL_ID_COGNITO = os.getenv("user_pool")
+S3_BUCKET_NAME = os.getenv("s3_bucket_name", "test")
 
 # boto3 clients
-cognito_client = boto3.client('cognito-idp', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
-lambda_client = boto3.client('lambda', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
-s3_client = boto3.client('s3', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey)
+cognito_client = boto3.client('cognito-idp', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId,
+                              aws_secret_access_key=secretAccessKey)
+lambda_client = boto3.client('lambda', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId,
+                             aws_secret_access_key=secretAccessKey)
+s3_client = boto3.client('s3',
+                         region_name=AWS_REGION_PREDICTIA,
+                         aws_access_key_id=accessKeyId,
+                         aws_secret_access_key=secretAccessKey
+                         )
 
 db_host = os.getenv("db_endpoint")
 db_name = "postgres"
 db_user = "cfo_user"
 db_password = os.getenv("password_db")
+
 
 def authenticate_user(username, password):
     try:
@@ -99,6 +109,7 @@ def login():
             secretAccessKey=secretAccessKey
         )
 
+
 @app.route('/registro', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -150,6 +161,7 @@ def signup():
     else:
         return render_template('login/signup.html')
 
+
 @app.route('/confirmar_cuenta', methods=['GET', 'POST'])
 def confirm_account_code():
     email = request.form['email_not_confirmed']
@@ -181,11 +193,13 @@ def confirm_account_code():
     else:
         return render_template('login/confirm_account_code.html', email=email)
 
+
 @app.route('/logout')
 def logout():
     # Clear the session data
     session.clear()
     return redirect(url_for('login'))
+
 
 def token_required(f):
     @wraps(f)
@@ -194,7 +208,8 @@ def token_required(f):
         if not token:
             return render_template('login/login.html')
         try:
-            decoded_token = jwt.decode(token, options={"verify_signature": False})  # Decode the token without verifying signature
+            decoded_token = jwt.decode(token, options={
+                "verify_signature": False})  # Decode the token without verifying signature
             expiration_time = datetime.utcfromtimestamp(decoded_token['exp'])
             current_time = datetime.utcnow()
             if expiration_time > current_time:
@@ -205,7 +220,9 @@ def token_required(f):
         except jwt.ExpiredSignatureError:
             return render_template('login/login.html',
                                    error="Sesión Expirada. Ingrese sus datos de nuevo")
+
     return decorated_function
+
 
 @app.route('/olvido_contrasena', methods=['GET', 'POST'])
 def forgot_password():
@@ -238,6 +255,7 @@ def forgot_password():
     else:
         return render_template('login/reset_password.html')
 
+
 @app.route('/enviar_link_contrasena', methods=['GET', 'POST'])
 def send_reset_password_link():
     if request.method == "POST":
@@ -263,6 +281,7 @@ def send_reset_password_link():
     else:
         return render_template('login/send_reset_password_link.html')
 
+
 @app.route('/', methods=["GET"])
 @token_required
 def index():
@@ -286,7 +305,6 @@ def index():
     )
     if not filters_present:
         where_statement_sql = ""
-
 
     # Validador IVA table data
     conn, cur = connection_db()
@@ -353,7 +371,6 @@ def index():
         query=ingresos_totales_query
     )[0][0]
 
-
     conn, cur = connection_db()
     ingresos_data_chart_query = """
         select cliente, sum(depositos) as total from conciliaciones_raw_data
@@ -374,11 +391,12 @@ def index():
         transactions_data=transactions_data,
         validador_iva_rows=query_validador_ivas_rows,
         validador_ieps_rows=query_validador_ieps_rows,
-        transactions_count = transaction_sum_query_result,
-        ingresos_totales = ingresos_totales_query_result,
-        ingresos_chart_data = ingresos_chart_data,
-        ingresos_chart_labels = ingresos_chart_labels
+        transactions_count=transaction_sum_query_result,
+        ingresos_totales=ingresos_totales_query_result,
+        ingresos_chart_data=ingresos_chart_data,
+        ingresos_chart_labels=ingresos_chart_labels
     )
+
 
 @app.route('/get_rfc_list', methods=["GET"])
 def get_rfc_list():
@@ -388,9 +406,9 @@ def get_rfc_list():
     conn, cur = connection_db()
     query_uuid = """select DISTINCT (rfc) from conciliaciones ;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
-    new_item = ("Todos", )
+    new_item = ("Todos",)
     try:
-        return [new_item]+data_from_db
+        return [new_item] + data_from_db
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -403,11 +421,12 @@ def get_customer_name_list():
     conn, cur = connection_db()
     query_uuid = """select DISTINCT (cliente) from conciliaciones ;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
-    new_item = ("Todos", )
+    new_item = ("Todos",)
     try:
-        return [new_item]+data_from_db
+        return [new_item] + data_from_db
     except Exception as e:
         return jsonify({'error': str(e)})
+
 
 @app.route('/conciliaciones')
 @token_required
@@ -423,6 +442,7 @@ def reconciliations_data_cfo():
         'reconciliations_data_cfo.html',
         initial_data_for_table=rows_data_view,
     )
+
 
 def generate_filter_sql(start_date, end_date, rfc, customer):
     """
@@ -452,6 +472,7 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
     if field_flag:
         return where_query, True
     return where_query, False
+
 
 @app.route('/get_filtered_data_conciliations', methods=["GET"])
 def get_filtered_data_conciliations():
@@ -492,18 +513,16 @@ def get_filtered_data_conciliations():
     return jsonify(result)
 
 
-@app.route('/vista_subir_archivo')
-def uploadfile():
-    return render_template('uploadfile.html')
-
 def custom_values_for_insert(data_sheet, max_col: int):
     # Prepare data for bulk insertion
     data_collection = []
     for row in data_sheet.iter_rows(min_row=2, max_col=max_col):  # Start from the second row (data)
         if row[0].value == "" or row[0].value is None:
             continue
-        data_collection.append(f"""{tuple(str(cell.value).replace("'","") if cell.value is not None else '' for cell in row)}""")
+        data_collection.append(
+            f"""{tuple(str(cell.value).replace("'", "") if cell.value is not None else '' for cell in row)}""")
     return data_collection
+
 
 def connection_db():
     try:
@@ -519,6 +538,7 @@ def connection_db():
         print(f"Error connecting to database: {e}")
         exit()
 
+
 def get_query_rows(cur, conn, query):
     try:
         cur.execute(query)
@@ -533,6 +553,8 @@ def get_query_rows(cur, conn, query):
             cur.close()
             conn.close()
         print("PostgreSQL connection is closed")
+
+
 def execute_query(cur, conn, query):
     # Execute bulk insert using executemany
     try:
@@ -543,191 +565,58 @@ def execute_query(cur, conn, query):
         print(f"Error inserting data: {e}")
         conn.rollback()  # Rollback changes in case of errors
 
-@app.route('/subir_archivo', methods=['POST'])
-def subir_archivo():
+
+@app.route('/vista_subir_archivo/')
+def uploadfile(extension):
+    return render_template('uploadfile.html', extension=extension)
+
+
+@app.route("/subir_info_bancos", methods=['GET', 'POST'])
+def upload_banks_info():
+    if request.method == 'GET':
+
+        return render_template('bank_info_files.html', banks=UploadFilesController.BANK_LIST)
+
+@app.route("/subir_info_sat_sap", methods=['GET', 'POST'])
+def upload_sat_sap():
+    if request.method == 'GET':
+        return render_template('sat_sap_files.html', banks=UploadFilesController.BANK_LIST)
+
+
+
+@app.route('/subir_archivo/<extension>', methods=['GET', 'POST'])
+def subir_archivo(extension):
+    if request.method == 'GET':
+        return render_template('uploadfile.html', extension=extension)
+
     if 'archivo' not in request.files:
-        return 'No se ha enviado ningún archivo'
+        error = 'No se ha enviado ningún archivo'
+        return render_template('uploadfile.html', error=error, extension=extension)
+
     archivo = request.files['archivo']
+
     if archivo.filename == '':
-        return 'No se ha seleccionado ningún archivo'
+        error = 'No se ha seleccionado ningún archivo'
+        return render_template('uploadfile.html', error=error, extension=extension)
+
     # Verificar si el archivo tiene la extensión permitida
-    if not archivo.filename.endswith('.xlsx'):
-        return 'La extensión del archivo no está permitida. Se permiten solo archivos .xlsx'
-    stream = BytesIO(archivo.read())
-    workbook = load_workbook(stream)
-    cfdi_ingresos_sheet = workbook.worksheets[0]
-    cfdi_complemento_sheet = workbook.worksheets[1]
-    iva_cobrado_sheet = workbook.worksheets[2]
-    analisis_iva_cobrado_sheet = workbook.worksheets[3]
-    # Prepare bulk insert query template
-    try:
-        column_names_ingresos = [
-            "version",
-            "estado",
-            "tipo_comprobante",
-            "rfc",
-            "nombre",
-            "fecha_emision",
-            "folio_interno",
-            "uuid_fiscal",
-            "producto_servicio_conforme_sat",
-            "concepto_del_cfdi",
-            "moneda",
-            "metodo_de_pago",
-            "subtotal",
-            "descuento",
-            "iva",
-            "ieps",
-            "isr_retenido",
-            "iva_retenido",
-            "total_cfdi",
-            "tipo_de_relacion",
-            "cfdi_relacionado",]
-        column_names_str_ingresos = ", ".join(column_names_ingresos)
-        column_names_complemento = [
-            "estado_sat",
-            "version_pagos",
-            "uuid_complemento",
-            "fecha_timbrado",
-            "fecha_emision",
-            "folio",
-            "serie",
-            "subtotal",
-            "moneda",
-            "total",
-            "lugar_expedicion",
-            "rfc_emisor",
-            "nombre_emisor",
-            "rfc_receptor",
-            "nombre_receptor",
-            "uso_cfdi",
-            "clave_prod_serv",
-            "descripcion",
-            "fecha_de_pago",
-            "forma_de_pago",
-            "moneda_p",
-            "tipo_cambio_p",
-            "monto",
-            "numero_operacion",
-            "importe_pagado_mo",
-            "id_documento",
-            "serie_dr",
-            "folio_dr",
-            "moneda_dr",
-            "num_parcialidad",
-            "imp_saldo_ant",
-            "importe_pagado",
-            "imp_saldo_insoluto"
-        ]
-        column_names_str_complemento = ", ".join(column_names_complemento)
+    if not archivo.filename.endswith(extension):
+        error = f'La extensión del archivo no está permitida. Se permiten solo archivos {extension}'
+        return render_template('uploadfile.html', error=error, extension=extension)
 
-        column_names_iva_cobrado_table = [
-            "doc_number",
-            "account",
-            "doc_type",
-            "clrng_date",
-            "text_iva_cobrado",
-            "reference",
-            "billing_doc",
-            "trading_partner",
-            "doc_number_2",
-            "clearing_doc",
-            "tax_code",
-            "doc_date",
-            "posting_date",
-            "amount_in_local_curr",
-            "amount_in_doc_curr",
-            "doc_curr",
-            "eff_exchange_rate",
-            "ano",
-            "llave",
-            "base_16",
-            "cero_nacional",
-            "cero_extranjero",
-            "iva",
-            "ieps",
-            "iva_retenido",
-            "total_factura",
-            "diferencia",
-            "ieps_base_iva",
-            "nombre",
-            "pais",
-            "ieps_tasa_6",
-            "ieps_tasa_7",
-            "total_ieps",
-            "diferencia_2"
-        ]
-        column_names_str_iva_cobrado = ", ".join(column_names_iva_cobrado_table)
+    is_valid, error, data = UploadFilesController.valid_file(archivo, extension)
 
-        column_names_analisis_iva_cobrado = [
-            "doc_number",
-            "account",
-            "reference",
-            "doc_type",
-            "doc_number_2",
-            "clrng_date",
-            "assignment_text",
-            "text_analisis_iva_cobrado",
-            "clearing_doc",
-            "billing_doc",
-            "tx",
-            "amount_in_local_curr",
-            "local_curr",
-            "doc_date",
-            "posting_date",
-            "amount_in_dc",
-            "diff",
-            "ano",
-            "llave",
-            "base_16",
-            "cero_nacional",
-            "cero_extranjero",
-            "iva",
-            "ieps",
-            "iva_retenido",
-            "total_factura",
-            "diferencia",
-            "empty_col_1",
-            "ieps_base_iva",
-            "nombre",
-            "pais",
-            "tasa_9",
-            "tasa_7",
-            "tasa_6",
-            "total_ieps",
-            "diferencia_2"
-        ]
-        column_names_str_analisis_iva_cobrado = ", ".join(column_names_analisis_iva_cobrado)
+    if not is_valid:
+        error = error
+        return render_template('uploadfile.html', error=error, extension=extension)
 
-    except Exception as e:
-        print(f"Error retrieving column names or constructing query: {e}")
-        exit()
+    s3_client.upload_fileobj(archivo, S3_BUCKET_NAME, archivo.filename)
 
-    # Prepare data for bulk insertion CFDI Ingreso sheet
-    data_collection_ingreso = custom_values_for_insert(data_sheet=cfdi_ingresos_sheet, max_col=21)
-    final_result_ingreso_data = ",".join(data_collection_ingreso)
-    # Prepare data for bulk insertion CFDI Complemento sheet
-    data_collection_complemento = custom_values_for_insert(data_sheet=cfdi_complemento_sheet, max_col=33)
-    final_result_complemento_data = ",".join(data_collection_complemento)
-    # Prepare data for bulk insertion IVA Cobrado BCS sheet
-    data_collection_iva_cobrado_table = custom_values_for_insert(data_sheet=iva_cobrado_sheet, max_col=34)
-    final_result_iva_cobrado_data = ",".join(data_collection_iva_cobrado_table)
-    # Prepare data for bulk insertion Analisis IVA Cobrado BHC sheet
-    data_collection_analisis_iva_cobrado_table = custom_values_for_insert(data_sheet=analisis_iva_cobrado_sheet, max_col=36)
-    final_result_analisis_iva_cobrado_data = ",".join(data_collection_analisis_iva_cobrado_table)
+    return render_template('uploadfile.html',
+                           error=None,
+                           extension=extension,
+                           success="El archivo se ha cargado y se esta procesando en estos momentos")
 
-    insert_query = f"""SET datestyle = dmy; 
-        INSERT INTO cfdi_ingreso ({column_names_str_ingresos}) VALUES {final_result_ingreso_data};
-        INSERT INTO complemento ({column_names_str_complemento}) VALUES {final_result_complemento_data};
-        INSERT INTO iva_cobrado_bcs ({column_names_str_iva_cobrado}) VALUES {final_result_iva_cobrado_data};
-        INSERT INTO analisis_iva_cobrado_bhc ({column_names_str_analisis_iva_cobrado}) VALUES {final_result_analisis_iva_cobrado_data};
-    """
-    conn, cur = connection_db()
-    try:
-        # Execute bulk insert using executemany
-        execute_query(cur, conn, insert_query)
-    except Exception as err:
-        print(err)
 
 # def export_data_conciliaciones():
 #     start_date = request.args.get("start_date")
@@ -739,3 +628,5 @@ def subir_archivo():
 #     ws = wb.active
 #     ws.title = f"CFO Data {rfc} from {start_date} to {end_date}"  # Set worksheet title
 
+if __name__ == '__main__':
+    app.run(debug=True)

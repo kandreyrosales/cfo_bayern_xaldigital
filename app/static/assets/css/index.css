@@ -51,6 +51,17 @@
     color: #FFFFFF;
 }
 
+.input_button{
+    font-family: Inter;
+    font-size: 14px;
+    font-weight: 500;
+    color: #FFFFFF;
+}
+
+.text_font {
+    font-family: Inter;
+}
+
 
 .card-title{
     font-family: Poppins;

@@ -1,15 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subir Archivo Excel</title>
-</head>
-<body>
-    <h1>Subir Archivo Excel</h1>
-    <form action="/subir_archivo" method="post" enctype="multipart/form-data">
-        <input type="file" name="archivo" accept=".xlsx"><br><br>
-        <input type="submit" value="Subir Archivo">
-    </form>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container">
+      <h3 class="form-label">Subir Archivo {{extension|upper}}</h3>
+        <form action="/subir_archivo/{{extension}}" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div  class="col">
+                    <input class="form-control" type="file" name="archivo" accept=".{{extension}}">
+                </div>
+                <div  class="col">
+                    <input type="submit" value="Subir Archivo">
+                </div>
+            </div>
+        </form>
+        {% if error %}
+            <p class="text-danger">{{ error }}</p>
+        {% endif %}
+        {% if success %}
+            <p class="text-success">{{ success }}</p>
+        {% endif %}
+{% endblock%}
