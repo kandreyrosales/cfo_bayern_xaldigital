@@ -31,3 +31,4 @@ utils/terraform.tfstate.backup
 .terraform/
 .DS_Store
 *.pyc
+app/.env
