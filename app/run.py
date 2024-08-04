@@ -1,5 +1,7 @@
+import asyncio
 import os
-from io import BytesIO
+from concurrent.futures import ThreadPoolExecutor
+
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import boto3
 import jwt
@@ -7,11 +9,9 @@ from datetime import datetime
 from functools import wraps
 import psycopg2
 
-
+from app import app, db
+from app.utils import aws
 from controllers.upload_files import UploadFilesController
-
-app = Flask(__name__)
-
 
 
 app.secret_key = 'xaldigitalcfobayer!'
@@ -34,10 +34,10 @@ s3_client = boto3.client('s3',
                          aws_secret_access_key=secretAccessKey
                          )
 
-db_host = os.getenv("db_endpoint")
+db_host = os.getenv("db_endpoint", "localhost")
 db_name = "postgres"
-db_user = "cfo_user"
-db_password = os.getenv("password_db")
+db_user = "postgres"
+db_password = os.getenv("password_db", "root")
 
 
 def authenticate_user(username, password):
@@ -574,14 +574,20 @@ def uploadfile(extension):
 @app.route("/subir_info_bancos", methods=['GET', 'POST'])
 def upload_banks_info():
     if request.method == 'GET':
-
         return render_template('bank_info_files.html', banks=UploadFilesController.BANK_LIST)
+
+    if request.method == "POST":
+        asyncio.run(UploadFilesController.upload_ban_info(request.files))
+        return render_template('bank_info_files.html',
+                               banks=UploadFilesController.BANK_LIST,
+                               success="El proceso de carga de informacion de bancos ha iniciado"
+                               )
+
 
 @app.route("/subir_info_sat_sap", methods=['GET', 'POST'])
 def upload_sat_sap():
     if request.method == 'GET':
         return render_template('sat_sap_files.html', banks=UploadFilesController.BANK_LIST)
-
 
 
 @app.route('/subir_archivo/<extension>', methods=['GET', 'POST'])
@@ -628,5 +634,8 @@ def subir_archivo(extension):
 #     ws = wb.active
 #     ws.title = f"CFO Data {rfc} from {start_date} to {end_date}"  # Set worksheet title
 
+
 if __name__ == '__main__':
     app.run(debug=True)
+    with app.app_context():
+        db.create_all()

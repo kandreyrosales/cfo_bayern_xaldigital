@@ -1,9 +1,18 @@
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 import xml.etree.ElementTree as ET
 import pandas as pd
+import logging
+import asyncio
+
+from app import db, app
+from app.utils import aws
+from app.models import Banco
+
+logger = logging.getLogger(__name__)
 
 
 class UploadFilesController:
-
     COLUMN_NAMES_INGRESOS = [
         "version",
         "estado",
@@ -12,22 +21,23 @@ class UploadFilesController:
         "nombre",
     ]
 
+    #"Deutsche Bank 4500",
+    #"JP Morgan 6487",
+    #"Citibanamex 5032927",
+    #"BBVA 012180001637146406",
+    #"BBVA 6026",
+    #"Santander 65-50049596-9",
+    #"In House Bank",
+    #"HSBC 0156000508",
+    #"HSBC 4005129028",
+    #"HSBC 4030167084",
+    #"Citibanamex 002180026157967545"
+
     BANK_LIST = [
-        "BBVA 64277",
-        "Citibanamex 5611843",
-        "JP Morgan 6461",
-        "BBVA EUR 0196006752",
-        "Deutsche Bank 4500",
-        "JP Morgan 6487",
-        "Citibanamex 5032927",
-        "BBVA 012180001637146406",
-        "BBVA 6026",
-        "Santander 65-50049596-9",
-        "In House Bank",
-        "HSBC 0156000508",
-        "HSBC 4005129028",
-        "HSBC 4030167084",
-        "Citibanamex 002180026157967545"
+        ("BBVA_64277", "BBVA 64277"),
+        ("Citibanamex_5611843", "Citibanamex 5611843"),
+        ("JP_Morgan_6461", "JP Morgan 6461"),
+        ("BBVA_EUR_0196006752", "BBVA EUR 0196006752")
     ]
 
     @classmethod
@@ -36,19 +46,23 @@ class UploadFilesController:
 
     @classmethod
     def load_file(cls, file, extension):
-        data = None
+        try:
+            data = None
+            print(file)
+            print(extension)
 
-        if extension == "xml":
-            data = ET.parse(file)
+            if extension == "xml":
+                data = ET.parse(file)
 
-        if extension == "xls" or extension == "xlsx":
-            data = pd.read_excel(file)
+            if extension == "xls" or extension == "xlsx":
+                data = pd.read_excel(file)
 
-        if extension == "pdf":
-            data = file.read()
-            print(data)
-
-        return data
+            if extension == "pdf":
+                data = file.read()
+            return data
+        except Exception as e:
+            logger.error(f"Error loading file: {str(e)}")
+            return None
 
     @classmethod
     def valid_file(cls, file, extension):
@@ -70,6 +84,47 @@ class UploadFilesController:
             print(data)
             return True, "", data
 
+    @classmethod
+    async def upload_ban_info(cls, files):
+        try:
+            today = datetime.now()
+            tasks = []
+            for file in files:
+                object_name = f"{today.strftime('%d-%m-%Y')}/{files[file].filename}"
+                tasks.append(
+                    asyncio.get_event_loop().run_in_executor(
+                        None,
+                        cls.upload_to_s3,
+                        files[file],
+                        aws.S3_BUCKET_NAME,
+                        object_name
+                    )
+                )
+
+                # Await all upload tasks
+                await asyncio.gather(*tasks)
+
+                s3_url = f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/{today.strftime('%d-%m-%Y')}/{files[file].filename}"
+
+                new_bank = Banco(
+                    name=files[file].filename,
+                    rfc=files[file].filename,
+                    uuid='wewqe21121',
+                    fiscal="fiscal",
+                    s3_url=s3_url)
+
+                new_bank.save()
+        except Exception as e:
+            logger.warning(str(e))
+
+    @classmethod
+    def upload_to_s3(cls, file, bucket_name, object_name):
+        try:
+            s3_client = aws.upload_to_s3()
+            s3_client.upload_fileobj(file, bucket_name, object_name)
+        except Exception as e:
+            return str(e)
+        return 'Upload successful'
 
 '''
 XML, PDF y XLS y XLSX
@@ -250,4 +305,5 @@ XML, PDF y XLS y XLSX
         execute_query(cur, conn, insert_query)
     except Exception as err:
         print(err)
+        
 '''

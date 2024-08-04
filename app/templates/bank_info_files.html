@@ -7,12 +7,13 @@
                 <div class="row">
                 {% for bank in banks %}
                     <div class="col-3 mt-3">
-                        <p class="form-label text_font fw-bold mb-0">{{bank|upper}}</p>
+                        <p class="form-label text_font fw-bold mb-0">{{bank[1]|upper}}</p>
                         <input
-                                class="form-control btn-outline-light btn-sm rounded-3 input_button"
+                                class="input_button form-control btn-outline-light btn-sm rounded-3"
                                 type="file"
-                                name="bank"
-                                accept=".pdf"
+                                name="{{bank[0]}}"
+                                id="{{bank[0]}}_file"
+                                accept="application/pdf"
                                 required>
                     </div>
                 {% endfor %}

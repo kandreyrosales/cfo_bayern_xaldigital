@@ -2,10 +2,10 @@ import os
 import psycopg2
 
 def create_tables_rds():
-    db_host = os.getenv("db_endpoint")
+    db_host = os.getenv("db_endpoint", "localhost")
     db_name = "postgres"
-    db_user = "cfo_user"
-    db_password = os.getenv("password_db")
+    db_user = "postgres"
+    db_password = os.getenv("password_db", "root")
 
     tables_and_views_queries = [
         """CREATE TABLE IF NOT EXISTS cfdi_ingreso (
