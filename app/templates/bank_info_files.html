@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
     <div class="ms-5 me-5">
-      <h3 class="text-center text_font mb-3">Importador de archivos Bancarios Semanal</h3>
+      <h2 class="text_font fw-bold mb-3">Importador de archivos Bancarios Semanal</h2>
         <form action="/subir_info_bancos" method="post" enctype="multipart/form-data">
-            <div class="d-flex flex-row mb-3">
+            <div class="row align-items-start">
                 <div class="row">
                 {% for bank in banks %}
-                    <div class="col-3 mt-3">
-                        <p class="form-label text_font fw-bold mb-0">{{bank[1]|upper}}</p>
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                        <p class="form-label text_font mb-2 h6">{{bank[1]|upper}}</p>
                         <input
                                 class="input_button form-control btn-outline-light btn-sm rounded-3"
                                 type="file"

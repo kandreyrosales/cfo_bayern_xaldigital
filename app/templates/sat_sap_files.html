@@ -2,36 +2,26 @@
 {% block content %}
     <div class="ms-5 me-5">
       <h3 class="form-label  text_font mb-3">Importador de archivos SAT - SAP</h3>
-        <form action="/subir_info_bancos" method="post" enctype="multipart/form-data">
-            <div class="d-flex flex-row mb-3">
+        <form action="/subir_info_sat_sap" method="post" enctype="multipart/form-data">
+            <div class="row align-items-start">
                 <div class="row">
-                    <div class="col-3 mt-3">
-                            <p class="form-label text_font fw-bold mb-0">Archivo 1</p>
+                    <div class="col-12 col-md-6 col-lg-6 mb-4">
+                            <p class="form-label text_font mb-2 h6">SAT</p>
                             <input
                                     class="form-control btn-outline-light btn-sm rounded-3 input_button"
                                     type="file"
-                                    name="bank"
-                                    accept=".xlsx"
+                                    name="sat"
+                                    accept=".xlsx, .xml"
                                     required
                             >
                     </div>
-                    <div class="col-3 mt-3">
-                            <p class="form-label text_font fw-bold mb-0">Archivo 2</p>
+                    <div class="col-12 col-md-6 col-lg-6 mb-4">
+                            <p class="form-label text_font mb-2 h6">SAP</p>
                             <input
                                     class="form-control btn-outline-light btn-sm rounded-3 input_button"
                                     type="file"
-                                    name="bank"
-                                    accept=".xlsx"
-                                    required
-                            >
-                    </div>
-                    <div class="col-3 mt-3">
-                            <p class="form-label text_font fw-bold mb-0">Archivo 3</p>
-                            <input
-                                    class="form-control btn-outline-light btn-sm rounded-3 input_button"
-                                    type="file"
-                                    name="bank"
-                                    accept=".xml"
+                                    name="sap"
+                                    accept=".xlsx, .xml"
                                     required
                             >
                     </div>
