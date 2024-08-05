@@ -7,7 +7,7 @@ import asyncio
 
 from app import db, app
 from app.utils import aws
-from app.models import Banco
+from app.models import Bank
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +21,22 @@ class UploadFilesController:
         "nombre",
     ]
 
-    #"Deutsche Bank 4500",
-    #"JP Morgan 6487",
-    #"Citibanamex 5032927",
-    #"BBVA 012180001637146406",
-    #"BBVA 6026",
-    #"Santander 65-50049596-9",
-    #"In House Bank",
-    #"HSBC 0156000508",
-    #"HSBC 4005129028",
-    #"HSBC 4030167084",
-    #"Citibanamex 002180026157967545"
-
     BANK_LIST = [
         ("BBVA_64277", "BBVA 64277"),
         ("Citibanamex_5611843", "Citibanamex 5611843"),
         ("JP_Morgan_6461", "JP Morgan 6461"),
-        ("BBVA_EUR_0196006752", "BBVA EUR 0196006752")
+        ("BBVA_EUR_0196006752", "BBVA EUR 0196006752"),
+        ("Deutsche_Bank_4500", "Deutsche Bank 4500"),
+        ("JP_Morgan_6487", "JP Morgan 6487"),
+        ("Citibanamex_5032927", "Citibanamex 5032927"),
+        ("BBVA_012180001637146406", "BBVA 012180001637146406"),
+        ("BBVA_6026", "BBVA 6026"),
+        ("Santander_65-50049596-9", "Santander 65-50049596-9"),
+        ("In_House_Bank", "In House Bank"),
+        ("HSBC_0156000508", "HSBC 0156000508"),
+        ("HSBC_4005129028", "HSBC 4005129028"),
+        ("HSBC_4030167084", "HSBC 4030167084"),
+        ("Citibanamex_002180026157967545", "Citibanamex 002180026157967545")
     ]
 
     @classmethod
@@ -48,8 +47,6 @@ class UploadFilesController:
     def load_file(cls, file, extension):
         try:
             data = None
-            print(file)
-            print(extension)
 
             if extension == "xml":
                 data = ET.parse(file)
@@ -106,7 +103,7 @@ class UploadFilesController:
 
                 s3_url = f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/{today.strftime('%d-%m-%Y')}/{files[file].filename}"
 
-                new_bank = Banco(
+                new_bank = Bank(
                     name=files[file].filename,
                     rfc=files[file].filename,
                     uuid='wewqe21121',
@@ -118,6 +115,58 @@ class UploadFilesController:
             logger.warning(str(e))
 
     @classmethod
+    async def upload_sat_sap_info(cls, files):
+        try:
+            today = datetime.now()
+            tasks = []
+            for file in files:
+                object_name = f"{today.strftime('%d-%m-%Y')}/{files[file].filename}"
+                file_content = files[file].read()
+                files[file].seek(0)
+
+                tasks.append(
+                    asyncio.get_event_loop().run_in_executor(
+                        None,
+                        cls.upload_to_s3,
+                        files[file],
+                        aws.S3_BUCKET_NAME,
+                        object_name
+                    )
+                )
+
+                # Await all upload tasks
+                await asyncio.gather(*tasks)
+
+                s3_url = f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/{today.strftime('%d-%m-%Y')}/{files[file].filename}"
+                extension = files[file].filename.split(".")[-1].lower()
+
+                if extension == "xml":
+                    root = ET.fromstring(file_content)
+
+                    namespaces = {
+                        'cfdi': 'http://www.sat.gob.mx/cfd/4',
+                        'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+                    }
+
+                    data = {
+                        '_Folio': root.get('Folio'),
+                        '_Fecha': root.get('Fecha'),
+                        '_UUID': root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
+                        '_ClaveProdServ': root.find('.//cfdi:Concepto', namespaces).get('ClaveProdServ'),
+                        '_Descripcion': root.find('.//cfdi:Concepto', namespaces).get('Descripcion'),
+                        'Moneda': root.get('Moneda'),
+                        '_SubTotal': root.get('SubTotal'),
+                        '_Total': root.get('Total'),
+                        '_Importe': root.find('.//cfdi:Concepto', namespaces).get('Importe'),
+                        '_MetodoPago': root.get('MetodoPago')
+                    }
+
+                    logger.warning(data)
+
+        except Exception as e:
+            logger.warning(str(e))
+
+    @classmethod
     def upload_to_s3(cls, file, bucket_name, object_name):
         try:
             s3_client = aws.upload_to_s3()
@@ -125,6 +174,7 @@ class UploadFilesController:
         except Exception as e:
             return str(e)
         return 'Upload successful'
+
 
 '''
 XML, PDF y XLS y XLSX

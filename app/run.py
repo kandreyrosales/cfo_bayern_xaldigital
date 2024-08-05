@@ -587,7 +587,13 @@ def upload_banks_info():
 @app.route("/subir_info_sat_sap", methods=['GET', 'POST'])
 def upload_sat_sap():
     if request.method == 'GET':
-        return render_template('sat_sap_files.html', banks=UploadFilesController.BANK_LIST)
+        return render_template('sat_sap_files.html')
+
+    if request.method == "POST":
+        asyncio.run(UploadFilesController.upload_sat_sap_info(request.files))
+        return render_template('sat_sap_files.html',
+                               success="El proceso de carga de informacion de SAP-SAT ha iniciado"
+                               )
 
 
 @app.route('/subir_archivo/<extension>', methods=['GET', 'POST'])
