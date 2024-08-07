@@ -1,13 +1,18 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import xml.etree.ElementTree as ET
+from io import BytesIO
+import re
+
+import numpy as np
 import pandas as pd
 import logging
 import asyncio
 
-from app import db, app
+from app import db
 from app.utils import aws
-from app.models import Bank
+from app.models import Bank, Sat, BCSIEPS2440020, BCSIVACobrado2440015, BCSIVARetenido1250010, BHCIEPS2440020, \
+    BHCIVATrasladado2440015, BHCIVARetenido1250010, BHCIVAOTROS, BCSFBL5N, BHCFBL5N, BankPbc, BankN8p
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +42,196 @@ class UploadFilesController:
         ("HSBC_4005129028", "HSBC 4005129028"),
         ("HSBC_4030167084", "HSBC 4030167084"),
         ("Citibanamex_002180026157967545", "Citibanamex 002180026157967545")
+    ]
+
+    EXPECTED_COLUMNS_FBL3N = ['Business Area', 'Document Type', 'Document Number', 'G/L Account', 'Fiscal Year',
+                              'Year/month',
+                              'Document Header Text', 'Assignment', 'Profit Center', 'Cost Center', 'Text', 'Reference',
+                              'User name', 'Transaction Type', 'Clearing Document', 'Tax code', 'Account Type',
+                              'Line item',
+                              'Invoice reference', 'Billing Document', 'Trading Partner', 'Purchasing Document',
+                              'Posting Date', 'Document currency', 'Amount in doc. curr.', 'Eff.exchange rate',
+                              'Amount in local currency', 'Document Date', 'Clearing date', 'Withholding tax amnt',
+                              'Withhldg tax base amount', 'Local Currency', 'Entry Date']
+
+    BHC_EXPECTED_COLUMNS_FBL3N = [
+        "División",
+        "Clase de documento",
+        "Nº documento",
+        "Cuenta",
+        "Ejercicio",
+        "Ejercicio / mes",
+        "Texto cab.documento",
+        "Asignación",
+        "Centro de beneficio",
+        "Centro de coste",
+        "Texto",
+        "Referencia",
+        "Nombre del usuario",
+        "Código transacción",
+        "Doc.compensación",
+        "Indicador impuestos",
+        "Clase de cuenta",
+        "Posición",
+        "Referencia a factura",
+        "Doc.facturación",
+        "Sociedad GL asociada",
+        "Cuenta de mayor",
+        "Documento compras",
+        "Fe.contabilización",
+        "Moneda del documento",
+        "Importe en moneda doc.",
+        "Tp.cambio efectivo",
+        "Importe en moneda local",
+        "Fecha de documento",
+        "Fecha compensación",
+        "Importe de retención",
+        "ImpteExentRetImptos",
+        "Importe base de retención",
+        "Moneda local",
+        "Fecha de entrada"
+    ]
+
+    BHC_EXPECTED_COLUMNS_FBL5N = [
+        "Clave contabiliz.",
+        "Nombre del usuario",
+        "Nº documento",
+        "Cuenta",
+        "Referencia",
+        "Bloqueo de pago",
+        "Clase de documento",
+        "Indicador CME",
+        "Asignación",
+        "Texto",
+        "Doc.compensación",
+        "Status de documento",
+        "Posición",
+        "Documento compras",
+        "Posición",
+        "Cta.subsidiaria",
+        "Clase de cuenta",
+        "Indicador impuestos",
+        "Posición",
+        "Referencia a factura",
+        "Factura colectiva",
+        "Documento de ventas",
+        "Doc.facturación",
+        "Sociedad GL asociada",
+        "Status",
+        "Cuenta de mayor",
+        "ID texto",
+        "Fe.contabilización",
+        "Fecha de documento",
+        "Vencimiento neto",
+        "Fecha compensación",
+        "Moneda del documento",
+        "Importe en moneda doc.",
+        "Tp.cambio efectivo",
+        "Importe en moneda local",
+        "Moneda local",
+        "Importe de retención",
+        "ImpteExentRetImptos",
+        "Importe base de retención",
+        "Fecha valor",
+        "Fecha de entrada"
+    ]
+
+    BCS_EXPECTED_COLUMNS_FBL5N = [
+        "Document Number",
+        "Account",
+        "Reference",
+        "Document Type",
+        "Doc.status",
+        "Assignment",
+        "Text",
+        "Clearing Document",
+        "Tax code",
+        "Invoice reference",
+        "Billing Document",
+        "Trading Partner",
+        "G/L Account",
+        "Posting Date",
+        "Document Date",
+        "Clearing date",
+        "Document currency",
+        "Amount in doc. curr.",
+        "Eff.exchange rate",
+        "Amount in local currency",
+        "Local Currency"
+    ]
+
+    BANK_PBC = [
+      "Business Area",
+      "Document Type",
+      "Document Number",
+      "Account",
+      "Fiscal Year",
+      "Document Header Text",
+      "Assignment",
+      "Profit Center",
+      "Cost Center",
+      "Text",
+      "Reference",
+      "User name",
+      "Transaction Code",
+      "Clearing Document",
+      "Tax code",
+      "Account Type",
+      "Item",
+      "Invoice reference",
+      "Billing Document",
+      "Trading partner",
+      "G/L Account",
+      "Purchasing Document",
+      "Posting Date",
+      "Document currency",
+      "Amount in doc. curr.",
+      "Eff.exchange rate",
+      "Amount in local currency",
+      "Document Date",
+      "Clearing date",
+      "Withholding tax amnt",
+      "W/tax exempt amount",
+      "Withhldg tax base amount",
+      "Local Currency",
+      "Entry Date"
+    ]
+
+    BANK_N8P = [
+        "Business Area",
+        "Document Type",
+        "Document Number",
+        "Account",
+        "Fiscal Year",
+        "Document Header Text",
+        "Assignment",
+        "Profit Center",
+        "Cost Center",
+        "Text",
+        "Reference",
+        "User Name",
+        "Transaction Code",
+        "Clearing Document",
+        "Tax Code",
+        "Account Type",
+        "Item",
+        "Invoice reference",
+        "Billing Document",
+        "Trading partner",
+        "G/L Account",
+        "Purchasing Document",
+        "Posting Date",
+        "Document currency",
+        "Amount in doc. curr.",
+        "Eff.exchange rate",
+        "Amount in local currency",
+        "Document Date",
+        "Clearing date",
+        "Withholding tax amnt",
+        "W/tax exempt amount",
+        "Withhldg tax base amount",
+        "Local Currency",
+        "Entry Date"
     ]
 
     @classmethod
@@ -121,6 +316,7 @@ class UploadFilesController:
             tasks = []
             for file in files:
                 object_name = f"{today.strftime('%d-%m-%Y')}/{files[file].filename}"
+                extension = files[file].filename.split(".")[-1].lower()
                 file_content = files[file].read()
                 files[file].seek(0)
 
@@ -137,10 +333,10 @@ class UploadFilesController:
                 # Await all upload tasks
                 await asyncio.gather(*tasks)
 
-                s3_url = f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/{today.strftime('%d-%m-%Y')}/{files[file].filename}"
-                extension = files[file].filename.split(".")[-1].lower()
+                s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/"
+                          f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
 
-                if extension == "xml":
+                if extension == "xml" and file == 'sat':
                     root = ET.fromstring(file_content)
 
                     namespaces = {
@@ -148,23 +344,352 @@ class UploadFilesController:
                         'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
                     }
 
-                    data = {
-                        '_Folio': root.get('Folio'),
-                        '_Fecha': root.get('Fecha'),
-                        '_UUID': root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
-                        '_ClaveProdServ': root.find('.//cfdi:Concepto', namespaces).get('ClaveProdServ'),
-                        '_Descripcion': root.find('.//cfdi:Concepto', namespaces).get('Descripcion'),
-                        'Moneda': root.get('Moneda'),
-                        '_SubTotal': root.get('SubTotal'),
-                        '_Total': root.get('Total'),
-                        '_Importe': root.find('.//cfdi:Concepto', namespaces).get('Importe'),
-                        '_MetodoPago': root.get('MetodoPago')
-                    }
+                    descriptions = [concepto.get('Descripcion') for concepto in
+                                    root.findall('.//cfdi:Concepto', namespaces)]
 
-                    logger.warning(data)
+                    # Join descriptions with '*'
+                    descripcion_string = '*'.join(descriptions)
+
+                    sat = Sat(
+                        cfdi_date=root.get('Fecha'),
+                        receipt_number=root.get('Folio'),
+                        fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
+                        product_or_service=descripcion_string,
+                        currency=root.get('Moneda'),
+                        total_amount=root.get('Total'),
+                        payment_method=root.get('MetodoPago'),
+                        s3_url=s3_url,
+                        subtotal_me=root.get('SubTotal'),
+                        state="uploaded"
+                    )
+                    sat.save()
+
+                if extension == "xlsx":
+                    if file == "bcs_fbl3n":
+                        file_bytes = BytesIO(file_content)
+                        xls = pd.ExcelFile(file_bytes)
+
+                        df_bcs_ieps_2440020 = pd.read_excel(xls, 'IEPS 2440020')
+                        df_bcs_iva_cobrado_2440015 = pd.read_excel(xls, 'IVA cobrado 2440015')
+                        df_bcs_iva_retenido_1250010 = pd.read_excel(xls, 'IVA Retenido 1250010')
+
+                        if cls.validate_columns(df_bcs_ieps_2440020, cls.EXPECTED_COLUMNS_FBL3N):
+                            df_bcs_ieps_2440020 = cls.clean_data(df_bcs_ieps_2440020)
+                            cls.save_fbl3n_to_db(df_bcs_ieps_2440020, BCSIEPS2440020)
+
+                        if cls.validate_columns(df_bcs_iva_cobrado_2440015, cls.EXPECTED_COLUMNS_FBL3N):
+                            df_bcs_iva_cobrado_2440015 = cls.clean_data(df_bcs_iva_cobrado_2440015)
+                            cls.save_fbl3n_to_db(df_bcs_iva_cobrado_2440015, BCSIVACobrado2440015)
+
+                        if cls.validate_columns(df_bcs_iva_retenido_1250010, cls.EXPECTED_COLUMNS_FBL3N):
+                            df_bcs_iva_retenido_1250010 = cls.clean_data(df_bcs_iva_retenido_1250010)
+                            cls.save_fbl3n_to_db(df_bcs_iva_retenido_1250010, BCSIVARetenido1250010)
+
+                    if file == "bhc_fbl3n":
+                        file_bytes = BytesIO(file_content)
+                        xls = pd.ExcelFile(file_bytes)
+
+                        df_bhs_ieps_2440020 = pd.read_excel(xls, 'IEPS 2440020')
+                        df_bhs_iva_trasladado_2440015 = pd.read_excel(xls, 'IVA Trasladado 2440015')
+                        df_bhs_iva_retenido_1250010 = pd.read_excel(xls, 'IVA Retenido 1250010')
+                        df_bhs_iva_otros = pd.read_excel(xls, 'IVA Otros ingresos')
+
+                        if cls.validate_columns(df_bhs_ieps_2440020, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                            df_bcs_ieps_2440020 = cls.clean_data(df_bhs_ieps_2440020)
+                            cls.save_bhc_fbl3n_to_db(df_bcs_ieps_2440020, BHCIEPS2440020)
+
+                        if cls.validate_columns(df_bhs_iva_trasladado_2440015, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                            df_bhs_iva_trasladado_2440015 = cls.clean_data(df_bhs_iva_trasladado_2440015)
+                            cls.save_bhc_fbl3n_to_db(df_bhs_iva_trasladado_2440015, BHCIVATrasladado2440015)
+
+                        if cls.validate_columns(df_bhs_iva_retenido_1250010, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                            df_bhs_iva_retenido_1250010 = cls.clean_data(df_bhs_iva_retenido_1250010)
+                            cls.save_bhc_fbl3n_to_db(df_bhs_iva_retenido_1250010, BHCIVARetenido1250010)
+
+                        if cls.validate_columns(df_bhs_iva_otros, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                            df_bhs_iva_otros = cls.clean_data(df_bhs_iva_otros)
+                            cls.save_bhc_fbl3n_to_db(df_bhs_iva_otros, BHCIVAOTROS)
+
+                    if file == "bcs_fbl5n":
+                        file_bytes = BytesIO(file_content)
+                        xls = pd.ExcelFile(file_bytes)
+
+                        df_bcs = pd.read_excel(xls, "Sheet1")
+
+                        if cls.validate_columns(df_bcs, cls.BCS_EXPECTED_COLUMNS_FBL5N):
+                            df_bcs = cls.clean_data(df_bcs)
+                            cls.save_bcs_fbl5n_to_db(df_bcs, BCSFBL5N)
+
+                    if file == "bhc_fbl5n":
+                        file_bytes = BytesIO(file_content)
+                        xls = pd.ExcelFile(file_bytes)
+
+                        df_bhc = pd.read_excel(xls, 'Sheet1')
+                        if cls.validate_columns(df_bhc, cls.BHC_EXPECTED_COLUMNS_FBL5N):
+                            df_bcs = cls.clean_data(df_bhc)
+                            cls.save_bhc_fbl5n_to_db(df_bcs, BHCFBL5N)
+
+                    if file == "banks":
+                        file_bytes = BytesIO(file_content)
+                        xls = pd.ExcelFile(file_bytes)
+
+                        sheets_to_process = cls.get_sheets_banks(xls.sheet_names)
+
+                        for sheet in sheets_to_process:
+                            model_name = sheet[-3:]
+                            model = None
+                            array_to_validate = []
+
+                            if model_name == "PBC":
+                                model = BankPbc
+                                array_to_validate = cls.BANK_PBC
+
+                            if model_name == "N8P":
+                                model = BankN8p
+                                array_to_validate = cls.BANK_N8P
+
+                            if model is not None:
+                                df_bank = pd.read_excel(xls, sheet)
+
+                                if cls.validate_columns(df_bank, array_to_validate):
+                                    df_bank = cls.clean_data(df_bank)
+                                    cls.save_bank_pbc_n8p(df_bank, model)
 
         except Exception as e:
             logger.warning(str(e))
+
+    @classmethod
+    def get_sheets_banks(cls, sheets_list):
+        pattern = re.compile(r'^[a-z]{2,3}-[a-z]{3} [A-Z0-9]{3}$')
+        sheets = []
+        for sheet in sheets_list:
+            if pattern.match(sheet):
+                sheets.append(sheet)
+
+        return sheets
+
+    @classmethod
+    def validate_columns(cls, df, expected_columns):
+        return all(column in df.columns for column in expected_columns)
+
+    @classmethod
+    def convert_to_datetime(cls, value):
+        if pd.notnull(value):
+            return pd.to_datetime(value)
+        return None
+
+    @classmethod
+    def clean_data(cls, df):
+        logger.warning(df.dtypes)
+        for col in df.columns:
+            if df[col].dtype == 'object':
+                df[col] = df[col].str.replace("'", "", regex=False)
+        return df
+
+    @classmethod
+    def save_fbl3n_to_db(cls, df, model):
+        for _, row in df.iterrows():
+            record = model(
+                business_area=row.get('Business Area'),
+                document_type=row.get('Document Type'),
+                document_number=str(row.get('Document Number')),
+                gl_account=row.get('G/L Account'),
+                fiscal_year=row.get('Fiscal Year'),
+                year_month=row.get('Year/month'),
+                document_header_text=str(row.get('Document Header Text')),
+                assignment=str(row.get('Assignment')),
+                profit_center=row.get('Profit Center'),
+                cost_center=row.get('Cost Center'),
+                text=str(row.get('Text')),
+                reference=str(row.get('Reference')),
+                user_name=row.get('User Name'),
+                transaction_type=row.get('Transaction Type'),
+                clearing_document=str(row.get('Clearing Document')),
+                tax_code=row.get('Tax Code'),
+                account_type=row.get('Account Type'),
+                line_item=row.get('Line Item'),
+                invoice_reference=row.get('Invoice Reference'),
+                billing_document=row.get('Billing Document'),
+                trading_partner=row.get('Trading Partner'),
+                purchasing_document=row.get('Purchasing Document'),
+                posting_date=cls.convert_to_datetime(row.get('Posting Date')),
+                document_currency=row.get('Document Currency'),
+                amount_in_doc_curr=row.get('Amount in doc. curr.'),
+                eff_exchange_rate=str(row.get('Eff.exchange rate').replace(",", ".")),
+                amount_in_local_currency=row.get('Amount in local currency'),
+                document_date=cls.convert_to_datetime(row.get('Document Date')),
+                clearing_date=cls.convert_to_datetime(row.get('Clearing Date')),
+                withholding_tax_amnt=row.get('Withholding tax amnt'),
+                withhldg_tax_base_amount=row.get('Withhldg tax base amount'),
+                local_currency=row.get('Local Currency'),
+                entry_date=cls.convert_to_datetime(row.get('Entry Date'))
+            )
+            db.session.add(record)
+        db.session.commit()
+
+    @classmethod
+    def save_bhc_fbl3n_to_db(cls, df, model):
+        for _, row in df.iterrows():
+            record = model(
+                business_area=row.get('División'),
+                document_type=row.get('Clase de documento'),
+                document_number=str(row.get('Nº documento')),
+                gl_account=row.get('Cuenta'),
+                fiscal_year=row.get('Ejercicio'),
+                year_month=row.get('Ejercicio / mes'),
+                document_header_text=str(row.get('Texto cab.documento')),
+                assignment=str(row.get('Asignación')),
+                profit_center=row.get('Centro de beneficio'),
+                cost_center=row.get('Centro de coste'),
+                text=str(row.get('Texto')),
+                reference=str(row.get('Referencia')),
+                user_name=row.get('Nombre del usuario'),
+                transaction_type=row.get('Código transacción'),
+                clearing_document=str(row.get('Doc.compensación')),
+                tax_code=str(row.get('Indicador impuestos')),
+                account_type=row.get('Clase de cuenta'),
+                line_item=row.get('Posición'),
+                invoice_reference=row.get('Referencia a factura'),
+                billing_document=row.get('Doc.facturación'),
+                trading_partner=row.get('Sociedad GL asociada'),
+                purchasing_document=row.get('Documento compras'),
+                posting_date=cls.convert_to_datetime(row.get('Fe.contabilización')),
+                document_currency=row.get('Moneda del documento'),
+                amount_in_doc_curr=row.get('Importe en moneda doc.'),
+                eff_exchange_rate=float(str(row.get('Tp.cambio efectivo')).replace(",", ".")),
+                amount_in_local_currency=row.get('Importe en moneda local'),
+                document_date=cls.convert_to_datetime(row.get('Fecha de documento')),
+                clearing_date=cls.convert_to_datetime(row.get('Fecha compensación')),
+                withholding_tax_amnt=row.get('Importe de retención'),
+                amount_exempt_withholding_taxes=row.get('ImpteExentRetImptos'),
+                general_ledger_account=row.get('Cuenta de mayo'),
+                withhldg_tax_base_amount=row.get('Importe base de retención'),
+                local_currency=row.get('Moneda local'),
+                entry_date=cls.convert_to_datetime(row.get('Fecha de entrada'))
+            )
+            db.session.add(record)
+        db.session.commit()
+
+    @classmethod
+    def save_bcs_fbl5n_to_db(cls, df, model):
+        for _, row in df.iterrows():
+            record = model(
+                document_number=str(row.get("Document Number")),
+                account=row.get("Account"),
+                reference=str(row.get("Reference")),
+                document_type=str(row.get("Document Type")),
+                doc_status=row.get("Doc.status"),
+                assignment=str(row.get("Assignment")),
+                text=str(row.get("Text")),
+                clearing_document=str(row.get("Clearing Document")),
+                tax_code=str(row.get("Tax code")),
+                invoice_reference=str(row.get("Invoice reference")),
+                billing_document=row.get("Billing Document"),
+                trading_partner=row.get("Trading Partner"),
+                gl_account=row.get("G/L Account"),
+                posting_date=cls.convert_to_datetime(row.get("Posting Date")),
+                document_date=cls.convert_to_datetime(row.get("Document Date")),
+                clearing_date=cls.convert_to_datetime(row.get("Clearing date")),
+                document_currency=row.get("Document currency"),
+                amount_in_doc_curr=row.get("Amount in doc. curr."),
+                eff_exchange_rate=float(str(row.get("Eff.exchange rate")).replace(",", ".")),
+                amount_in_local_currency=row.get("Amount in local currency"),
+                local_currency=row.get("Local Currency")
+            )
+
+            logger.warning(record)
+            db.session.add(record)
+        db.session.commit()
+
+    @classmethod
+    def save_bhc_fbl5n_to_db(cls, df, model):
+        for _, row in df.iterrows():
+            record = model(
+                posting_key=row.get("Clave contabiliz."),
+                user_name=row.get("Nombre del usuario"),
+                document_number=str(row.get("Nº documento")),
+                account=row.get("Cuenta"),
+                reference=str(row.get("Referencia")),
+                payment_block=str(row.get("Bloqueo de pago")),
+                document_type=str(row.get("Clase de documento")),
+                cme_indicator=row.get("Indicador CME"),
+                assignment=str(row.get("Asignación")),
+                text=str(row.get("Texto")),
+                clearing_document=str(row.get("Doc.compensación")),
+                document_status=row.get("Status de documento"),
+                position=row.get("Posición"),
+                purchase_document=row.get("Documento compras"),
+                subsidiary_account=row.get("Cta.subsidiaria"),
+                account_type=row.get("Clase de cuenta"),
+                tax_indicator=str(row.get("Indicador impuestos")),
+                invoice_reference=str(row.get("Referencia a factura")),
+                collective_invoice=row.get("Factura colectiva"),
+                sales_document=row.get("Documento de ventas"),
+                billing_document=row.get("Doc.facturación"),
+                associated_gl_company=row.get("Sociedad GL asociada"),
+                status=row.get("Status"),
+                gl_account=row.get("Cuenta de mayor"),
+                text_id=row.get("ID texto"),
+                posting_date=cls.convert_to_datetime(row.get("Fe.contabilización")),
+                document_date=cls.convert_to_datetime(row.get("Fecha de documento")),
+                net_due_date=cls.convert_to_datetime(row.get("Vencimiento neto")),
+                clearing_date=cls.convert_to_datetime(row.get("Fecha compensación")),
+                document_currency=row.get("Moneda del documento"),
+                amount_in_doc_curr=row.get("Importe en moneda doc."),
+                eff_exchange_rate=float(str(row.get("Tp.cambio efectivo")).replace(",", ".")),
+                amount_in_local_currency=row.get("Importe en moneda local"),
+                local_currency=row.get("Moneda local"),
+                withholding_amount=row.get("Importe de retención"),
+                exempt_withholding_amount=row.get("ImpteExentRetImptos"),
+                withholding_base_amount=row.get("Importe base de retención"),
+                value_date=cls.convert_to_datetime(row.get("Fecha valor")),
+                entry_date=cls.convert_to_datetime(row.get("Fecha de entrada"))
+            )
+
+            logger.warning(record)
+            db.session.add(record)
+        db.session.commit()
+
+    @classmethod
+    def save_bank_pbc_n8p(cls,  df, model):
+        for _, row in df.iterrows():
+            record = model(
+                business_area=row.get("Business Area"),
+                document_type=row.get("Document Type"),
+                document_number=row.get("Document Number"),
+                account=row.get("Account"),
+                fiscal_year=row.get("Fiscal Year"),
+                document_header_text=row.get("Document Header Text"),
+                assignment=row.get("Assignment"),
+                profit_center=row.get("Profit Center"),
+                cost_center=row.get("Cost Center"),
+                text=row.get("Text"),
+                amount_in_doc_curr=row.get("Amount in doc. curr."),
+                eff_exchange_rate=float(str(row.get("Eff.exchange rate")).replace(",", ".")),
+                amount_in_local_currency=row.get("Amount in local currency"),
+                document_date=cls.convert_to_datetime(row.get("Document Date")),
+                clearing_date=cls.convert_to_datetime(row.get("Clearing date")),
+                withholding_tax_amnt=row.get("Withholding tax amnt"),
+                wtax_exempt_amount=row.get("W/tax exempt amount"),
+                withhldg_tax_base_amount=row.get("Withhldg tax base amount"),
+                local_currency=row.get("Local Currency"),
+                entry_date=cls.convert_to_datetime(row.get("Entry Date")),
+                user_name=row.get("User Name" or "User name"),
+                transaction_code=row.get("Transaction Code"),
+                clearing_document=row.get("Clearing Document"),
+                tax_code=row.get("Tax Code" or "Tax code"),
+                account_type=row.get("Account Type"),
+                item=row.get("Item"),
+                invoice_reference=row.get("Invoice Reference"),
+                billing_document=row.get("Billing Document"),
+                trading_partner=row.get("Trading Partner"),
+                gl_account=row.get("GL Account"),
+                purchasing_document=row.get("Purchasing Document"),
+                posting_date=cls.convert_to_datetime(row.get("Posting Date"))
+            )
+            logger.warning(record)
+            db.session.add(record)
+        db.session.commit()
 
     @classmethod
     def upload_to_s3(cls, file, bucket_name, object_name):
