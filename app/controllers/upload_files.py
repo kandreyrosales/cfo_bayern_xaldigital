@@ -161,40 +161,40 @@ class UploadFilesController:
     ]
 
     BANK_PBC = [
-      "Business Area",
-      "Document Type",
-      "Document Number",
-      "Account",
-      "Fiscal Year",
-      "Document Header Text",
-      "Assignment",
-      "Profit Center",
-      "Cost Center",
-      "Text",
-      "Reference",
-      "User name",
-      "Transaction Code",
-      "Clearing Document",
-      "Tax code",
-      "Account Type",
-      "Item",
-      "Invoice reference",
-      "Billing Document",
-      "Trading partner",
-      "G/L Account",
-      "Purchasing Document",
-      "Posting Date",
-      "Document currency",
-      "Amount in doc. curr.",
-      "Eff.exchange rate",
-      "Amount in local currency",
-      "Document Date",
-      "Clearing date",
-      "Withholding tax amnt",
-      "W/tax exempt amount",
-      "Withhldg tax base amount",
-      "Local Currency",
-      "Entry Date"
+        "Business Area",
+        "Document Type",
+        "Document Number",
+        "Account",
+        "Fiscal Year",
+        "Document Header Text",
+        "Assignment",
+        "Profit Center",
+        "Cost Center",
+        "Text",
+        "Reference",
+        "User name",
+        "Transaction Code",
+        "Clearing Document",
+        "Tax code",
+        "Account Type",
+        "Item",
+        "Invoice reference",
+        "Billing Document",
+        "Trading partner",
+        "G/L Account",
+        "Purchasing Document",
+        "Posting Date",
+        "Document currency",
+        "Amount in doc. curr.",
+        "Eff.exchange rate",
+        "Amount in local currency",
+        "Document Date",
+        "Clearing date",
+        "Withholding tax amnt",
+        "W/tax exempt amount",
+        "Withhldg tax base amount",
+        "Local Currency",
+        "Entry Date"
     ]
 
     BANK_N8P = [
@@ -320,143 +320,123 @@ class UploadFilesController:
                 file_content = files[file].read()
                 files[file].seek(0)
 
-                tasks.append(
-                    asyncio.get_event_loop().run_in_executor(
-                        None,
-                        cls.upload_to_s3,
-                        files[file],
-                        aws.S3_BUCKET_NAME,
-                        object_name
-                    )
-                )
-
-                # Await all upload tasks
-                await asyncio.gather(*tasks)
+                cls.upload_to_s3(file_content, aws.S3_BUCKET_NAME, object_name)
 
                 s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/"
                           f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
 
                 if extension == "xml" and file == 'sat':
-                    root = ET.fromstring(file_content)
-
-                    namespaces = {
-                        'cfdi': 'http://www.sat.gob.mx/cfd/4',
-                        'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
-                    }
-
-                    descriptions = [concepto.get('Descripcion') for concepto in
-                                    root.findall('.//cfdi:Concepto', namespaces)]
-
-                    # Join descriptions with '*'
-                    descripcion_string = '*'.join(descriptions)
-
-                    sat = Sat(
-                        cfdi_date=root.get('Fecha'),
-                        receipt_number=root.get('Folio'),
-                        fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
-                        product_or_service=descripcion_string,
-                        currency=root.get('Moneda'),
-                        total_amount=root.get('Total'),
-                        payment_method=root.get('MetodoPago'),
-                        s3_url=s3_url,
-                        subtotal_me=root.get('SubTotal'),
-                        state="uploaded"
-                    )
-                    sat.save()
+                    tasks.append(cls.process_xml_file(file_content, s3_url))
 
                 if extension == "xlsx":
-                    if file == "bcs_fbl3n":
-                        file_bytes = BytesIO(file_content)
-                        xls = pd.ExcelFile(file_bytes)
+                    tasks.append(cls.process_xlsx_file(file_content, file))
 
-                        df_bcs_ieps_2440020 = pd.read_excel(xls, 'IEPS 2440020')
-                        df_bcs_iva_cobrado_2440015 = pd.read_excel(xls, 'IVA cobrado 2440015')
-                        df_bcs_iva_retenido_1250010 = pd.read_excel(xls, 'IVA Retenido 1250010')
-
-                        if cls.validate_columns(df_bcs_ieps_2440020, cls.EXPECTED_COLUMNS_FBL3N):
-                            df_bcs_ieps_2440020 = cls.clean_data(df_bcs_ieps_2440020)
-                            cls.save_fbl3n_to_db(df_bcs_ieps_2440020, BCSIEPS2440020)
-
-                        if cls.validate_columns(df_bcs_iva_cobrado_2440015, cls.EXPECTED_COLUMNS_FBL3N):
-                            df_bcs_iva_cobrado_2440015 = cls.clean_data(df_bcs_iva_cobrado_2440015)
-                            cls.save_fbl3n_to_db(df_bcs_iva_cobrado_2440015, BCSIVACobrado2440015)
-
-                        if cls.validate_columns(df_bcs_iva_retenido_1250010, cls.EXPECTED_COLUMNS_FBL3N):
-                            df_bcs_iva_retenido_1250010 = cls.clean_data(df_bcs_iva_retenido_1250010)
-                            cls.save_fbl3n_to_db(df_bcs_iva_retenido_1250010, BCSIVARetenido1250010)
-
-                    if file == "bhc_fbl3n":
-                        file_bytes = BytesIO(file_content)
-                        xls = pd.ExcelFile(file_bytes)
-
-                        df_bhs_ieps_2440020 = pd.read_excel(xls, 'IEPS 2440020')
-                        df_bhs_iva_trasladado_2440015 = pd.read_excel(xls, 'IVA Trasladado 2440015')
-                        df_bhs_iva_retenido_1250010 = pd.read_excel(xls, 'IVA Retenido 1250010')
-                        df_bhs_iva_otros = pd.read_excel(xls, 'IVA Otros ingresos')
-
-                        if cls.validate_columns(df_bhs_ieps_2440020, cls.BHC_EXPECTED_COLUMNS_FBL3N):
-                            df_bcs_ieps_2440020 = cls.clean_data(df_bhs_ieps_2440020)
-                            cls.save_bhc_fbl3n_to_db(df_bcs_ieps_2440020, BHCIEPS2440020)
-
-                        if cls.validate_columns(df_bhs_iva_trasladado_2440015, cls.BHC_EXPECTED_COLUMNS_FBL3N):
-                            df_bhs_iva_trasladado_2440015 = cls.clean_data(df_bhs_iva_trasladado_2440015)
-                            cls.save_bhc_fbl3n_to_db(df_bhs_iva_trasladado_2440015, BHCIVATrasladado2440015)
-
-                        if cls.validate_columns(df_bhs_iva_retenido_1250010, cls.BHC_EXPECTED_COLUMNS_FBL3N):
-                            df_bhs_iva_retenido_1250010 = cls.clean_data(df_bhs_iva_retenido_1250010)
-                            cls.save_bhc_fbl3n_to_db(df_bhs_iva_retenido_1250010, BHCIVARetenido1250010)
-
-                        if cls.validate_columns(df_bhs_iva_otros, cls.BHC_EXPECTED_COLUMNS_FBL3N):
-                            df_bhs_iva_otros = cls.clean_data(df_bhs_iva_otros)
-                            cls.save_bhc_fbl3n_to_db(df_bhs_iva_otros, BHCIVAOTROS)
-
-                    if file == "bcs_fbl5n":
-                        file_bytes = BytesIO(file_content)
-                        xls = pd.ExcelFile(file_bytes)
-
-                        df_bcs = pd.read_excel(xls, "Sheet1")
-
-                        if cls.validate_columns(df_bcs, cls.BCS_EXPECTED_COLUMNS_FBL5N):
-                            df_bcs = cls.clean_data(df_bcs)
-                            cls.save_bcs_fbl5n_to_db(df_bcs, BCSFBL5N)
-
-                    if file == "bhc_fbl5n":
-                        file_bytes = BytesIO(file_content)
-                        xls = pd.ExcelFile(file_bytes)
-
-                        df_bhc = pd.read_excel(xls, 'Sheet1')
-                        if cls.validate_columns(df_bhc, cls.BHC_EXPECTED_COLUMNS_FBL5N):
-                            df_bcs = cls.clean_data(df_bhc)
-                            cls.save_bhc_fbl5n_to_db(df_bcs, BHCFBL5N)
-
-                    if file == "banks":
-                        file_bytes = BytesIO(file_content)
-                        xls = pd.ExcelFile(file_bytes)
-
-                        sheets_to_process = cls.get_sheets_banks(xls.sheet_names)
-
-                        for sheet in sheets_to_process:
-                            model_name = sheet[-3:]
-                            model = None
-                            array_to_validate = []
-
-                            if model_name == "PBC":
-                                model = BankPbc
-                                array_to_validate = cls.BANK_PBC
-
-                            if model_name == "N8P":
-                                model = BankN8p
-                                array_to_validate = cls.BANK_N8P
-
-                            if model is not None:
-                                df_bank = pd.read_excel(xls, sheet)
-
-                                if cls.validate_columns(df_bank, array_to_validate):
-                                    df_bank = cls.clean_data(df_bank)
-                                    cls.save_bank_pbc_n8p(df_bank, model)
+            asyncio.gather(*tasks)
 
         except Exception as e:
             logger.warning(str(e))
+
+    @classmethod
+    async def process_xml_file(cls, file_content, s3_url):
+        root = ET.fromstring(file_content)
+        namespaces = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/4',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+        }
+        descriptions = [concepto.get('Descripcion') for concepto in
+                        root.findall('.//cfdi:Concepto', namespaces)]
+        descripcion_string = '*'.join(descriptions)
+
+        sat = Sat(
+            cfdi_date=root.get('Fecha'),
+            receipt_number=root.get('Folio'),
+            fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
+            product_or_service=descripcion_string,
+            currency=root.get('Moneda'),
+            total_amount=root.get('Total'),
+            payment_method=root.get('MetodoPago'),
+            s3_url=s3_url,
+            subtotal_me=root.get('SubTotal'),
+            state="uploaded"
+        )
+        sat.save()
+
+    @classmethod
+    async def process_xlsx_file(cls, file_content, file_key):
+        file_bytes = BytesIO(file_content)
+        xls = pd.ExcelFile(file_bytes)
+
+        if file_key == "bcs_fbl3n":
+            df_bcs_ieps_2440020 = pd.read_excel(xls, 'IEPS 2440020')
+            df_bcs_iva_cobrado_2440015 = pd.read_excel(xls, 'IVA cobrado 2440015')
+            df_bcs_iva_retenido_1250010 = pd.read_excel(xls, 'IVA Retenido 1250010')
+
+            if cls.validate_columns(df_bcs_ieps_2440020, cls.EXPECTED_COLUMNS_FBL3N):
+                df_bcs_ieps_2440020 = cls.clean_data(df_bcs_ieps_2440020)
+                cls.save_fbl3n_to_db(df_bcs_ieps_2440020, BCSIEPS2440020)
+
+            if cls.validate_columns(df_bcs_iva_cobrado_2440015, cls.EXPECTED_COLUMNS_FBL3N):
+                df_bcs_iva_cobrado_2440015 = cls.clean_data(df_bcs_iva_cobrado_2440015)
+                cls.save_fbl3n_to_db(df_bcs_iva_cobrado_2440015, BCSIVACobrado2440015)
+
+            if cls.validate_columns(df_bcs_iva_retenido_1250010, cls.EXPECTED_COLUMNS_FBL3N):
+                df_bcs_iva_retenido_1250010 = cls.clean_data(df_bcs_iva_retenido_1250010)
+                cls.save_fbl3n_to_db(df_bcs_iva_retenido_1250010, BCSIVARetenido1250010)
+
+        elif file_key == "bhc_fbl3n":
+            df_bhs_ieps_2440020 = pd.read_excel(xls, 'IEPS 2440020')
+            df_bhs_iva_trasladado_2440015 = pd.read_excel(xls, 'IVA Trasladado 2440015')
+            df_bhs_iva_retenido_1250010 = pd.read_excel(xls, 'IVA Retenido 1250010')
+            df_bhs_iva_otros = pd.read_excel(xls, 'IVA Otros ingresos')
+
+            if cls.validate_columns(df_bhs_ieps_2440020, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                df_bcs_ieps_2440020 = cls.clean_data(df_bhs_ieps_2440020)
+                cls.save_bhc_fbl3n_to_db(df_bcs_ieps_2440020, BHCIEPS2440020)
+
+            if cls.validate_columns(df_bhs_iva_trasladado_2440015, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                df_bhs_iva_trasladado_2440015 = cls.clean_data(df_bhs_iva_trasladado_2440015)
+                cls.save_bhc_fbl3n_to_db(df_bhs_iva_trasladado_2440015, BHCIVATrasladado2440015)
+
+            if cls.validate_columns(df_bhs_iva_retenido_1250010, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                df_bhs_iva_retenido_1250010 = cls.clean_data(df_bhs_iva_retenido_1250010)
+                cls.save_bhc_fbl3n_to_db(df_bhs_iva_retenido_1250010, BHCIVARetenido1250010)
+
+            if cls.validate_columns(df_bhs_iva_otros, cls.BHC_EXPECTED_COLUMNS_FBL3N):
+                df_bhs_iva_otros = cls.clean_data(df_bhs_iva_otros)
+                cls.save_bhc_fbl3n_to_db(df_bhs_iva_otros, BHCIVAOTROS)
+
+        elif file_key == "bcs_fbl5n":
+            df_bcs = pd.read_excel(xls, "Sheet1")
+            if cls.validate_columns(df_bcs, cls.BCS_EXPECTED_COLUMNS_FBL5N):
+                df_bcs = cls.clean_data(df_bcs)
+                cls.save_bcs_fbl5n_to_db(df_bcs, BCSFBL5N)
+
+        elif file_key == "bhc_fbl5n":
+            df_bhc = pd.read_excel(xls, 'Sheet1')
+            if cls.validate_columns(df_bhc, cls.BHC_EXPECTED_COLUMNS_FBL5N):
+                df_bcs = cls.clean_data(df_bhc)
+                cls.save_bhc_fbl5n_to_db(df_bcs, BHCFBL5N)
+
+        elif file_key == "banks":
+            sheets_to_process = cls.get_sheets_banks(xls.sheet_names)
+            for sheet in sheets_to_process:
+                model_name = sheet[-3:]
+                model = None
+                array_to_validate = []
+
+                if model_name == "PBC":
+                    model = BankPbc
+                    array_to_validate = cls.BANK_PBC
+
+                if model_name == "N8P":
+                    model = BankN8p
+                    array_to_validate = cls.BANK_N8P
+
+                if model is not None:
+                    df_bank = pd.read_excel(xls, sheet)
+                    if cls.validate_columns(df_bank, array_to_validate):
+                        df_bank = cls.clean_data(df_bank)
+                        cls.save_bank_pbc_n8p(df_bank, model)
 
     @classmethod
     def get_sheets_banks(cls, sheets_list):
@@ -651,7 +631,7 @@ class UploadFilesController:
         db.session.commit()
 
     @classmethod
-    def save_bank_pbc_n8p(cls,  df, model):
+    def save_bank_pbc_n8p(cls, df, model):
         for _, row in df.iterrows():
             record = model(
                 business_area=row.get("Business Area"),

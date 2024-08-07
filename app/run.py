@@ -246,8 +246,7 @@ def forgot_password():
                                    error="Usuario No Encontrado o Eliminado.", email=email)
         except cognito_client.exceptions.CodeMismatchException as e:
             return render_template('login/reset_password.html',
-                                   error="Ha ocurrido un problema al enviar el código para asignar una nueva "
-                                         "contraseña."
+                                   error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
                                          "Intenta de nuevo.",
                                    email=email)
         except Exception as e:
