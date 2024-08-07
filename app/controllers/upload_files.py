@@ -343,8 +343,24 @@ class UploadFilesController:
             'cfdi': 'http://www.sat.gob.mx/cfd/4',
             'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
         }
+
+        tax_codes = {'001', '002', '003'}
+
         descriptions = [concepto.get('Descripcion') for concepto in
                         root.findall('.//cfdi:Concepto', namespaces)]
+
+        taxes = root.findall('.//cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces)
+
+        vat = 0
+        ieps = 0
+
+        for tax in taxes:
+            tax_code = tax.get('Impuesto')
+            if tax_code == "002":
+                vat = tax.get('Importe')
+            if tax_code == "003":
+                ieps = tax.get('Importe')
+
         descripcion_string = '*'.join(descriptions)
 
         sat = Sat(
@@ -357,7 +373,9 @@ class UploadFilesController:
             payment_method=root.get('MetodoPago'),
             s3_url=s3_url,
             subtotal_me=root.get('SubTotal'),
-            state="uploaded"
+            state="uploaded",
+            ieps=ieps,
+            vat_16=vat
         )
         sat.save()
 
