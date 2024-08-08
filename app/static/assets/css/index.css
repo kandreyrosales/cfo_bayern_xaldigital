@@ -130,6 +130,14 @@
     align-items: center; /* Center vertically */
 }
 
+#loadingSpinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050; /* Ensure it appears on top of other elements */
+}
+
 #more_info_ingresos{
     font-family: Poppins;
     font-size: 14px;

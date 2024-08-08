@@ -19,6 +19,7 @@ class Bank(db.Model):
     classification = db.Column(db.String(250), nullable=True)
     comment = db.Column(db.String(250), nullable=True)
     s3_url = db.Column(db.String(250), nullable=True)
+    file_name = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
         return f'<Banco {self.id}>'
@@ -54,6 +55,7 @@ class Sat(db.Model):
     payment_supplement = db.Column(db.Float, nullable=False, default=0)
     s3_url = db.Column(db.String(250), nullable=False)
     state = db.Column(db.String(100), nullable=False, default="uploaded")
+    file_name = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
         return f'<Sat {self.id}>'
@@ -122,7 +124,7 @@ class FBL3N(db.Model):
     document_type = db.Column(db.String(250), nullable=True)
     document_number = db.Column(db.String(250))
     gl_account = db.Column(db.String(250), nullable=True)
-    fiscal_year = db.Column(db.BigInteger, nullable=True)
+    fiscal_year = db.Column(db.String(10), nullable=True)
     year_month = db.Column(db.String(10), nullable=True)
     document_header_text = db.Column(db.String(255), nullable=True)
     assignment = db.Column(db.String(250), nullable=True)
@@ -302,7 +304,7 @@ class BankN8p(db.Model):
     __tablename__ = 'bank_n8p'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    business_area = db.Column(db.String, nullable=True)
+    business_area = db.Column(db.Float, nullable=True, default=0)
     document_type = db.Column(db.String, nullable=True)
     document_number = db.Column(db.String, nullable=True)
     account = db.Column(db.String, nullable=True)

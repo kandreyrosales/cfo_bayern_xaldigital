@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://unpkg.com/htmx.org@1.8.5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <title>Defense File</title>
 </head>
 <body>
@@ -94,17 +96,7 @@
                     <path class="rect_conciliaciones_icon" d="M12 17L12 7" stroke="#231F20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path class="rect_conciliaciones_icon" d="M16 17L16 10" stroke="#231F20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Bancos
-            </a>
-            </li>
-            <li class="nav-item"><a href="{{ url_for('upload_sat_sap') }}" class="btn btn-lg border-0 custom_btn_navbar custom_btn_navbar_banks" id="btn-banks-page">
-                <svg id="icon_bancos" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect class="rect_conciliaciones_icon" x="2" y="2" width="20" height="20" rx="5" stroke="#231F20" stroke-width="1.5"/>
-                    <path class="rect_conciliaciones_icon" d="M8 17L8 14" stroke="#231F20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path class="rect_conciliaciones_icon" d="M12 17L12 7" stroke="#231F20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path class="rect_conciliaciones_icon" d="M16 17L16 10" stroke="#231F20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                SAT, SAP
+                Cargar Archivos
             </a>
             </li>
         </ul>

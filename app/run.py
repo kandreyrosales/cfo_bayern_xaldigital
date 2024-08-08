@@ -571,29 +571,21 @@ def uploadfile(extension):
     return render_template('uploadfile.html', extension=extension)
 
 
-@app.route("/subir_info_bancos", methods=['GET', 'POST'])
+@app.route("/subir_info", methods=['GET', 'POST'])
 def upload_banks_info():
     if request.method == 'GET':
-        return render_template('bank_info_files.html', banks=UploadFilesController.BANK_LIST)
+        return render_template('uploader_info_files.html', banks=UploadFilesController.BANK_LIST)
 
     if request.method == "POST":
         asyncio.run(UploadFilesController.upload_ban_info(request.files))
-        return render_template('bank_info_files.html',
-                               banks=UploadFilesController.BANK_LIST,
-                               success="El proceso de carga de informacion de bancos ha iniciado"
-                               )
+        return jsonify(message="Ha comenzado el proceso de carga de información bancaria"), 200
 
 
-@app.route("/subir_info_sat_sap", methods=['GET', 'POST'])
+@app.route("/subir_info_sat_sap", methods=['POST'])
 def upload_sat_sap():
-    if request.method == 'GET':
-        return render_template('sat_sap_files.html')
-
     if request.method == "POST":
         asyncio.run(UploadFilesController.upload_sat_sap_info(request.files))
-        return render_template('sat_sap_files.html',
-                               success="El proceso de carga de informacion de SAP-SAT ha iniciado"
-                               )
+        return jsonify(message="El proceso de carga de información de SAP - SAT ha comenzado"), 200
 
 
 @app.route('/subir_archivo/<extension>', methods=['GET', 'POST'])
@@ -644,4 +636,5 @@ def subir_archivo(extension):
 if __name__ == '__main__':
     app.run(debug=True)
     with app.app_context():
+        db.drop_all()
         db.create_all()
