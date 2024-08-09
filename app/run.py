@@ -13,7 +13,6 @@ from app import app, db
 from app.utils import aws
 from controllers.upload_files import UploadFilesController
 
-
 app.secret_key = 'xaldigitalcfobayer!'
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
 bucket_name = os.getenv("bucket_name")
@@ -429,7 +428,7 @@ def get_customer_name_list():
 
 
 @app.route('/conciliaciones')
-@token_required
+#@token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -577,15 +576,31 @@ def upload_banks_info():
         return render_template('uploader_info_files.html', banks=UploadFilesController.BANK_LIST)
 
     if request.method == "POST":
-        asyncio.run(UploadFilesController.upload_ban_info(request.files))
-        return jsonify(message="Ha comenzado el proceso de carga de información bancaria"), 200
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            executor.submit(UploadFilesController.upload_ban_info, request.files)
+        return jsonify(message="Ha comenzado el proceso de carga de la información bancaria. "
+                               "Por favor, espere unos minutos. El tiempo de "
+                               "carga depende del tamaño de los archivos."), 200
 
 
 @app.route("/subir_info_sat_sap", methods=['POST'])
 def upload_sat_sap():
     if request.method == "POST":
-        asyncio.run(UploadFilesController.upload_sat_sap_info(request.files))
-        return jsonify(message="El proceso de carga de información de SAP - SAT ha comenzado"), 200
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            executor.submit(UploadFilesController.upload_sap_info, request.files)
+        return jsonify(message="Se está cargando información de SAP. "
+                               "Por favor, espere unos minutos. El tiempo de "
+                               "carga depende del tamaño de los archivos."), 200
+
+
+@app.route("/subir_info_sat", methods=['POST'])
+def upload_sat():
+    if request.method == "POST":
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            executor.submit(UploadFilesController.upload_sat_info, request.files)
+        return jsonify(message="Se está cargando información de SAT. "
+                               "Por favor, espere unos minutos. El tiempo de "
+                               "carga depende del tamaño de los archivos."), 200
 
 
 @app.route('/subir_archivo/<extension>', methods=['GET', 'POST'])

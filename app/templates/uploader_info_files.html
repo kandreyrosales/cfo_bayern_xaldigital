@@ -19,10 +19,9 @@
             </h3>
             <div id="collapseOne" class="accordion-collapse collapse show  p-5" data-bs-parent="#accordionExample">
                 <form
-                        action="/subir_info_bancos"
                         method="post"
                         enctype="multipart/form-data"
-                        hx-post="/subir_info_bancos"
+                        hx-post="/subir_info"
                         hx-trigger="submit"
                         hx-swap="innerHTML"
                         hx-target="#status-message"
@@ -64,7 +63,7 @@
                     <form
                             method="post"
                             enctype="multipart/form-data"
-                            hx-post="/subir_info_sat_sap"
+                            hx-post="/subir_info_sat"
                             hx-trigger="submit"
                             hx-swap="innerHTML"
                             hx-target="#status-message"
@@ -72,13 +71,17 @@
                         <div class="row align-items-start">
                             <div class="row">
                                 <div class="col-12 col-md-6 col-lg-6 mb-4">
-                                    <p class="form-label text_font mb-2 h6">SAT</p>
+                                    <p class="form-label text_font mb-2 h6">
+                                        SAT (Límite de 10 archivos por carga.)
+                                    </p>
                                     <input
                                             class="form-control btn-outline-light btn-sm rounded-3 input_button"
                                             type="file"
                                             name="sat"
                                             accept=".xml"
                                             required
+                                            multiple
+                                            id="sapInput"
                                     >
                                 </div>
                             </div>
@@ -263,5 +266,22 @@
                 }
             });
         </script>
+        <script>
+            const fileInput = document.getElementById('sapInput');
+            const maxFiles = 10;
 
+            fileInput.addEventListener('change', (event) => {
+              const files = event.target.files;
+              if (files.length > maxFiles) {
+                 Swal.fire({
+                        title: 'Error!',
+                        text: `Solo puedes seleccionar un máximo de ${maxFiles} archivos`,
+                        icon: 'error',
+                        confirmButtonText: 'Try Again'
+                    });
+                event.target.value = ''; // Limpia la selección de archivos
+              }
+            });
+
+        </script>
         {% endblock%}
