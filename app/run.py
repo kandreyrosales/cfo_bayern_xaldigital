@@ -402,12 +402,14 @@ def get_rfc_list():
     """
     Getting the RFC list from the Database
     """
+    '''
     conn, cur = connection_db()
     query_uuid = """select DISTINCT (rfc) from conciliaciones ;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
     new_item = ("Todos",)
+    '''
     try:
-        return [new_item] + data_from_db
+        return []
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -417,29 +419,35 @@ def get_customer_name_list():
     """
     Getting customer names list from the Database
     """
+    '''
     conn, cur = connection_db()
     query_uuid = """select DISTINCT (cliente) from conciliaciones ;"""
     data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
     new_item = ("Todos",)
+    '''
     try:
-        return [new_item] + data_from_db
+        return []
     except Exception as e:
         return jsonify({'error': str(e)})
 
 
 @app.route('/conciliaciones')
-#@token_required
+# @token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
-    conn, cur = connection_db()
-    query_conciliations_view = """select * from conciliaciones order by cliente, fecha;"""
-    rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
+    #conn, cur = connection_db()
+    #query_conciliations_view = """select * from conciliaciones order by cliente, fecha;"""
+    #rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
+
     return render_template(
         'reconciliations_data_cfo.html',
-        initial_data_for_table=rows_data_view,
+        initial_data_for_table=[],
+        search=True,
+        total_pages=0,
+        current_page=1
     )
 
 
@@ -473,8 +481,58 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
     return where_query, False
 
 
-@app.route('/get_filtered_data_conciliations', methods=["GET"])
+@app.route('/get_filtered_data_conciliations', methods=["GET", "POST"])
 def get_filtered_data_conciliations():
+    if request.method == "POST":
+        result = {
+            "data": [
+                {
+                    "RFC": "ABC123456789",
+                    "Factura": "F001",
+                    "Cliente": "Cliente XYZ",
+                    "Transacción": "T001",
+                    "Fecha": "2024-08-12",
+                    "Estado": "Pagado",
+                    "XML_Facturación": {
+                        "UUID": "UUID-001",
+                        "Subtotal": 1000.00,
+                        "IVA": 160.00,
+                        "IEPS": 0.00,
+                        "Total": 1160.00
+                    },
+                    "Bancos": {
+                        "Depósitos": 1160.00,
+                        "Nombre_del_Banco": "Banco ABC",
+                        "Fecha_de_Depósito": "2024-08-10"
+                    },
+                    "Validador_Aplicación_de_Pagos": None,
+                    "SAP_FBL5N": {
+                        "Document_Number": "DOC-001",
+                        "Clearing_Document": "CLR-001",
+                        "Subtotal": 1000.00,
+                        "IVA": 160.00,
+                        "IEPS": 0.00,
+                        "Total_Aplicación": 1160.00
+                    },
+                    "SAT_XML_Complemento_de_Pago": {
+                        "UUID_Relacionado": "UUID-002",
+                        "Subtotal": 1000.00,
+                        "IVA_Cobrado_%": 16,
+                        "IEPS_Cobrado_%": 0,
+                        "Total_Aplicación": 1160.00
+                    },
+                    "Validador_IVA": {
+                        "Validador_Subtotal": 1000.00,
+                        "Validador_IVAS": 160.00,
+                        "Validador_IEPS": 0.00,
+                        "Total_Variación": 0.00
+                    }
+                }
+            ]
+        }
+        return jsonify(result), 200
+
+    '''
     conn, cur = connection_db()
 
     start_date = request.args.get("start_date")
@@ -510,6 +568,7 @@ def get_filtered_data_conciliations():
         query=query_conciliations_view_filtered
     )
     return jsonify(result)
+    '''
 
 
 def custom_values_for_insert(data_sheet, max_col: int):

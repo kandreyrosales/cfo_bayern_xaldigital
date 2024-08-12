@@ -1,0 +1,40 @@
+<form class="d-flex"
+      method="post"
+      hx-post="/get_filtered_data_conciliations"
+      hx-trigger="submit"
+      hx-target="#result-conciliations"
+      hx-swap="innerHTML">
+    <div class="form-group me-4">
+        <label for="calendar_filter_start_date" style="display: block"><span class="filter_label">Fecha de Inicio</span></label>
+        <input
+                type="date" name="calendar_filter_start_date" id="calendar_filter_start_date" lang="es-MX"
+                class="input_button form-control btn-outline-light btn-sm"
+        >
+    </div>
+    <div class="form-group me-4">
+        <label for="calendar_filter_end_date" style="display: block"><span class="filter_label" lang="es-MX">Fecha de Fin</span></label>
+        <input type="date" name="calendar_filter_end_date" id="calendar_filter_end_date"
+        class="input_button form-control btn-outline-light btn-sm"
+        >
+    </div>
+    <div class="form-group me-4">
+        <label style="display: block"><span class="filter_label">RFC</span></label>
+        <select id="rfc_selector" style="width: 150px"
+        class="form-select"></select>
+    </div>
+    <div class="form-group me-4">
+        <label style="display: block"><span class="filter_label">Cliente</span></label>
+        <select id="customer_name_selector" style="width: 150px"
+                class="input_button form-control btn-outline-light btn-sm"></select>
+    </div>
+    <div class="form-group me-4">
+        <label for="calendar_filter_value_date_start_date" style="display: block"><span class="filter_label">Mes Cobranza</span></label>
+        <input type="month" name="calendar_filter_value_date_start_date" id="calendar_filter_value_date_start_date"
+               class="input_button form-control btn-outline-light btn-sm"
+               lang="es-MX">
+    </div>
+    <div class="form-group me-4" style="margin-top: auto;">
+        <input type="submit" class="btn btn-light" value="Filtrar">
+
+    </div>
+</form>

@@ -1,6 +1,155 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="row">
+<div class="container-fluid">
+    <div class="table-responsive">
+        <table id="cfo_reconciliations" class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th colspan="6"></th>
+                <th colspan="5" class="text-center" style="background-color: #0BBEF0;">XML Facturación</th>
+                <th colspan="3" class="text-center" style="background-color: #0BBEF0;">Bancos</th>
+                <th class="text-center" style="background-color: #83D333;">Validador Aplicación de Pagos</th>
+                <th colspan="6" class="text-center" style="background-color: #0BBEF0;">SAP (FBL5N)</th>
+                <th colspan="5" class="text-center" style="background-color: #0BBEF0;">SAT XML Complemento de Pago</th>
+                <th colspan="4" class="text-center" style="background-color: #83D333;">Validador IVA</th>
+            </tr>
+            <tr>
+                <!-- Columnas Generales -->
+                <th style="background-color: #0F7093; color: #FFFFFF;">RFC</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Factura</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Cliente</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Transacción</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Fecha</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Estado</th>
+
+                <!-- XML Facturación -->
+                <th style="background-color: #0F7093; color: #FFFFFF;">UUID</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Subtotal</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">IVA</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">IEPS</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Total</th>
+
+                <!-- Bancos -->
+                <th style="background-color: #0F7093; color: #FFFFFF;">Depósitos</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Nombre del Banco</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Fecha de Depósito</th>
+
+                <!-- Validador Aplicación de Pagos -->
+                <th style="background-color: #0F7093; color: #FFFFFF;"></th>
+
+                <!-- SAP (FBL5N) -->
+                <th style="background-color: #0F7093; color: #FFFFFF;">Document Number</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Clearing Document</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Subtotal</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">IVA</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">IEPS</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Total Aplicación</th>
+
+                <!-- SAT XML Complemento de Pago -->
+                <th style="background-color: #0F7093; color: #FFFFFF;">UUID Relacionado</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Subtotal</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">IVA Cobrado %</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">IEPS Cobrado %</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Total Aplicación</th>
+
+                <!-- Validador IVA -->
+                <th style="background-color: #0F7093; color: #FFFFFF;">Validador Subtotal</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Validador IVAS</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Validador IEPS</th>
+                <th style="background-color: #0F7093; color: #FFFFFF;">Total Variación</th>
+            </tr>
+            </thead>
+            <tbody id="result-conciliations">
+            <!-- Aquí van las filas de datos -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    document.body.addEventListener('htmx:afterRequest', (event) => {
+        let data;
+        try {
+            data = JSON.parse(event.detail.xhr.responseText);
+        } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            return;
+        }
+
+        if (event.detail.xhr.status === 200) {
+            console.log(data);
+
+            const tbody = document.getElementById('result-conciliations');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            // Check if data is an array and has elements
+            if (Array.isArray(data.data) && data.data.length > 0) {
+                data.data.forEach(item => {
+                    const row = document.createElement('tr');
+
+                    // General Columns
+                    row.innerHTML += `<td>${item.RFC}</td>`;
+                    row.innerHTML += `<td>${item.Factura}</td>`;
+                    row.innerHTML += `<td>${item.Cliente}</td>`;
+                    row.innerHTML += `<td>${item.Transacción}</td>`;
+                    row.innerHTML += `<td>${item.Fecha}</td>`;
+                    row.innerHTML += `<td>${item.Estado}</td>`;
+
+                    // XML Facturación Columns
+                    row.innerHTML += `<td>${item.XML_Facturación.UUID}</td>`;
+                    row.innerHTML += `<td>${item.XML_Facturación.Subtotal.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.XML_Facturación.IVA.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.XML_Facturación.IEPS.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.XML_Facturación.Total.toFixed(2)}</td>`;
+
+                    // Bancos Columns
+                    row.innerHTML += `<td>${item.Bancos.Depósitos.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.Bancos.Nombre_del_Banco}</td>`;
+                    row.innerHTML += `<td>${item.Bancos.Fecha_de_Depósito}</td>`;
+
+                    // Validador Aplicación de Pagos Column
+                    row.innerHTML += `<td>${item.Validador_Aplicación_de_Pagos || ''}</td>`;
+
+                    // SAP (FBL5N) Columns
+                    row.innerHTML += `<td>${item.SAP_FBL5N.Document_Number}</td>`;
+                    row.innerHTML += `<td>${item.SAP_FBL5N.Clearing_Document}</td>`;
+                    row.innerHTML += `<td>${item.SAP_FBL5N.Subtotal.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.SAP_FBL5N.IVA.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.SAP_FBL5N.IEPS.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.SAP_FBL5N.Total_Aplicación.toFixed(2)}</td>`;
+
+                    // SAT XML Complemento de Pago Columns
+                    row.innerHTML += `<td>${item.SAT_XML_Complemento_de_Pago.UUID_Relacionado}</td>`;
+                    row.innerHTML += `<td>${item.SAT_XML_Complemento_de_Pago.Subtotal.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.SAT_XML_Complemento_de_Pago['IVA_Cobrado_%']}</td>`;
+                    row.innerHTML += `<td>${item.SAT_XML_Complemento_de_Pago['IEPS_Cobrado_%']}</td>`;
+                    row.innerHTML += `<td>${item.SAT_XML_Complemento_de_Pago.Total_Aplicación.toFixed(2)}</td>`;
+
+                    // Validador IVA Columns
+                    row.innerHTML += `<td>${item.Validador_IVA.Validador_Subtotal.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.Validador_IVA.Validador_IVAS.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.Validador_IVA.Validador_IEPS.toFixed(2)}</td>`;
+                    row.innerHTML += `<td>${item.Validador_IVA.Total_Variación.toFixed(2)}</td>`;
+
+                    tbody.appendChild(row);
+                });
+            }
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Something went wrong.',
+                icon: 'error',
+                confirmButtonText: 'Try Again'
+            });
+        }
+    });
+</script>
+
+
+{% endblock %}
+
+
+<!--
+<div class="row">
         <div class="container-fluid">
             <div class="row align-items-start">
                 <div class="col">
@@ -28,7 +177,7 @@
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Fecha</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Estado</th>
 
-                            <!-- XML Facturacion -->
+                            <!-- XML Facturacion
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">UUID</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Subtotal</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IVA</th>
@@ -40,10 +189,10 @@
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Nombre del Banco</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Fecha de Depósito</th>
 
-                            <!-- VALIDADOR APLICACIÓN DE PAGOS -->
+                            <!-- VALIDADOR APLICACIÓN DE PAGOS
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;"></th>
 
-                            <!-- SAP FBL5 -->
+                            <!-- SAP FBL5
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Document Number</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Clearing Document</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Subtotal</th>
@@ -51,7 +200,7 @@
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IEPS</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Total Aplicación</th>
 
-                            <!-- SAT XML COMPLEMENTO DE PAGO -->
+                            <!-- SAT XML COMPLEMENTO DE PAGO
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">UUID Relacionado</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Subtotal</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">IVA Cobrado %</th>
@@ -60,7 +209,7 @@
 
 
 
-                            <!-- SAT XML COMPLEMENTO DE PAGO -->
+                            <!-- SAT XML COMPLEMENTO DE PAGO
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Validador Subtotal</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Validador IVAS</th>
                             <th style="background-color: #0F7093; font-family: Poppins;font-size: 18px;font-weight: 600;text-align: center;color: #FFFFFF;padding: 10px 80px;border-color: white;">Validador IEPS</th>
@@ -75,138 +224,137 @@
             </div>
         </div>
     </div>
-    <script type="text/javascript">
-        $(document).ready(function() {
+-->
+/*
+$(document).ready(function() {
 
-            const language_data = {
-                "sProcessing":    "Procesando...",
-                "sLengthMenu":    "Mostrar _MENU_ registros",
-                "sZeroRecords":   "No se encontraron resultados",
-                "sEmptyTable":    "Ningún dato disponible en esta tabla",
-                "sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-                "sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-                "sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-                "sInfoPostFix":   "",
-                "sSearch":        "Buscar:",
-                "sUrl":           "",
-                "sInfoThousands":  ",",
-                "sLoadingRecords": "Cargando...",
-                "oPaginate": {
-                    "sFirst":    "Primero",
-                    "sLast":    "Último",
-                    "sNext":    "Siguiente",
-                    "sPrevious": "Anterior"
-                },
-                "oAria": {
-                    "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                },
-            };
+const language_data = {
+"sProcessing":    "Procesando...",
+"sLengthMenu":    "Mostrar _MENU_ registros",
+"sZeroRecords":   "No se encontraron resultados",
+"sEmptyTable":    "Ningún dato disponible en esta tabla",
+"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
+"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
+"sInfoPostFix":   "",
+"sSearch":        "Buscar:",
+"sUrl":           "",
+"sInfoThousands":  ",",
+"sLoadingRecords": "Cargando...",
+"oPaginate": {
+"sFirst":    "Primero",
+"sLast":    "Último",
+"sNext":    "Siguiente",
+"sPrevious": "Anterior"
+},
+"oAria": {
+"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+},
+};
 
-            // Retrieve data for filters
-            const start_date = localStorage.getItem('start_date');
-            const end_date = localStorage.getItem('end_date');
-            const calendar_filter_value_date_start_date = localStorage.getItem('calendar_filter_value_date_start_date');
-            const rfc = localStorage.getItem('rfc');
-            const customer_name = localStorage.getItem('customer_name');
-            if(calendar_filter_value_date_start_date != null){
-                $('#calendar_filter_value_date_start_date').val(calendar_filter_value_date_start_date);
-            }
-            if (start_date !== null){
-                $('#calendar_filter_start_date').val(start_date);
-                $('#calendar_filter_end_date').val(end_date);
-            }
-            if(rfc !== null){
-                $('#rfc_selector').val(rfc).trigger('change'); // Select option by value
-                $('#rfc_selector option:first').prop('selected', true).trigger('change');
-            }
-            if(customer_name !== null){
-                $('#customer_name_selector').val(rfc).trigger('change'); // Select option by value
-                $('#customer_name_selector option:first').prop('selected', true).trigger('change');
-            }
-            /* End retrieving data for filters */
+// Retrieve data for filters
+const start_date = localStorage.getItem('start_date');
+const end_date = localStorage.getItem('end_date');
+const calendar_filter_value_date_start_date = localStorage.getItem('calendar_filter_value_date_start_date');
+const rfc = localStorage.getItem('rfc');
+const customer_name = localStorage.getItem('customer_name');
+if(calendar_filter_value_date_start_date != null){
+$('#calendar_filter_value_date_start_date').val(calendar_filter_value_date_start_date);
+}
+if (start_date !== null){
+$('#calendar_filter_start_date').val(start_date);
+$('#calendar_filter_end_date').val(end_date);
+}
+if(rfc !== null){
+$('#rfc_selector').val(rfc).trigger('change'); // Select option by value
+$('#rfc_selector option:first').prop('selected', true).trigger('change');
+}
+if(customer_name !== null){
+$('#customer_name_selector').val(rfc).trigger('change'); // Select option by value
+$('#customer_name_selector option:first').prop('selected', true).trigger('change');
+}
+/* End retrieving data for filters */
 
-            let minEl = $('#calendar_filter_start_date').val();
-            let maxEl = $('#calendar_filter_end_date').val();
+let minEl = $('#calendar_filter_start_date').val();
+let maxEl = $('#calendar_filter_end_date').val();
 
-            // Initial URL for datatable
-            let url_get_conciliations_view_data = "{{ url_for('get_filtered_data_conciliations') }}"+"?start_date="+minEl+"&end_date="+maxEl+"&rfc=all";
+// Initial URL for datatable
+let url_get_conciliations_view_data = "{{ url_for('get_filtered_data_conciliations') }}"+"?start_date="+minEl+"&end_date="+maxEl+"&rfc=all";
 
-            // initial color of buttons
-            $("#btn-conciliations-page").css("background-color", "#0075A6");
-            $("#btn-conciliations-page").css("color", "#FFFFFF");
-            $(".rect_conciliaciones_icon").attr("stroke", "white");
+// initial color of buttons
+$("#btn-conciliations-page").css("background-color", "#0075A6");
+$("#btn-conciliations-page").css("color", "#FFFFFF");
+$(".rect_conciliaciones_icon").attr("stroke", "white");
 
-            // Formula to adjust ScrollY in datatable with actual size of page
-            let value_for_scroll = '300px';
-            if ($(document).height() > 800 && $(document).height() <1500){
-                value_for_scroll = "500px";
-            }else if($(document).height() > 1500){
-                value_for_scroll = "700px";
-            }
+// Formula to adjust ScrollY in datatable with actual size of page
+let value_for_scroll = '300px';
+if ($(document).height() > 800 && $(document).height() <1500){
+value_for_scroll = "500px";
+}else if($(document).height() > 1500){
+value_for_scroll = "700px";
+}
 
-            let table = $('#cfo_reconciliations').DataTable({
-                pageLength: 50,
-                responsive: true,
-                paging: true,
-                scrollCollapse: true,
-                scrollY: value_for_scroll,
-                searching: false,
-                info: false,
-                ordering: false,
-                "ajax": {
-                    "type": "GET",
-                    "url": url_get_conciliations_view_data, // Replace with your data endpoint URL
-                    "dataSrc": function (data) {
-                        return data.data || data; // Handle data structure from your API
-                    }
-                },
-                "language": language_data
-            });
+let table = $('#cfo_reconciliations').DataTable({
+pageLength: 50,
+responsive: true,
+paging: true,
+scrollCollapse: true,
+scrollY: value_for_scroll,
+searching: false,
+info: false,
+ordering: false,
+"ajax": {
+"type": "GET",
+"url": url_get_conciliations_view_data, // Replace with your data endpoint URL
+"dataSrc": function (data) {
+return data.data || data; // Handle data structure from your API
+}
+},
+"language": language_data
+});
 
-            $("#search_data_filter_button").click(function() {
-                let start_date_data = $('#calendar_filter_start_date').val();
-                let end_date_data = $('#calendar_filter_end_date').val();
-                let calendar_filter_value_date_start_date_data = $('#calendar_filter_value_date_start_date').val();
-                let rfc_data = $("#rfc_selector option:selected").text();
-                let customer_name_data = $("#customer_name_selector option:selected").text();
-                if (rfc_data === '' || rfc_data === 'Todos') {
-                    rfc_data = 'all';
-                }
-                if (customer_name_data === '' || customer_name_data === 'Todos') {
-                    customer_name_data = 'all';
-                }
+$("#search_data_filter_button").click(function() {
+let start_date_data = $('#calendar_filter_start_date').val();
+let end_date_data = $('#calendar_filter_end_date').val();
+let calendar_filter_value_date_start_date_data = $('#calendar_filter_value_date_start_date').val();
+let rfc_data = $("#rfc_selector option:selected").text();
+let customer_name_data = $("#customer_name_selector option:selected").text();
+if (rfc_data === '' || rfc_data === 'Todos') {
+rfc_data = 'all';
+}
+if (customer_name_data === '' || customer_name_data === 'Todos') {
+customer_name_data = 'all';
+}
 
-                // Store data for filters
-                localStorage.setItem('start_date', start_date_data);
-                localStorage.setItem('end_date', end_date_data);
-                localStorage.setItem('calendar_filter_value_date_start_date', calendar_filter_value_date_start_date_data);
-                localStorage.setItem('rfc', rfc_data);
-                localStorage.setItem('customer_name', customer_name_data);
+// Store data for filters
+localStorage.setItem('start_date', start_date_data);
+localStorage.setItem('end_date', end_date_data);
+localStorage.setItem('calendar_filter_value_date_start_date', calendar_filter_value_date_start_date_data);
+localStorage.setItem('rfc', rfc_data);
+localStorage.setItem('customer_name', customer_name_data);
 
-                let url_get_conciliations = "{{ url_for('get_filtered_data_conciliations') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data + "&customer=" + customer_name_data;
+let url_get_conciliations = "{{ url_for('get_filtered_data_conciliations') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data + "&customer=" + customer_name_data;
 
-                table.destroy();
-                table = $('#cfo_reconciliations').DataTable({
-                    pageLength: 50,
-                    responsive: true,
-                    paging: true,
-                    scrollY: value_for_scroll,
-                    scrollCollapse: true,
-                    searching: false,
-                    info: false,
-                    ordering: false,
-                    "ajax": {
-                        "type": "GET",
-                        "url": url_get_conciliations, // Replace with your data endpoint URL
-                        "dataSrc": function (data) {
-                            return data.data || data; // Handle data structure from your API
-                        }
-                    },
-                    "language": language_data
-                });
-            });
-        });
-    </script>
-{% endblock %}
-
+table.destroy();
+table = $('#cfo_reconciliations').DataTable({
+pageLength: 50,
+responsive: true,
+paging: true,
+scrollY: value_for_scroll,
+scrollCollapse: true,
+searching: false,
+info: false,
+ordering: false,
+"ajax": {
+"type": "GET",
+"url": url_get_conciliations, // Replace with your data endpoint URL
+"dataSrc": function (data) {
+return data.data || data; // Handle data structure from your API
+}
+},
+"language": language_data
+});
+});
+});
+*/
