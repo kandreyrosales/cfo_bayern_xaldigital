@@ -634,7 +634,10 @@ def uploadfile(extension):
 @app.route("/subir_info", methods=['GET', 'POST'])
 def upload_banks_info():
     if request.method == 'GET':
-        return render_template('uploader_info_files.html', banks=UploadFilesController.BANK_LIST)
+        return render_template('uploader_info_files.html',
+                               banks=UploadFilesController.BANK_LIST,
+                               title='Importador de archivos'
+                               )
 
     if request.method == "POST":
         with ThreadPoolExecutor(max_workers=5) as executor:

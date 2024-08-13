@@ -2,13 +2,16 @@
     <div class="container-fluid">
         <!-- Navbar brand and toggle button -->
         <div class="navbar-brand d-flex align-items-center">
-            <button class="btn btn-light btn-lg border-0" style="background-color: transparent;color: white;font-size: 35px" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+            <button class="btn btn-light btn-lg border-0"
+                    style="background-color: transparent;color: white;font-size: 35px" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
                 <i class="bi bi-list"></i>
             </button>
         </div>
 
         <!-- Toggler button for small screens -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -18,7 +21,12 @@
                 <div>
                     {% include 'search_component.html' %}
                 </div>
-            {% endif %}
+            {% else %}
+                <div class="d-none d-lg-block"> <!-- Show on large screens and above -->
+                    <h1 class="h4 text-white">{{ title }}</h1>
+                </div>
+                <div class="d-lg-none"> <!-- Show on medium screens and below -->
+                    <h1 class="h5 text-white">{{ title }}</h1>
+                {% endif %}
         </div>
-    </div>
 </nav>
