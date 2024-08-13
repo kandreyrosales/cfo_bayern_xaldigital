@@ -1,4 +1,5 @@
 from app import db, app
+from sqlalchemy import text
 from datetime import datetime
 
 
@@ -336,3 +337,11 @@ class BankN8p(db.Model):
     gl_account = db.Column(db.String, nullable=True)  # Added field
     purchasing_document = db.Column(db.String, nullable=True)  # Added field
     posting_date = db.Column(db.Date, nullable=True)
+
+
+def get_conciliations_view_data():
+    with app.app_context():
+        query = text("SELECT * FROM conciliations_view")
+        result = db.session.execute(query)
+        data = result.fetchall()  # Fetch all rows as a list of tuples
+        return data

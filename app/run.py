@@ -9,11 +9,11 @@ from datetime import datetime
 from functools import wraps
 import psycopg2
 
-from app import app, db
+from app import init_app, create_db, app, create_conciliations_view, destroy_db
+from app.models import get_conciliations_view_data
 from app.utils import aws
 from controllers.upload_files import UploadFilesController
 
-app.secret_key = 'xaldigitalcfobayer!'
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
@@ -484,6 +484,8 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
 @app.route('/get_filtered_data_conciliations', methods=["GET", "POST"])
 def get_filtered_data_conciliations():
     if request.method == "POST":
+        data = get_conciliations_view_data()
+        print(data)
         result = {
             "data": [
                 {
@@ -708,7 +710,9 @@ def subir_archivo(extension):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
+    init_app()
+    #destroy_db()
+    create_db()
+    create_conciliations_view()
+
+

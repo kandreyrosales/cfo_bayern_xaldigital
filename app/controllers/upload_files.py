@@ -278,19 +278,21 @@ class UploadFilesController:
 
     @classmethod
     def upload_sat_info(cls, files):
-        for file in files.getlist("sat"):
-            try:
-                today = datetime.now()
-                object_name = f"{today.strftime('%d-%m-%Y')}/{file.filename}"
-                file_content = file.read()
-                file.seek(0)
-                cls.upload_to_s3(file_content, aws.S3_BUCKET_NAME, object_name)
+        with app.app_context():
+            for file in files.getlist("sat"):
+                try:
+                    today = datetime.now()
+                    object_name = f"{today.strftime('%d-%m-%Y')}/{file.filename}"
+                    file_content = file.read()
+                    cls.process_xml_file(file_content, "", object_name)
+                    #file.seek(0)
+                    #cls.upload_to_s3(file_content, aws.S3_BUCKET_NAME, object_name)
 
-                s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/"
-                          f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
-                cls.process_xml_file(file_content, s3_url, object_name)
-            except Exception as e:
-                logger.warning(str(e))
+                    #s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/"
+                              #f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
+
+                except Exception as e:
+                    logger.warning(str(e))
 
     @classmethod
     def upload_ban_info(cls, files):
@@ -342,55 +344,66 @@ class UploadFilesController:
 
     @classmethod
     def process_xml_file(cls, file_content, s3_url, object_name):
-        with app.app_context():
+        sat = Sat.query.filter_by(file_name=object_name).first()
+        if not sat:
+            root = ET.fromstring(file_content)
+            namespaces = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/4',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+            }
 
-            sat = Sat.query.filter_by(file_name=object_name).first()
+            tax_codes = {'001', '002', '003'}
 
-            if not sat:
-                root = ET.fromstring(file_content)
-                namespaces = {
-                    'cfdi': 'http://www.sat.gob.mx/cfd/4',
-                    'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
-                }
+            descriptions = [concepto.get('Descripcion') for concepto in
+                            root.findall('.//cfdi:Concepto', namespaces)]
 
-                tax_codes = {'001', '002', '003'}
+            taxes = root.findall('.//cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces)
 
-                descriptions = [concepto.get('Descripcion') for concepto in
-                                root.findall('.//cfdi:Concepto', namespaces)]
+            vat = 0
+            ieps = 0
 
-                taxes = root.findall('.//cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces)
+            for tax in taxes:
+                tax_code = tax.get('Impuesto')
+                if tax_code == "002":
+                    vat = tax.get('Importe')
+                if tax_code == "003":
+                    ieps = tax.get('Importe')
 
-                vat = 0
-                ieps = 0
+            descripcion_string = '*'.join(descriptions)
 
-                for tax in taxes:
-                    tax_code = tax.get('Impuesto')
-                    if tax_code == "002":
-                        vat = tax.get('Importe')
-                    if tax_code == "003":
-                        ieps = tax.get('Importe')
+            sat = Sat(
+                cfdi_date=root.get('Fecha'),
+                receipt_number=root.get('Folio'),
+                fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
+                product_or_service=descripcion_string,
+                currency=root.get('Moneda'),
+                total_amount=root.get('Total'),
+                payment_method=root.get('MetodoPago'),
+                s3_url=s3_url,
+                subtotal_me=root.get('SubTotal'),
+                state="uploaded",
+                ieps=ieps,
+                vat_16=vat,
+                file_name=object_name
+            )
+            sat.save()
+        else:
+            logger.warning(f"{object_name} the data sat already register")
+        '''
+        logger.warning("inicio de la funcion")
+        sat = Sat.query.filter_by(file_name=object_name).first()
+        logger.warning(sat)
 
-                descripcion_string = '*'.join(descriptions)
-
-                sat = Sat(
-                    cfdi_date=root.get('Fecha'),
-                    receipt_number=root.get('Folio'),
-                    fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
-                    product_or_service=descripcion_string,
-                    currency=root.get('Moneda'),
-                    total_amount=root.get('Total'),
-                    payment_method=root.get('MetodoPago'),
-                    s3_url=s3_url,
-                    subtotal_me=root.get('SubTotal'),
-                    state="uploaded",
-                    ieps=ieps,
-                    vat_16=vat,
-                    file_name=object_name
-                )
-                sat.save()
-            else:
-                logger.warning(f"{object_name} the data sat already register")
-
+        if not sat:
+            try:
+                
+                logger.warning("Guardo ?")
+            except Exception as e:
+                logger.warning(str(e))
+        
+    except Exception as e:
+        logger.warning(str(e))
+        '''
     @classmethod
     def process_xlsx_file(cls, file_content, file_key, object_name):
         try:
