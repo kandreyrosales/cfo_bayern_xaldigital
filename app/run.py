@@ -2,7 +2,7 @@ import asyncio
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import render_template, request, redirect, url_for, session, jsonify
 import boto3
 import jwt
 from datetime import datetime
@@ -11,7 +11,6 @@ import psycopg2
 
 from app import init_app, create_db, app, create_conciliations_view, destroy_db
 from app.models import get_conciliations_view_data
-from app.utils import aws
 from controllers.upload_files import UploadFilesController
 
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
@@ -282,7 +281,7 @@ def send_reset_password_link():
 
 
 @app.route('/', methods=["GET"])
-@token_required
+#@token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -438,16 +437,11 @@ def reconciliations_data_cfo():
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
-    #conn, cur = connection_db()
-    #query_conciliations_view = """select * from conciliaciones order by cliente, fecha;"""
-    #rows_data_view = get_query_rows(cur=cur, conn=conn, query=query_conciliations_view)
 
     return render_template(
         'reconciliations_data_cfo.html',
         initial_data_for_table=[],
         search=True,
-        total_pages=0,
-        current_page=1
     )
 
 
@@ -634,14 +628,11 @@ def uploadfile(extension):
 @app.route("/subir_info", methods=['GET', 'POST'])
 def upload_banks_info():
     if request.method == 'GET':
-        return render_template('uploader_info_files.html',
-                               banks=UploadFilesController.BANK_LIST,
-                               title='Importador de archivos'
-                               )
+        return render_template('uploader_info_files.html', title='Importador de archivos')
 
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            executor.submit(UploadFilesController.upload_ban_info, request.files)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            executor.submit(UploadFilesController.upload_ban_info, request.files, request.form['dof'])
         return jsonify(message="Ha comenzado el proceso de carga de la información bancaria. "
                                "Por favor, espere unos minutos. El tiempo de "
                                "carga depende del tamaño de los archivos."), 200
@@ -701,21 +692,8 @@ def subir_archivo(extension):
                            success="El archivo se ha cargado y se esta procesando en estos momentos")
 
 
-# def export_data_conciliaciones():
-#     start_date = request.args.get("start_date")
-#     end_date = request.args.get("end_date")
-#     rfc = request.args.get("rfc")
-#     # Create a new Excel workbook
-#     wb = Workbook()
-#     # Add a worksheet
-#     ws = wb.active
-#     ws.title = f"CFO Data {rfc} from {start_date} to {end_date}"  # Set worksheet title
-
-
 if __name__ == '__main__':
     init_app()
     #destroy_db()
     create_db()
     create_conciliations_view()
-
-

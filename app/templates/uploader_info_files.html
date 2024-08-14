@@ -28,18 +28,30 @@
                 >
                     <div class="row align-items-start">
                         <div class="row">
-                            {% for bank in banks %}
-                            <div class="col-12 col-md-6 col-lg-4 mb-4">
-                                <p class="form-label text_font mb-2 h6">{{bank[1]|upper}}</p>
+                            <div class="col-12 col-md-6 col-lg-6 mb-4">
+                                <p class="form-label text_font mb-2 h6">Bancos</p>
                                 <input
                                         class="input_button form-control btn-outline-light btn-sm rounded-3"
                                         type="file"
-                                        name="{{bank[0]}}"
-                                        id="{{bank[0]}}_file"
-                                        accept="application/pdf"
+                                        name="banks"
+                                        id="banks"
+                                        accept=".xlsx"
                                         required>
                             </div>
-                            {% endfor %}
+                            <div class="col-12 col-md-6 col-lg-6 mb-4">
+                                <p class="form-label text_font mb-2 h6">
+                                    Valor del dólar, consultar valor
+                                    <a href="https://www.dof.gob.mx/#gsc.tab=0" target="_blank">aquí</a>
+                                </p>
+                                <input
+                                        class="input_button form-control btn-outline-light btn-sm rounded-3"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        name="dof"
+                                        id="dof"
+                                        required>
+                            </div>
                         </div>
                     </div>
                     <div class="col">

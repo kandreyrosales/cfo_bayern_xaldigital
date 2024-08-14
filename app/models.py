@@ -11,7 +11,7 @@ class Bank(db.Model):
     number = db.Column(db.Integer, nullable=True)
     book_date = db.Column(db.DateTime, nullable=True)
     value_date = db.Column(db.DateTime, nullable=True)
-    posting_amount = db.Column(db.Float, nullable=True)
+    posting_amount = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
     payment_method = db.Column(db.String(250), nullable=True)
     ref = db.Column(db.String(250), nullable=True)
     addref = db.Column(db.String(250), nullable=True)

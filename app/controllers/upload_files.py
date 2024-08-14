@@ -1,18 +1,20 @@
-from concurrent.futures import ThreadPoolExecutor
+import math
+import os
+import json
+import urllib.request, json as js
+
+import numpy as np
+import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 from io import BytesIO
 import re
-
-import numpy as np
 import pandas as pd
 import logging
-import asyncio
-
 from app import db, app
 from app.utils import aws
 from app.models import Bank, Sat, BCSIEPS2440020, BCSIVACobrado2440015, BCSIVARetenido1250010, BHCIEPS2440020, \
-    BHCIVATrasladado2440015, BHCIVARetenido1250010, BHCIVAOTROS, BCSFBL5N, BHCFBL5N, BankPbc, BankN8p, Sap
+    BHCIVATrasladado2440015, BHCIVARetenido1250010, BHCIVAOTROS, BCSFBL5N, BHCFBL5N, BankPbc, BankN8p, Sap, Dof
 
 logger = logging.getLogger(__name__)
 
@@ -289,35 +291,81 @@ class UploadFilesController:
                     #cls.upload_to_s3(file_content, aws.S3_BUCKET_NAME, object_name)
 
                     #s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/"
-                              #f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
+                    #f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
 
                 except Exception as e:
                     logger.warning(str(e))
 
     @classmethod
-    def upload_ban_info(cls, files):
+    def upload_ban_info(cls, files, dof_value):
         try:
             today = datetime.now()
-            for file in files:
-                with app.app_context():
-                    object_name = f"{today.strftime('%d-%m-%Y')}/{files[file].filename}"
+            url = os.getenv("api-getway-service",
+                            "https://vt26v7zc2d.execute-api.us-east-1.amazonaws.com/prod/UploadFile")
+            with app.app_context():
+                object_name = f"{today.strftime('%d-%m-%Y')}/{files['banks'].filename}"
 
-                    bank = Bank.query.filter_by(file_name=object_name).first()
+                bank = Bank.query.filter_by(file_name=object_name).first()
+                file_content = files['banks'].read()
+                files['banks'].seek(0)
 
-                    if not bank:
-                        cls.upload_to_s3(files[file], aws.S3_BUCKET_NAME, object_name)
+                if not bank:
+                    cls.upload_to_s3(files['banks'], aws.S3_BUCKET_NAME, object_name)
 
-                        s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/{today.strftime('%d-%m-%Y')}/"
-                                  f"{files[file].filename}")
+                    s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/{today.strftime('%d-%m-%Y')}/"
+                              f"{files['banks'].filename}")
 
-                        new_bank = Bank(
-                            bank_name=object_name,
-                            s3_url=s3_url,
-                            file_name=object_name
-                        )
-                        new_bank.save()
-                    else:
-                        logger.warning(f"{object_name} the data bank already register")
+                    headers = {
+                        'file-name': 'Cobradoras_Agosto',
+                        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    }
+
+                    response = requests.put(url, headers=headers, data=file_content)
+
+                    json_response = json.loads(response.text)
+                    default_value = ""
+
+
+                    '''
+                    Bulk insert sqlalquemist
+                    '''
+
+                    for url in json_response.get('urls'):
+                        file_name_with_extension = os.path.basename(url)
+                        file_name = os.path.splitext(file_name_with_extension)[0]
+                        with urllib.request.urlopen(url.replace(" ", "%20")) as url_json:
+                            data = js.load(url_json)
+                            for transaction in data[file_name]["Transactions"]:
+                                for key, value in transaction.items():
+                                    if isinstance(value, float) and math.isnan(value):  # Check if float and NaN
+                                        transaction[key] = default_value
+                                    elif isinstance(value, str) and value.lower() == 'nan':  # Check if string 'nan'
+                                        transaction[key] = default_value
+                                    elif value is np.nan:  # General check for np.nan
+                                        transaction[key] = default_value
+
+                                new_bank = Bank(
+                                    bank_name=file_name,
+                                    book_date=transaction.get('Book Date'),
+                                    value_date=transaction.get('Value Date'),
+                                    posting_amount=transaction.get('Posting Amount'),
+                                    payment_method=transaction.get('Payment Method'),
+                                    ref=transaction.get('Ref'),
+                                    addref=transaction.get('Addref'),
+                                    comment=transaction.get('Reason of transfer'),
+                                    payer=transaction.get('Payer'),
+                                    posting_text=transaction.get('Posting Text'),
+                                    s3_url=s3_url,
+                                    file_name=object_name
+                                )
+                                new_bank.save()
+
+                else:
+                    logger.warning(f"{object_name} the data bank already register")
+
+                dof = Dof(exchange_rate=dof_value)
+                dof.save()
+
         except Exception as e:
             logger.warning(str(e))
 
@@ -404,6 +452,7 @@ class UploadFilesController:
     except Exception as e:
         logger.warning(str(e))
         '''
+
     @classmethod
     def process_xlsx_file(cls, file_content, file_key, object_name):
         try:
@@ -538,22 +587,28 @@ class UploadFilesController:
                     gl_account=str(int(row.get('G/L Account'))) if not pd.isna(row.get("G/L Account")) else None,
                     fiscal_year=str(int(row.get('Fiscal Year'))),
                     year_month=str(row.get('Year/month')),
-                    document_header_text=str(row.get('Document Header Text')) if not pd.isna(row.get('Document Header Text')) else None,
+                    document_header_text=str(row.get('Document Header Text')) if not pd.isna(
+                        row.get('Document Header Text')) else None,
                     assignment=str(row.get('Assignment')) if not pd.isna(row.get('Assignment')) else None,
                     profit_center=row.get('Profit Center'),
                     cost_center=str(row.get('Cost Center')) if not pd.isna(row.get('Cost Center')) else None,
                     text=str(row.get('Text')) if not pd.isna(row.get('Text')) else None,
                     reference=str(row.get('Reference')) if not pd.isna(row.get('Reference')) else None,
                     user_name=row.get('User Name'),
-                    transaction_type=str(row.get('Transaction Type')) if not pd.isna(row.get('Transaction Type')) else None,
-                    clearing_document=str(int(row.get('Clearing Document'))) if not pd.isna(row.get('Clearing Document')) else None,
+                    transaction_type=str(row.get('Transaction Type')) if not pd.isna(
+                        row.get('Transaction Type')) else None,
+                    clearing_document=str(int(row.get('Clearing Document'))) if not pd.isna(
+                        row.get('Clearing Document')) else None,
                     tax_code=row.get('Tax Code'),
                     account_type=row.get('Account Type'),
                     line_item=row.get('Line Item'),
                     invoice_reference=row.get('Invoice Reference'),
-                    billing_document=str(row.get('Billing Document')) if not pd.isna(row.get('Billing Document')) else None,
-                    trading_partner=str(int(row.get('Trading Partner'))) if not pd.isna(row.get('Trading Partner')) else None,
-                    purchasing_document=str(row.get('Purchasing Document')) if not pd.isna(row.get('Purchasing Document')) else None,
+                    billing_document=str(row.get('Billing Document')) if not pd.isna(
+                        row.get('Billing Document')) else None,
+                    trading_partner=str(int(row.get('Trading Partner'))) if not pd.isna(
+                        row.get('Trading Partner')) else None,
+                    purchasing_document=str(row.get('Purchasing Document')) if not pd.isna(
+                        row.get('Purchasing Document')) else None,
                     posting_date=cls.convert_to_datetime(row.get('Posting Date')),
                     document_currency=row.get('Document Currency'),
                     amount_in_doc_curr=row.get('Amount in doc. curr.'),
@@ -592,22 +647,29 @@ class UploadFilesController:
                     gl_account=str(int(row.get('Cuenta'))),
                     fiscal_year=str(int(row.get('Ejercicio'))),
                     year_month=str(row.get('Ejercicio / mes')),
-                    document_header_text=str(row.get('Texto cab.documento')) if not pd.isna(row.get('Texto cab.documento')) else None,
+                    document_header_text=str(row.get('Texto cab.documento')) if not pd.isna(
+                        row.get('Texto cab.documento')) else None,
                     assignment=str(row.get('Asignación')) if not pd.isna(row.get('Asignación')) else None,
-                    profit_center=str(row.get('Centro de beneficio')) if not pd.isna(row.get('Centro de beneficio')) else None,
+                    profit_center=str(row.get('Centro de beneficio')) if not pd.isna(
+                        row.get('Centro de beneficio')) else None,
                     cost_center=str(row.get('Centro de coste')) if not pd.isna(row.get('Centro de coste')) else None,
                     text=str(row.get('Texto')) if not pd.isna(row.get('Texto')) else None,
                     reference=str(row.get('Referencia')) if not pd.isna(row.get('Referencia')) else None,
                     user_name=str(row.get('Nombre del usuario', '')),
                     transaction_type=str(row.get('Código transacción')),
-                    clearing_document=str(int(row.get('Doc.compensación'))) if not pd.isna(row.get("Doc.compensación")) else None,
-                    tax_code=str(row.get('Indicador impuestos')) if not pd.isna(row.get('Indicador impuestos')) else None,
+                    clearing_document=str(int(row.get('Doc.compensación'))) if not pd.isna(
+                        row.get("Doc.compensación")) else None,
+                    tax_code=str(row.get('Indicador impuestos')) if not pd.isna(
+                        row.get('Indicador impuestos')) else None,
                     account_type=str(row.get('Clase de cuenta', '')),
                     line_item=int(row.get('Posición', 0) if not pd.isna(row.get('Posición')) else 0),
                     invoice_reference=str(int(row.get('Referencia a factura'))),
-                    billing_document=str(row.get('Doc.facturación')) if not pd.isna(row.get('Doc.facturación')) else None,
-                    trading_partner=str(row.get('Sociedad GL asociada')) if not pd.isna(row.get('Sociedad GL asociada')) else None,
-                    purchasing_document=str(row.get('Documento compras')) if not pd.isna(row.get('Documento compras')) else None,
+                    billing_document=str(row.get('Doc.facturación')) if not pd.isna(
+                        row.get('Doc.facturación')) else None,
+                    trading_partner=str(row.get('Sociedad GL asociada')) if not pd.isna(
+                        row.get('Sociedad GL asociada')) else None,
+                    purchasing_document=str(row.get('Documento compras')) if not pd.isna(
+                        row.get('Documento compras')) else None,
                     posting_date=cls.convert_to_datetime(row.get('Fe.contabilización')),
                     document_currency=str(row.get('Moneda del documento', '')),
                     amount_in_doc_curr=row.get('Importe en moneda doc.'),
@@ -644,18 +706,23 @@ class UploadFilesController:
                         eff_exchange_rate = None
 
                 record = model(
-                    document_number=str(int(row.get("Document Number"))) if not pd.isna(row.get("Document Number")) else None,
+                    document_number=str(int(row.get("Document Number"))) if not pd.isna(
+                        row.get("Document Number")) else None,
                     account=str(int(row.get("Account"))) if not pd.isna(row.get("Account")) else None,
                     reference=str(row.get("Reference")) if not pd.isna(row.get("Reference")) else None,
                     document_type=str(row.get("Document Type")) if not pd.isna(row.get("Document Type")) else None,
                     doc_status=str(row.get("Doc.status")) if not pd.isna(row.get("Doc.status")) else None,
                     assignment=str(row.get("Assignment")) if not pd.isna(row.get("Assignment")) else None,
                     text=str(row.get("Text")) if not pd.isna(row.get("Text")) else None,
-                    clearing_document=str(int(row.get("Clearing Document"))) if not pd.isna(row.get("Clearing Document")) else None,
+                    clearing_document=str(int(row.get("Clearing Document"))) if not pd.isna(
+                        row.get("Clearing Document")) else None,
                     tax_code=str(row.get("Tax code")) if not pd.isna(row.get("Tax code")) else None,
-                    invoice_reference=str(row.get("Invoice reference")) if not pd.isna(row.get("Invoice reference")) else None,
-                    billing_document=str(int(row.get("Billing Document"))) if not pd.isna(row.get("Billing Document")) else None,
-                    trading_partner=str(row.get("Trading Partner")) if not pd.isna(row.get("Trading Partner")) else None,
+                    invoice_reference=str(row.get("Invoice reference")) if not pd.isna(
+                        row.get("Invoice reference")) else None,
+                    billing_document=str(int(row.get("Billing Document"))) if not pd.isna(
+                        row.get("Billing Document")) else None,
+                    trading_partner=str(row.get("Trading Partner")) if not pd.isna(
+                        row.get("Trading Partner")) else None,
                     gl_account=str(int(row.get("G/L Account"))) if not pd.isna(row.get("G/L Account")) else None,
                     posting_date=cls.convert_to_datetime(row.get("Posting Date")),
                     document_date=cls.convert_to_datetime(row.get("Document Date")),
@@ -687,17 +754,24 @@ class UploadFilesController:
                     assignment=str(row.get("Asignación")),
                     text=str(row.get("Texto")) if not pd.isna(row.get("Texto")) else None,
                     clearing_document=str(int(row.get("Doc.compensación"))),
-                    document_status=str(row.get("Status de documento")) if not pd.isna(row.get("Status de documento")) else None,
+                    document_status=str(row.get("Status de documento")) if not pd.isna(
+                        row.get("Status de documento")) else None,
                     position=str(int(row.get("Posición"))),
-                    purchase_document=str(row.get("Documento compras")) if not pd.isna(row.get("Documento compras")) else None,
-                    subsidiary_account=str(row.get("Cta.subsidiaria")) if not pd.isna(row.get("Cta.subsidiaria")) else None,
+                    purchase_document=str(row.get("Documento compras")) if not pd.isna(
+                        row.get("Documento compras")) else None,
+                    subsidiary_account=str(row.get("Cta.subsidiaria")) if not pd.isna(
+                        row.get("Cta.subsidiaria")) else None,
                     account_type=str(row.get("Clase de cuenta")),
-                    tax_indicator=str(row.get("Indicador impuestos")) if not pd.isna(row.get("Indicador impuestos")) else None,
+                    tax_indicator=str(row.get("Indicador impuestos")) if not pd.isna(
+                        row.get("Indicador impuestos")) else None,
                     invoice_reference=str(row.get("Referencia a factura")),
                     collective_invoice=row.get("Factura colectiva"),
-                    sales_document=str(row.get("Documento de ventas")) if not pd.isna(row.get("Documento de ventas")) else None,
-                    billing_document=str(row.get("Doc.facturación")) if not pd.isna(row.get("Doc.facturación")) else None,
-                    associated_gl_company=str(row.get("Sociedad GL asociada")) if not pd.isna(row.get("Sociedad GL asociada")) else None,
+                    sales_document=str(row.get("Documento de ventas")) if not pd.isna(
+                        row.get("Documento de ventas")) else None,
+                    billing_document=str(row.get("Doc.facturación")) if not pd.isna(
+                        row.get("Doc.facturación")) else None,
+                    associated_gl_company=str(row.get("Sociedad GL asociada")) if not pd.isna(
+                        row.get("Sociedad GL asociada")) else None,
                     status=str(row.get("Status")) if not pd.isna(row.get("Status")) else None,
                     gl_account=str(int(row.get("Cuenta de mayor"))),
                     text_id=str(row.get("ID texto")) if not pd.isna(row.get("ID texto")) else None,
@@ -763,7 +837,8 @@ class UploadFilesController:
                             row.get("W/tax exempt amount")) else None,
                         withhldg_tax_base_amount=row.get("Withhldg tax base amount") if not pd.isna(
                             row.get("Withhldg tax base amount")) else None,
-                        local_currency=str(row.get("Local Currency")) if not pd.isna(row.get("Local Currency")) else None,
+                        local_currency=str(row.get("Local Currency")) if not pd.isna(
+                            row.get("Local Currency")) else None,
                         entry_date=cls.convert_to_datetime(row.get("Entry Date")),
                         user_name=str(row.get("User Name")) or "",
                         transaction_code=str(row.get("Transaction Code")) if not pd.isna(
