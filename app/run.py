@@ -440,7 +440,6 @@ def reconciliations_data_cfo():
 
     return render_template(
         'reconciliations_data_cfo.html',
-        initial_data_for_table=[],
         search=True,
     )
 
@@ -477,94 +476,16 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
 
 @app.route('/get_filtered_data_conciliations', methods=["GET", "POST"])
 def get_filtered_data_conciliations():
+    if request.method == "GET":
+        result = get_conciliations_view_data()
+        column_names = result.keys()
+        data = [dict(zip(column_names, row)) for row in result]
+        return jsonify(data), 200
     if request.method == "POST":
-        data = get_conciliations_view_data()
-        print(data)
-        result = {
-            "data": [
-                {
-                    "RFC": "ABC123456789",
-                    "Factura": "F001",
-                    "Cliente": "Cliente XYZ",
-                    "Transacción": "T001",
-                    "Fecha": "2024-08-12",
-                    "Estado": "Pagado",
-                    "XML_Facturación": {
-                        "UUID": "UUID-001",
-                        "Subtotal": 1000.00,
-                        "IVA": 160.00,
-                        "IEPS": 0.00,
-                        "Total": 1160.00
-                    },
-                    "Bancos": {
-                        "Depósitos": 1160.00,
-                        "Nombre_del_Banco": "Banco ABC",
-                        "Fecha_de_Depósito": "2024-08-10"
-                    },
-                    "Validador_Aplicación_de_Pagos": None,
-                    "SAP_FBL5N": {
-                        "Document_Number": "DOC-001",
-                        "Clearing_Document": "CLR-001",
-                        "Subtotal": 1000.00,
-                        "IVA": 160.00,
-                        "IEPS": 0.00,
-                        "Total_Aplicación": 1160.00
-                    },
-                    "SAT_XML_Complemento_de_Pago": {
-                        "UUID_Relacionado": "UUID-002",
-                        "Subtotal": 1000.00,
-                        "IVA_Cobrado_%": 16,
-                        "IEPS_Cobrado_%": 0,
-                        "Total_Aplicación": 1160.00
-                    },
-                    "Validador_IVA": {
-                        "Validador_Subtotal": 1000.00,
-                        "Validador_IVAS": 160.00,
-                        "Validador_IEPS": 0.00,
-                        "Total_Variación": 0.00
-                    }
-                }
-            ]
-        }
-        return jsonify(result), 200
-
-    '''
-    conn, cur = connection_db()
-
-    start_date = request.args.get("start_date")
-    end_date = request.args.get("end_date")
-    rfc = request.args.get("rfc")
-    customer = request.args.get("customer")
-
-    select_table_fields = """SELECT rfc, CAST(factura_bayer AS BIGINT), cliente, transaccion, to_char(fecha, 'DD/MM/YYYY'), estado, 
-            uuid, subtotal, iva, ieps, total,
-            depositos, nombre_del_banco, to_char(fecha_deposito, 'DD/MM/YYYY'), validador_aplicacion_pagos, 
-            CAST(document_number_sap as BIGINT), CAST(clearing_document_sap AS BIGINT), subtotal_sap, iva_sap, ieps_sap, total_aplicacion_sap, 
-            uuid_relacionado, subtotal_sat, iva_cobrado_sat, ieps_cobrado_sat, total_aplicacion_sat, 
-            validador_subtotal_validador_iva, validar_ivas_validador_iva,
-            validador_ieps_validador_iva, total_variacion_validador_iva"""
-
-    where_statement_sql, filters_present = generate_filter_sql(
-        start_date=start_date,
-        end_date=end_date,
-        rfc=rfc,
-        customer=customer
-    )
-    if filters_present:
-        query_conciliations_view_filtered = f"""
-            {select_table_fields} from conciliaciones {where_statement_sql} order by cliente, fecha
-        """
-    else:
-        query_conciliations_view_filtered = f"""
-                    {select_table_fields} from conciliaciones order by cliente, fecha
-                """
-    result = get_query_rows(
-        cur=cur,
-        conn=conn,
-        query=query_conciliations_view_filtered
-    )
-    return jsonify(result)
-    '''
+        result = get_conciliations_view_data()
+        column_names = result.keys()
+        data = [dict(zip(column_names, row)) for row in result]
+        return jsonify(data), 200
 
 
 def custom_values_for_insert(data_sheet, max_col: int):
@@ -628,6 +549,7 @@ def uploadfile(extension):
 @app.route("/subir_info", methods=['GET', 'POST'])
 def upload_banks_info():
     if request.method == 'GET':
+
         return render_template('uploader_info_files.html', title='Importador de archivos')
 
     if request.method == "POST":

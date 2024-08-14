@@ -35,6 +35,9 @@ class Sat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     cfdi_date = db.Column(db.DateTime, nullable=False)
+    cfdi_use = db.Column(db.String(250), nullable=False)
+    rfc = db.Column(db.String(250), nullable=False)
+    client_name = db.Column(db.String(250), nullable=False)
     vat_withholding_4_me = db.Column(db.Float, nullable=False, default=0)
     receipt_number = db.Column(db.String(250), nullable=False)
     vat_withholding_2_3_me = db.Column(db.Float, nullable=False, default=0)
@@ -57,6 +60,7 @@ class Sat(db.Model):
     s3_url = db.Column(db.String(250), nullable=False)
     state = db.Column(db.String(100), nullable=False, default="uploaded")
     file_name = db.Column(db.String(250), nullable=False)
+    tax_rate = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
         return f'<Sat {self.id}>'
@@ -214,7 +218,7 @@ class BCSFBL5N(db.Model):
     clearing_date = db.Column(db.DateTime, nullable=True)
     document_currency = db.Column(db.String(250), nullable=True)
     amount_in_doc_curr = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
-    eff_exchange_rate = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    eff_exchange_rate = db.Column(db.Numeric(precision=20, scale=5), nullable=True)
     amount_in_local_currency = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
     local_currency = db.Column(db.String(250), nullable=True)
 
@@ -343,5 +347,4 @@ def get_conciliations_view_data():
     with app.app_context():
         query = text("SELECT * FROM conciliations_view")
         result = db.session.execute(query)
-        data = result.fetchall()  # Fetch all rows as a list of tuples
-        return data
+        return result

@@ -287,12 +287,6 @@ class UploadFilesController:
                     object_name = f"{today.strftime('%d-%m-%Y')}/{file.filename}"
                     file_content = file.read()
                     cls.process_xml_file(file_content, "", object_name)
-                    #file.seek(0)
-                    #cls.upload_to_s3(file_content, aws.S3_BUCKET_NAME, object_name)
-
-                    #s3_url = (f"https://{aws.S3_BUCKET_NAME}.s3.amazonaws.com/"
-                    #f"{today.strftime('%d-%m-%Y')}/{files[file].filename}")
-
                 except Exception as e:
                     logger.warning(str(e))
 
@@ -323,8 +317,8 @@ class UploadFilesController:
                     response = requests.put(url, headers=headers, data=file_content)
 
                     json_response = json.loads(response.text)
+                    logger.warning(json_response)
                     default_value = ""
-
 
                     '''
                     Bulk insert sqlalquemist
@@ -395,63 +389,59 @@ class UploadFilesController:
         sat = Sat.query.filter_by(file_name=object_name).first()
         if not sat:
             root = ET.fromstring(file_content)
-            namespaces = {
-                'cfdi': 'http://www.sat.gob.mx/cfd/4',
-                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
-            }
 
-            tax_codes = {'001', '002', '003'}
+            descriptions = ' * '.join(
+                map(lambda concepto: concepto.get('Descripcion', ''),
+                    root.findall('.//cfdi:Concepto', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})))
 
-            descriptions = [concepto.get('Descripcion') for concepto in
-                            root.findall('.//cfdi:Concepto', namespaces)]
+            receptor = root.find('cfdi:Receptor', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
 
-            taxes = root.findall('.//cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces)
+            taxes = root.find('.//cfdi:Impuestos', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
+            traslados = taxes.find('.//cfdi:Traslados', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
+            taxes_elements = traslados.findall('.//cfdi:Traslado',
+                                               {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
 
-            vat = 0
+            vat_16 = 0
             ieps = 0
+            vat_0 = 0
+            subtotal_16 = 0
+            tax_rate = ""
 
-            for tax in taxes:
-                tax_code = tax.get('Impuesto')
-                if tax_code == "002":
-                    vat = tax.get('Importe')
-                if tax_code == "003":
+            for tax in taxes_elements:
+                if tax.get('Impuesto') == '002':
+                    vat_16 = tax.get('Importe')
+                if tax.get('Impuesto') == '003':
                     ieps = tax.get('Importe')
 
-            descripcion_string = '*'.join(descriptions)
 
             sat = Sat(
                 cfdi_date=root.get('Fecha'),
+                cfdi_use=receptor.get('UsoCFDI') if receptor is not None else "",
+                rfc=receptor.get('Rfc') if receptor is not None else "",
+                client_name=receptor.get('Nombre') if receptor is not None else "",
                 receipt_number=root.get('Folio'),
-                fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital', namespaces).get('UUID'),
-                product_or_service=descripcion_string,
+                fiscal_uuid=root.find('.//tfd:TimbreFiscalDigital',
+                                      {
+                                          'cfdi': 'http://www.sat.gob.mx/cfd/4',
+                                          'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+                                      }
+                                      ).get('UUID'),
+                product_or_service=descriptions,
                 currency=root.get('Moneda'),
                 total_amount=root.get('Total'),
                 payment_method=root.get('MetodoPago'),
                 s3_url=s3_url,
-                subtotal_me=root.get('SubTotal'),
                 state="uploaded",
                 ieps=ieps,
-                vat_16=vat,
-                file_name=object_name
+                vat_16=vat_16,
+                file_name=object_name,
+                vat_0=vat_0,
+                subtotal_16=subtotal_16,
+                tax_rate=tax_rate
             )
             sat.save()
         else:
             logger.warning(f"{object_name} the data sat already register")
-        '''
-        logger.warning("inicio de la funcion")
-        sat = Sat.query.filter_by(file_name=object_name).first()
-        logger.warning(sat)
-
-        if not sat:
-            try:
-                
-                logger.warning("Guardo ?")
-            except Exception as e:
-                logger.warning(str(e))
-        
-    except Exception as e:
-        logger.warning(str(e))
-        '''
 
     @classmethod
     def process_xlsx_file(cls, file_content, file_key, object_name):
@@ -694,17 +684,6 @@ class UploadFilesController:
     def save_bcs_fbl5n_to_db(cls, df, model):
         for _, row in df.iterrows():
             try:
-
-                eff_exchange_rate = row.get('Eff.exchange rate"')
-                if pd.isna(eff_exchange_rate):
-                    eff_exchange_rate = None
-                elif isinstance(eff_exchange_rate, str):
-                    eff_exchange_rate = eff_exchange_rate.replace(",", ".")
-                    try:
-                        eff_exchange_rate = float(eff_exchange_rate)
-                    except ValueError:
-                        eff_exchange_rate = None
-
                 record = model(
                     document_number=str(int(row.get("Document Number"))) if not pd.isna(
                         row.get("Document Number")) else None,
@@ -729,7 +708,8 @@ class UploadFilesController:
                     clearing_date=cls.convert_to_datetime(row.get("Clearing date")),
                     document_currency=row.get("Document currency"),
                     amount_in_doc_curr=row.get("Amount in doc. curr."),
-                    eff_exchange_rate=eff_exchange_rate,
+                    eff_exchange_rate=float(str(row.get('Eff.exchange rate')).replace(",", ".")) if not pd.isna(
+                        row.get('Eff.exchange rate')) else None,
                     amount_in_local_currency=row.get("Amount in local currency"),
                     local_currency=str(row.get("Local Currency"))
                 )
