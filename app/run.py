@@ -82,20 +82,19 @@ def login():
         password = request.form.get('password')
 
         if not username or not password:
-            return render_template('login/login.html',
-                                   error="Nombre de usuario y Contraseña obligatorios")
+            return jsonify(error="Nombre de usuario y Contraseña obligatorios"), 400
 
         cognito_response = authenticate_user(username, password)
 
         reason = cognito_response.get("reason")
         if reason == "Usuario No Confirmado":
-            return render_template('login/confirm_account_code.html', email=username)
+            return jsonify(error=username), 400
         elif reason is not None:
-            return render_template('login/login.html', error=reason)
+            return jsonify(error=reason), 400
 
         auth_result = cognito_response.get("AuthenticationResult")
         if not auth_result:
-            return render_template('login/login.html', error=cognito_response)
+            return jsonify(error=cognito_response), 400
 
         session['access_token'] = auth_result.get('AccessToken')
         session['id_token'] = auth_result.get('IdToken')
@@ -281,7 +280,7 @@ def send_reset_password_link():
 
 
 @app.route('/', methods=["GET"])
-#@token_required
+@token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))

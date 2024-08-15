@@ -66,10 +66,11 @@ def create_conciliations_view():
                         format_price(sat.vat_16) AS formatted_vat_16,
                         format_price(sat.vat_0) AS formatted_vat_0,
                         format_price(sat.ieps) AS formatted_ieps,
-                        format_price(sat.total_amount) AS formatted_total_amount,
+                        format_price(sat.subtotal_16 + sat.vat_16 + sat.vat_0 + sat.ieps) AS formatted_total_amount,
                         format_price(sat.income_tax_withholding_me) AS formatted_income_tax_withholding_me,
                         sat.tax_rate,
-                        sat.payment_method
+                        sat.payment_method,
+                        format_price(total_amount-bcs_fbl5n.amount_in_local_currency) AS diff_sat_sap
                    FROM sat 
                    JOIN bcs_fbl5n ON sat.receipt_number = bcs_fbl5n.reference
                    
