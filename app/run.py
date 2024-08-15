@@ -139,22 +139,16 @@ def signup():
             return render_template('login/confirm_account_code.html', email=username)
         except cognito_client.exceptions.NotAuthorizedException as e:
             # Handle authentication failure
-            return render_template(
-                'login/signup.html',
-                error="Usuario no Autorizado para ejecutar esta acción")
+            return jsonify(error="Usuario no Autorizado para ejecutar esta acción"), 400
         except cognito_client.exceptions.UsernameExistsException:
-            return render_template(
-                'login/signup.html',
-                error="Ya existe una cuenta asociada a este correo")
+            return jsonify(error="Ya existe una cuenta asociada a este correo"), 400
         except cognito_client.exceptions.InvalidPasswordException:
-            return render_template(
-                'login/signup.html',
-                error="Crea una contraseña de al menos 8 dígitos, más segura, usando al menos una letra mayúscula, "
-                      "un número y un carácter especial")
+            return jsonify(error="Crea una contraseña de al menos "
+                                 "8 dígitos, más segura, usando al menos una letra mayúscula, "
+                                 "un número y un carácter especial"), 400
         except Exception as e:
-            return render_template(
-                'login/signup.html',
-                error=f"Ha ocurrido el siguiente error: {e}")
+            return jsonify(error=f"Ha ocurrido el siguiente error: {e}"), 400
+
     else:
         return render_template('login/signup.html')
 
