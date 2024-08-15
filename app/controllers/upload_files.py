@@ -390,10 +390,12 @@ class UploadFilesController:
         sat = Sat.query.filter_by(file_name=object_name).first()
         if not sat:
             root = ET.fromstring(file_content)
-            vat_16 = 0
-            ieps = 0
-            vat_0 = 0
+
             subtotal_16 = 0
+            vat_16 = 0
+            vat_0 = 0
+            ieps = 0
+
             tax_rate = ""
 
             descriptions = ' * '.join(
@@ -402,47 +404,21 @@ class UploadFilesController:
 
             receptor = root.find('cfdi:Receptor', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
 
-            taxes = root.findall('.//cfdi:Traslado', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
-
-            for tax in taxes:
-                print("---- Tax Element ----")
-                for child in tax:
-                    print(f"Tag: {child.tag}, Attribute: {child.attrib}, Text: {child.text}")
-
-                print("Attributes of Tax Element:", tax.attrib)
-                print("-----------------------\n")
-
-            '''
-            
-            list(map(lambda traslado: total_taxes[traslado.attrib['Impuesto']].update(
-                { 'Base': total_taxes[traslado.attrib['Impuesto']]['Base'] + float(traslado.attrib.get('Base', '0')),
-                  'Importe': total_taxes[traslado.attrib['Impuesto']]['Importe'] + float(traslado.attrib.get('Importe', '0')),
-                  'TasaOCuota': round(total_taxes[traslado.attrib['Impuesto']]['TasaOCuota'] + float(traslado.attrib.get('TasaOCuota', '0')), 6),
-                }), 
-
-            # Convert defaultdict to a regular dictionary if needed
-            total_taxes = dict(total_taxes)
-
-            if total_taxes.get('002'):
-                subtotal_16 = total_taxes.get('002').get('Base')
-            if total_taxes.get('003'):
-                vat_0 = total_taxes.get('003').get('Base')
-
-            logger.warning(total_taxes)
-
-            taxes = root.find('.//cfdi:Impuestos', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
-            traslados = taxes.find('.//cfdi:Traslados', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
-
-            taxes_elements = traslados.findall('.//cfdi:Traslado',
-                                               {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
+            tax_root = root.findall('.//cfdi:Impuestos', {'cfdi': 'http://www.sat.gob.mx/cfd/3'})
+            taxes_elements = [traslado for tax in tax_root for traslado in
+                              cls.get_traslados(tax, {'cfdi': 'http://www.sat.gob.mx/cfd/3'})]
 
             for tax in taxes_elements:
                 if tax.get('Impuesto') == '002' and float(tax.get('Importe')) > 0.0:
                     vat_16 = tax.get('Importe')
+                if tax.get('Impuesto') == '002' and tax.get('TasaOCuota') == '0.160000':
+                    subtotal_16 = root.get('SubTotal')
                     tax_rate += "16%"
+                if tax.get('Impuesto') == '002' and tax.get('TasaOCuota') == '0.000000':
+                    vat_0 = root.get('SubTotal')
+                    tax_rate += "0%"
                 if tax.get('Impuesto') == '003' and float(tax.get('Importe')) > 0.0:
-                    ieps = tax.get('Importe')
-                    tax_rate += " 0%"
+                    ieps += float(tax.get('Importe'))
 
             sat = Sat(
                 cfdi_date=root.get('Fecha'),
@@ -466,13 +442,22 @@ class UploadFilesController:
                 vat_16=vat_16,
                 file_name=object_name,
                 vat_0=vat_0,
-                subtotal_16=subtotal_16 if float(vat_16) > 0.0 else 0,
+                subtotal_16=subtotal_16,
                 tax_rate=tax_rate
             )
             sat.save()
-            '''
         else:
             logger.warning(f"{object_name} the data sat already register")
+
+    @classmethod
+    def get_traslados(cls, tax, namespaces):
+        # Check if 'TotalImpuestosTrasladados' is in tax.attrib
+        if 'TotalImpuestosTrasladados' in tax.attrib:
+            # Find Traslados and Traslado elements within this tax element
+            traslados = tax.find('.//cfdi:Traslados', namespaces)
+            if traslados is not None:
+                return traslados.findall('.//cfdi:Traslado', namespaces)
+        return []
 
     @classmethod
     def process_xlsx_file(cls, file_content, file_key, object_name):
