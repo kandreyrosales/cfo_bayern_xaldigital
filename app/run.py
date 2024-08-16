@@ -470,10 +470,26 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
 @app.route('/get_filtered_data_conciliations', methods=["GET", "POST"])
 def get_filtered_data_conciliations():
     if request.method == "GET":
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))
         result = get_conciliations_view_data()
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
-        return jsonify(data), 200
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_data = data[start:end]
+
+        response = {
+            'data': paginated_data,
+            'total': len(data),
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (len(data) + page_size - 1) // page_size,
+        }
+
+        return jsonify(response), 200
+
     if request.method == "POST":
         result = get_conciliations_view_data()
         column_names = result.keys()
