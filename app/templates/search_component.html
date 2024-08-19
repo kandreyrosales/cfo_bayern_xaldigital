@@ -1,4 +1,4 @@
-<form class="d-flex"
+<form class="d-flex" id="form-search"
       method="post"
       hx-post="/get_filtered_data_conciliations"
       hx-trigger="submit"
@@ -17,15 +17,26 @@
     </div>
     <div class="form-group me-4">
         <label for="rfc_selector" class="form-label filter_label mb-0" style="display: block">RFC</label>
-        <select id="rfc_selector" name="rfc_selector"
-                class="input_button form-control btn-outline-light btn-sm" style="width: 150px; height:45px !important"></select>
+         <select id="rfc_selector" name="rfc_selector"
+            class="input_button form-control btn-outline-light btn-sm"
+            style="width: 180px; height:45px !important">
+             <option value="">Selecciones un RFC</option>
+             {% for rfc in rfc_list%}
+                <option value="{{rfc.rfc}}">{{rfc.rfc}}</option>
+             {% endfor %}
+         </select>
     </div>
     <div class="form-group me-4">
         <label class="form-label filter_label mb-0" style="display: block">Cliente</label>
         <select id="customer_name_selector"
                 name="customer_name_selector"
                 class="input_button form-control btn-outline-light btn-sm"
-                style="width: 150px; height:45px !important"></select>
+                style="width: 180px; height:45px !important">
+            <option value="">Selecciones un client</option>
+            {% for client in client_list%}
+                <option value="{{client.client_name}}">{{client.client_name}}</option>
+             {% endfor %}
+        </select>
     </div>
     <div class="form-group me-4">
         <label for="calendar_filter_start_date" class="form-label filter_label mb-0">Mes Cobranza</label>
@@ -34,6 +45,6 @@
     </div>
     <div class="form-group me-4 align-self-end">
         <input type="submit" class="btn btn-light" value="Filtrar">
-
     </div>
 </form>
+

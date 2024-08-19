@@ -10,7 +10,7 @@ from functools import wraps
 import psycopg2
 
 from app import init_app, create_db, app, create_conciliations_view, destroy_db
-from app.models import get_conciliations_view_data
+from app.models import get_conciliations_view_data, get_rfc_from_conciliations_view, get_clients_from_conciliations_view
 from controllers.upload_files import UploadFilesController
 
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
@@ -394,16 +394,11 @@ def get_rfc_list():
     """
     Getting the RFC list from the Database
     """
-    '''
-    conn, cur = connection_db()
-    query_uuid = """select DISTINCT (rfc) from conciliaciones ;"""
-    data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
-    new_item = ("Todos",)
-    '''
     try:
-        return []
+        data = []
+        return jsonify(data), 200
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/get_customer_name_list', methods=["GET"])
@@ -431,9 +426,19 @@ def reconciliations_data_cfo():
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
 
+    result_rfc = get_rfc_from_conciliations_view()
+    column_names_rfc = result_rfc.keys()
+    rfc_list = [dict(zip(column_names_rfc, row)) for row in result_rfc]
+
+    result_clients = get_clients_from_conciliations_view()
+    column_names_clients = result_clients.keys()
+    client_list = [dict(zip(column_names_clients, row)) for row in result_clients]
+
     return render_template(
         'reconciliations_data_cfo.html',
         search=True,
+        rfc_list=rfc_list,
+        client_list=client_list
     )
 
 
@@ -491,10 +496,40 @@ def get_filtered_data_conciliations():
         return jsonify(response), 200
 
     if request.method == "POST":
-        result = get_conciliations_view_data()
+        print(request.form)
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))
+        conditions = []
+
+        # Add conditions based on the presence of form data
+        if request.form.get('calendar_filter_start_date'):
+            conditions.append("cfdi_date >= :start_date")
+        if request.form.get('calendar_filter_end_date'):
+            conditions.append("cfdi_date <= :end_date")
+        if request.form.get('calendar_filter_value_date_start_date'):
+            conditions.append("value_date >= :value_date_start")
+        if request.form.get('calendar_filter_value_date_end_date'):
+            conditions.append("value_date <= :value_date_end")
+        if request.form.get('rfc_selector'):
+            conditions.append("rfc = :rfc")
+        if request.form.get('customer_name_selector'):
+            conditions.append("client_name = :client_name")
+
+        result = get_conciliations_view_data(query=conditions, data=request.form)
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
-        return jsonify(data), 200
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_data = data[start:end]
+
+        response = {
+            'data': paginated_data,
+            'total': len(data),
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (len(data) + page_size - 1) // page_size,
+        }
+        return jsonify(response), 200
 
 
 def custom_values_for_insert(data_sheet, max_col: int):
@@ -558,7 +593,6 @@ def uploadfile(extension):
 @app.route("/subir_info", methods=['GET', 'POST'])
 def upload_banks_info():
     if request.method == 'GET':
-
         return render_template('uploader_info_files.html', title='Importador de archivos')
 
     if request.method == "POST":

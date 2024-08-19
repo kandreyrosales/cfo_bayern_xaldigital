@@ -343,8 +343,38 @@ class BankN8p(db.Model):
     posting_date = db.Column(db.Date, nullable=True)
 
 
-def get_conciliations_view_data():
+def get_conciliations_view_data(query=None, data=None):
     with app.app_context():
-        query = text("SELECT * FROM conciliations_view")
+        base_query = """SELECT * FROM conciliations_view"""
+        if query:
+            base_query += " WHERE " + " AND ".join(query)
+
+        query_text = text(base_query)
+
+        if data:
+            result = db.session.execute(query_text, {
+                'start_date': data.get('calendar_filter_start_date'),
+                'end_date': data.get('calendar_filter_end_date'),
+                'value_date_start': data.get('calendar_filter_value_date_start_date'),
+                'value_date_end': data.get('calendar_filter_value_date_end_date'),
+                'rfc': data.get('rfc_selector'),
+                'client_name': data.get('customer_name_selector')
+            })
+        else:
+            result = db.session.execute(query_text)
+        return result
+
+
+def get_rfc_from_conciliations_view():
+    with app.app_context():
+        query = text("SELECT DISTINCT rfc FROM conciliations_view;")
         result = db.session.execute(query)
         return result
+
+
+def get_clients_from_conciliations_view():
+    with app.app_context():
+        query = text("SELECT DISTINCT client_name FROM conciliations_view;")
+        result = db.session.execute(query)
+        return result
+

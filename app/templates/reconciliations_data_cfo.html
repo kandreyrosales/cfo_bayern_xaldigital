@@ -81,8 +81,6 @@
         }
 
         if (event.detail.xhr.status === 200) {
-            console.log(data);
-
             const tbody = document.getElementById('result-conciliations');
             tbody.innerHTML = ''; // Clear existing rows
 
@@ -90,8 +88,6 @@
             if (Array.isArray(data.data) && data.data.length > 0) {
                 data.data.forEach(item => {
                     const row = document.createElement('tr');
-
-                    console.log(item)
 
                     // Populate the table cells
                     row.innerHTML += `<td>BHC</td>`;
@@ -156,15 +152,25 @@
     });
 
     function loadPage(page) {
-        currentPage = page;
-        htmx.ajax('GET', `/get_filtered_data_conciliations?page=${page}&page_size=${pageSize}`, {
-            target: '#result-conciliations',
-        });
+        const form = document.getElementById('form-search');
+        const formData = new URLSearchParams(new FormData(form)).toString();
+
+        console.log('Serialized Form Data:', formData);
+
+        // You can also use this serialized data in a fetch request
+        fetch('/get_filtered_data_conciliations', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
     }
 
     // Initialize first page load
     loadPage(1);
 </script>
-
-
 {% endblock %}
