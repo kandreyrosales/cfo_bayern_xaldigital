@@ -519,8 +519,7 @@ def format_date(date_str):
     """Helper function to convert a date string to 'Y-m-d' format."""
     if date_str:
         try:
-            # Try parsing the date assuming it's in 'd/m/y' format
-            return datetime.strptime(date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+            return datetime.strptime(date_str,"%Y-%m-%d").strftime("%d/%m/%Y")
         except ValueError:
             try:
                 # If the above fails, assume the date is already in 'Y-m-d' format

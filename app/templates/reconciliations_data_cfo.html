@@ -81,8 +81,6 @@
         }
 
         if (event.detail.xhr.status === 200) {
-            console.log(data);
-
             const tbody = document.getElementById('result-conciliations');
             tbody.innerHTML = ''; // Clear existing rows
 
@@ -90,8 +88,6 @@
             if (Array.isArray(data.data) && data.data.length > 0) {
                 data.data.forEach(item => {
                     const row = document.createElement('tr');
-
-                    console.log(item)
 
                     // Populate the table cells
                     row.innerHTML += `<td>BHC</td>`;
@@ -156,7 +152,7 @@
     });
 
     function loadPage(page) {
-        const form = document.getElementById("consiliation-search");
+        const form = document.getElementById("form-search");
         const formData = new FormData(form);
         const params = new URLSearchParams(formData).toString();
 

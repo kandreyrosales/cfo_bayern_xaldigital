@@ -357,14 +357,12 @@ def get_conciliations_view_data(calendar_filter_start_date=None,
             params['calendar_filter_start_date'] = calendar_filter_start_date
             params['calendar_filter_end_date'] = calendar_filter_end_date
 
-            print(query)
-
             # For the other filter
         if rfc_selector:
             query += " AND rfc = :rfc_selector"
             params['rfc_selector'] = rfc_selector
         if customer_name_selector:
-            query += " AND customer_name = :customer_name_selector"
+            query += " AND client_name = :customer_name_selector"
             params['customer_name_selector'] = customer_name_selector
         if calendar_filter_value_date_start_date:
             query += " AND value_date >= :calendar_filter_value_date_start_date"
