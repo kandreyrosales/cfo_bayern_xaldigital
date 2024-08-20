@@ -343,25 +343,34 @@ class BankN8p(db.Model):
     posting_date = db.Column(db.Date, nullable=True)
 
 
-def get_conciliations_view_data(query=None, data=None):
+def get_conciliations_view_data(calendar_filter_start_date=None,
+                                calendar_filter_end_date=None,
+                                rfc_selector=None,
+                                customer_name_selector=None,
+                                calendar_filter_value_date_start_date=None):
     with app.app_context():
-        base_query = """SELECT * FROM conciliations_view"""
-        if query:
-            base_query += " WHERE " + " AND ".join(query)
+        query = "SELECT * FROM conciliations_view WHERE 1=1"
+        params = {}
 
-        query_text = text(base_query)
+        if calendar_filter_start_date and calendar_filter_end_date:
+            query += " AND formatted_date_cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
+            params['calendar_filter_start_date'] = calendar_filter_start_date
+            params['calendar_filter_end_date'] = calendar_filter_end_date
 
-        if data:
-            result = db.session.execute(query_text, {
-                'start_date': data.get('calendar_filter_start_date'),
-                'end_date': data.get('calendar_filter_end_date'),
-                'value_date_start': data.get('calendar_filter_value_date_start_date'),
-                'value_date_end': data.get('calendar_filter_value_date_end_date'),
-                'rfc': data.get('rfc_selector'),
-                'client_name': data.get('customer_name_selector')
-            })
-        else:
-            result = db.session.execute(query_text)
+            print(query)
+
+            # For the other filter
+        if rfc_selector:
+            query += " AND rfc = :rfc_selector"
+            params['rfc_selector'] = rfc_selector
+        if customer_name_selector:
+            query += " AND customer_name = :customer_name_selector"
+            params['customer_name_selector'] = customer_name_selector
+        if calendar_filter_value_date_start_date:
+            query += " AND value_date >= :calendar_filter_value_date_start_date"
+            params['calendar_filter_value_date_start_date'] = calendar_filter_value_date_start_date
+
+        result = db.session.execute(text(query), params)
         return result
 
 

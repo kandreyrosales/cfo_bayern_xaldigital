@@ -472,12 +472,31 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
     return where_query, False
 
 
-@app.route('/get_filtered_data_conciliations', methods=["GET", "POST"])
+@app.route('/get_filtered_data_conciliations', methods=["GET"])
 def get_filtered_data_conciliations():
     if request.method == "GET":
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 10))
-        result = get_conciliations_view_data()
+
+        calendar_filter_start_date = request.args.get('calendar_filter_start_date', None)
+        calendar_filter_end_date = request.args.get('calendar_filter_end_date', None)
+        rfc_selector = request.args.get('rfc_selector', None)
+        customer_name_selector = request.args.get('customer_name_selector', None)
+        calendar_filter_value_date_start_date = request.args.get('calendar_filter_value_date_start_date', None)
+
+        # Format the dates to 'Y-m-d' before passing them to the query
+        calendar_filter_start_date = format_date(calendar_filter_start_date)
+        calendar_filter_end_date = format_date(calendar_filter_end_date)
+        calendar_filter_value_date_start_date = format_date(calendar_filter_value_date_start_date)
+
+        result = get_conciliations_view_data(
+            calendar_filter_start_date=calendar_filter_start_date,
+            calendar_filter_end_date=calendar_filter_end_date,
+            rfc_selector=rfc_selector,
+            customer_name_selector=customer_name_selector,
+            calendar_filter_value_date_start_date=calendar_filter_value_date_start_date
+        )
+
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
 
@@ -495,41 +514,20 @@ def get_filtered_data_conciliations():
 
         return jsonify(response), 200
 
-    if request.method == "POST":
-        print(request.form)
-        page = int(request.args.get('page', 1))
-        page_size = int(request.args.get('page_size', 10))
-        conditions = []
 
-        # Add conditions based on the presence of form data
-        if request.form.get('calendar_filter_start_date'):
-            conditions.append("cfdi_date >= :start_date")
-        if request.form.get('calendar_filter_end_date'):
-            conditions.append("cfdi_date <= :end_date")
-        if request.form.get('calendar_filter_value_date_start_date'):
-            conditions.append("value_date >= :value_date_start")
-        if request.form.get('calendar_filter_value_date_end_date'):
-            conditions.append("value_date <= :value_date_end")
-        if request.form.get('rfc_selector'):
-            conditions.append("rfc = :rfc")
-        if request.form.get('customer_name_selector'):
-            conditions.append("client_name = :client_name")
-
-        result = get_conciliations_view_data(query=conditions, data=request.form)
-        column_names = result.keys()
-        data = [dict(zip(column_names, row)) for row in result]
-        start = (page - 1) * page_size
-        end = start + page_size
-        paginated_data = data[start:end]
-
-        response = {
-            'data': paginated_data,
-            'total': len(data),
-            'page': page,
-            'page_size': page_size,
-            'total_pages': (len(data) + page_size - 1) // page_size,
-        }
-        return jsonify(response), 200
+def format_date(date_str):
+    """Helper function to convert a date string to 'Y-m-d' format."""
+    if date_str:
+        try:
+            # Try parsing the date assuming it's in 'd/m/y' format
+            return datetime.strptime(date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+        except ValueError:
+            try:
+                # If the above fails, assume the date is already in 'Y-m-d' format
+                return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
+            except ValueError:
+                raise ValueError(f"Date {date_str} does not match expected formats '%d/%m/%Y' or '%Y-%m-%d'")
+    return None
 
 
 def custom_values_for_insert(data_sheet, max_col: int):
