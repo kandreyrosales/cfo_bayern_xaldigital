@@ -350,14 +350,21 @@ def get_conciliations_view_data(calendar_filter_start_date=None,
                                 calendar_filter_value_date_start_date=None):
     with app.app_context():
         query = "SELECT * FROM conciliations_view WHERE 1=1"
+        query_sum = ("SELECT "
+                     "format_price(SUM(subtotal_16)) AS subtotal_iva_16, "
+                     "format_price(SUM(vat_16)) AS iva_16, "
+                     "format_price(SUM(vat_0)) AS iva_0, "
+                     "format_price(SUM(ieps)) AS ieps, "
+                     "format_price(SUM(posting_amount_number)) AS total_banks, "
+                     "format_price(SUM(total_amount)) AS total_sat "
+                     "FROM conciliations_view WHERE 1=1")
         params = {}
 
         if calendar_filter_start_date and calendar_filter_end_date:
-            query += " AND formatted_date_cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
+            query += " AND cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
             params['calendar_filter_start_date'] = calendar_filter_start_date
             params['calendar_filter_end_date'] = calendar_filter_end_date
 
-            # For the other filter
         if rfc_selector:
             query += " AND rfc = :rfc_selector"
             params['rfc_selector'] = rfc_selector
@@ -369,7 +376,8 @@ def get_conciliations_view_data(calendar_filter_start_date=None,
             params['calendar_filter_value_date_start_date'] = calendar_filter_value_date_start_date
 
         result = db.session.execute(text(query), params)
-        return result
+        result_sum = db.session.execute(text(query_sum), params)
+        return result, result_sum
 
 
 def get_rfc_from_conciliations_view():

@@ -53,6 +53,7 @@ def create_conciliations_view():
                     sat.client_name,
                     sat.rfc,
                     TO_CHAR(sat.cfdi_date, 'DD/MM/YYYY') AS formatted_date_cfdi_date,
+                    sat.cfdi_date,
                     sat.receipt_number,
                     sat.fiscal_uuid,
                     sat.product_or_service,
@@ -86,8 +87,14 @@ def create_conciliations_view():
                     format_price(sat.vat_16) AS formatted_vat_16,
                     format_price(sat.vat_0) AS formatted_vat_0,
                     format_price(sat.ieps) AS formatted_ieps,
-                    format_price(sat.subtotal_16 + sat.vat_16 + sat.vat_0 + sat.ieps) AS formatted_total_amount,
+                    format_price(total_amount) AS formatted_total_amount,
                     format_price(sat.income_tax_withholding_me) AS formatted_income_tax_withholding_me,
+                    sat.subtotal_16,
+                    sat.vat_16,
+                    sat.vat_0,
+                    sat.ieps,
+                    (sat.subtotal_16 + sat.vat_16 + sat.vat_0 + sat.ieps) AS total_amount,
+                    sat.income_tax_withholding_me,
                     sat.tax_rate,
                     sat.payment_method,
                     (
@@ -123,6 +130,13 @@ def create_conciliations_view():
                         WHERE bcs_fbl5n.reference = sat.receipt_number
                         LIMIT 1
                     ) AS value_date,
+                    (
+                        SELECT bank.posting_amount
+                        FROM bank 
+                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
+                        WHERE bcs_fbl5n.reference = sat.receipt_number
+                        LIMIT 1
+                    ) AS posting_amount_number,
                     (
                         SELECT format_price(bank.posting_amount)
                         FROM bank 

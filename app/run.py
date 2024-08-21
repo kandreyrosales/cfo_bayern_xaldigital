@@ -489,7 +489,7 @@ def get_filtered_data_conciliations():
         calendar_filter_end_date = format_date(calendar_filter_end_date)
         calendar_filter_value_date_start_date = format_date(calendar_filter_value_date_start_date)
 
-        result = get_conciliations_view_data(
+        result, totals = get_conciliations_view_data(
             calendar_filter_start_date=calendar_filter_start_date,
             calendar_filter_end_date=calendar_filter_end_date,
             rfc_selector=rfc_selector,
@@ -500,12 +500,16 @@ def get_filtered_data_conciliations():
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
 
+        column_names_totals = totals.keys()
+        data_totals = [dict(zip(column_names_totals, row)) for row in totals]
+
         start = (page - 1) * page_size
         end = start + page_size
         paginated_data = data[start:end]
 
         response = {
             'data': paginated_data,
+            'total_data': data_totals,
             'total': len(data),
             'page': page,
             'page_size': page_size,
@@ -519,7 +523,7 @@ def format_date(date_str):
     """Helper function to convert a date string to 'Y-m-d' format."""
     if date_str:
         try:
-            return datetime.strptime(date_str,"%Y-%m-%d").strftime("%d/%m/%Y")
+            return datetime.strptime(date_str,"%Y-%m-%d")
         except ValueError:
             try:
                 # If the above fails, assume the date is already in 'Y-m-d' format

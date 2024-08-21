@@ -125,6 +125,47 @@
                     tbody.appendChild(row);
                 });
 
+                if (Array.isArray(data.total_data) && data.total_data.length > 0){
+                    const item = data.total_data[0]
+                     const row = document.createElement('tr');
+                     row.setAttribute('class', 'table-primary');
+
+                    // Populate the table cells
+                    row.innerHTML += `<td>TOTALES</td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td>${item.subtotal_iva_16 || ''}</td>`;
+                    row.innerHTML += `<td>${item.iva_16 || ''}</td>`;
+                    row.innerHTML += `<td>${item.iva_0 || ''}</td>`;
+                    row.innerHTML += `<td>${item.ieps || ''}</td>`;
+                    row.innerHTML += `<td>${item.total_sat || ''}</td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td></td>`;
+                    row.innerHTML += `<td>${item.total_banks || ''}</td>`;
+                    tbody.appendChild(row);
+                }
+
                 const pagination = document.getElementById('pagination');
                 pagination.innerHTML = '';
 
