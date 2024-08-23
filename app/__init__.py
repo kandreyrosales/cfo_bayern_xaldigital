@@ -108,58 +108,7 @@ def create_conciliations_view():
                         FROM bcs_fbl5n 
                         WHERE bcs_fbl5n.reference = sat.receipt_number
                         LIMIT 1
-                    )) AS diff_sat_sap,
-                    (
-                        SELECT bank.bank_name 
-                        FROM bank 
-                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS bank_name,
-                    (
-                        SELECT bank.ref 
-                        FROM bank 
-                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS bank_ref,
-                    (
-                        SELECT TO_CHAR(bank.value_date, 'DD/MM/YYYY')
-                        FROM bank 
-                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS value_date,
-                    (
-                        SELECT bank.posting_amount
-                        FROM bank 
-                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS posting_amount_number,
-                    (
-                        SELECT format_price(bank.posting_amount)
-                        FROM bank 
-                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS posting_amount,
-                    (
-                        SELECT bank.comment 
-                        FROM bank 
-                        JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS comment,
-                    format_price(
-                        COALESCE((
-                            SELECT bank.posting_amount 
-                            FROM bank 
-                            JOIN bcs_fbl5n ON bank.ref = bcs_fbl5n.reference
-                            WHERE bcs_fbl5n.reference = sat.receipt_number
-                            LIMIT 1
-                        ), 0) - sat.total_amount
-                    ) AS diff_bank_sat
+                    )) AS diff_sat_sap
                 FROM 
                     sat
                 WHERE 

@@ -1,17 +1,21 @@
-import asyncio
 import os
-from concurrent.futures import ThreadPoolExecutor
+import io
+from collections import defaultdict
+from typing import Dict
 
-from flask import render_template, request, redirect, url_for, session, jsonify
-import boto3
 import jwt
-from datetime import datetime
-from functools import wraps
+import boto3
 import psycopg2
-
-from app import init_app, create_db, app, create_conciliations_view, destroy_db
-from app.models import get_conciliations_view_data, get_rfc_from_conciliations_view, get_clients_from_conciliations_view
+import pandas as pd
+from functools import wraps, reduce
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from concurrent.futures import ThreadPoolExecutor
 from controllers.upload_files import UploadFilesController
+from app import init_app, create_db, app, create_conciliations_view, destroy_db
+from flask import render_template, request, redirect, url_for, session, jsonify, make_response
+from app.models import get_conciliations_view_data, get_rfc_from_conciliations_view, \
+    get_clients_from_conciliations_view, Bank, get_transactions
 
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
 bucket_name = os.getenv("bucket_name")
@@ -489,7 +493,12 @@ def get_filtered_data_conciliations():
         calendar_filter_end_date = format_date(calendar_filter_end_date)
         calendar_filter_value_date_start_date = format_date(calendar_filter_value_date_start_date)
 
-        result, totals = get_conciliations_view_data(
+        if calendar_filter_end_date:
+            filter_date = calendar_filter_end_date
+        else:
+            filter_date = datetime.now()
+
+        result, totals, sum_by_rfc = get_conciliations_view_data(
             calendar_filter_start_date=calendar_filter_start_date,
             calendar_filter_end_date=calendar_filter_end_date,
             rfc_selector=rfc_selector,
@@ -497,15 +506,24 @@ def get_filtered_data_conciliations():
             calendar_filter_value_date_start_date=calendar_filter_value_date_start_date
         )
 
+        bank_records = get_transactions(filter_date)
+
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
 
+        rcf_column_names = sum_by_rfc.keys()
+        sum_rfc_data = [dict(zip(rcf_column_names, row)) for row in sum_by_rfc]
+
+        bank_transactions_filtered = filter_bank_transactions(sum_rfc_data, bank_records)
+
+        full_data = list(map(lambda x: update_bank_info(x, bank_transactions_filtered), data))
+        
         column_names_totals = totals.keys()
         data_totals = [dict(zip(column_names_totals, row)) for row in totals]
 
         start = (page - 1) * page_size
         end = start + page_size
-        paginated_data = data[start:end]
+        paginated_data = full_data[start:end]
 
         response = {
             'data': paginated_data,
@@ -515,15 +533,112 @@ def get_filtered_data_conciliations():
             'page_size': page_size,
             'total_pages': (len(data) + page_size - 1) // page_size,
         }
-
         return jsonify(response), 200
+
+
+@app.route('/download_data_conciliations', methods=["GET"])
+def download_data_conciliations():
+    if request.method == "GET":
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))
+
+        calendar_filter_start_date = request.args.get('calendar_filter_start_date', None)
+        calendar_filter_end_date = request.args.get('calendar_filter_end_date', None)
+        rfc_selector = request.args.get('rfc_selector', None)
+        customer_name_selector = request.args.get('customer_name_selector', None)
+        calendar_filter_value_date_start_date = request.args.get('calendar_filter_value_date_start_date', None)
+
+        # Format the dates to 'Y-m-d' before passing them to the query
+        calendar_filter_start_date = format_date(calendar_filter_start_date)
+        calendar_filter_end_date = format_date(calendar_filter_end_date)
+        calendar_filter_value_date_start_date = format_date(calendar_filter_value_date_start_date)
+
+        if calendar_filter_end_date:
+            filter_date = calendar_filter_end_date
+        else:
+            filter_date = datetime.now()
+
+        result, totals, sum_by_rfc = get_conciliations_view_data(
+            calendar_filter_start_date=calendar_filter_start_date,
+            calendar_filter_end_date=calendar_filter_end_date,
+            rfc_selector=rfc_selector,
+            customer_name_selector=customer_name_selector,
+            calendar_filter_value_date_start_date=calendar_filter_value_date_start_date
+        )
+
+        bank_records = get_transactions(filter_date)
+
+        column_names = result.keys()
+        data = [dict(zip(column_names, row)) for row in result]
+
+        rcf_column_names = sum_by_rfc.keys()
+        sum_rfc_data = [dict(zip(rcf_column_names, row)) for row in sum_by_rfc]
+
+        bank_transactions_filtered = filter_bank_transactions(sum_rfc_data, bank_records)
+
+        full_data = list(map(lambda x: update_bank_info(x, bank_transactions_filtered), data))
+
+        column_names_totals = totals.keys()
+        data_totals = [dict(zip(column_names_totals, row)) for row in totals]
+
+        # Convert data to DataFrame
+        df = pd.DataFrame(full_data)
+        df_totals = pd.DataFrame(data_totals)
+
+        # Combine data and totals into one DataFrame if necessary
+        if not df_totals.empty:
+            df = pd.concat([df, df_totals], ignore_index=True)
+
+        # Create a bytes buffer for the Excel file
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Conciliations')
+
+        # Rewind the buffer
+        output.seek(0)
+
+        # Create a response
+        response = make_response(output.read())
+        response.headers['Content-Disposition'] = 'attachment; filename=conciliations_data.xlsx'
+        response.headers['Content-type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+        return response, 200
+
+
+def filter_bank_transactions(rfcs, transactions):
+    match_transactions = []
+    for item in rfcs:
+        result = list(filter(lambda transaction: int(transaction[3]) == int(item['sum']), transactions))
+        if len(result) > 0:
+            bank = result[0]
+            item['bank_name'] = bank[0]
+            item['comment'] = bank[1]
+            item['value_date'] = bank[2]
+            item['posting_amount'] = bank[3]
+            item['ref'] = bank[4]
+            match_transactions.append(item)
+
+    return match_transactions
+
+
+def update_bank_info(item, bank_info_list) -> Dict:
+    for bank_info in bank_info_list:
+        if item['rfc'] == bank_info['rfc']:
+            item['bank_name'] = bank_info['bank_name']
+            item['bank_ref'] = bank_info['ref']
+            item['value_date'] = bank_info['value_date'].strftime('%d/%m/%Y')
+            item['posting_amount_number'] = bank_info['posting_amount']
+            item['posting_amount'] = f"${bank_info['posting_amount']:,.2f}"
+            item['comment'] = bank_info['comment']
+            break
+    return item
 
 
 def format_date(date_str):
     """Helper function to convert a date string to 'Y-m-d' format."""
     if date_str:
         try:
-            return datetime.strptime(date_str,"%Y-%m-%d")
+            return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
             try:
                 # If the above fails, assume the date is already in 'Y-m-d' format

@@ -1,6 +1,7 @@
 from app import db, app
 from sqlalchemy import text
 from datetime import datetime
+from sqlalchemy import func
 
 
 class Bank(db.Model):
@@ -355,29 +356,44 @@ def get_conciliations_view_data(calendar_filter_start_date=None,
                      "format_price(SUM(vat_16)) AS iva_16, "
                      "format_price(SUM(vat_0)) AS iva_0, "
                      "format_price(SUM(ieps)) AS ieps, "
-                     "format_price(SUM(posting_amount_number)) AS total_banks, "
                      "format_price(SUM(total_amount)) AS total_sat "
                      "FROM conciliations_view WHERE 1=1")
+        query_rfc = "SELECT rfc, SUM(total_amount) from public.conciliations_view WHERE 1=1"
         params = {}
 
         if calendar_filter_start_date and calendar_filter_end_date:
-            query += " AND cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
+            sub_query = " AND cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
+            query += sub_query
+            query_sum += sub_query
+            query_rfc += sub_query
             params['calendar_filter_start_date'] = calendar_filter_start_date
             params['calendar_filter_end_date'] = calendar_filter_end_date
 
         if rfc_selector:
-            query += " AND rfc = :rfc_selector"
+            sub_query = " AND rfc = :rfc_selector"
+            query += sub_query
+            query_sum += sub_query
+            query_rfc += sub_query
             params['rfc_selector'] = rfc_selector
         if customer_name_selector:
-            query += " AND client_name = :customer_name_selector"
+            sub_query = " AND client_name = :customer_name_selector"
+            query += sub_query
+            query_sum += sub_query
+            query_rfc += sub_query
             params['customer_name_selector'] = customer_name_selector
         if calendar_filter_value_date_start_date:
-            query += " AND value_date >= :calendar_filter_value_date_start_date"
+            sub_query = " AND value_date >= :calendar_filter_value_date_start_date"
+            query += sub_query
+            query_sum += sub_query
+            query_rfc += sub_query
             params['calendar_filter_value_date_start_date'] = calendar_filter_value_date_start_date
+
+        query_rfc += " GROUP BY rfc"
 
         result = db.session.execute(text(query), params)
         result_sum = db.session.execute(text(query_sum), params)
-        return result, result_sum
+        result_sum_rfc = db.session.execute(text(query_rfc), params)
+        return result, result_sum, result_sum_rfc
 
 
 def get_rfc_from_conciliations_view():
@@ -393,3 +409,25 @@ def get_clients_from_conciliations_view():
         result = db.session.execute(query)
         return result
 
+
+def get_transactions(date):
+    results = (
+        db.session.query(
+            Bank.bank_name,
+            Bank.comment,
+            Bank.value_date,
+            func.sum(Bank.posting_amount).label('total_posting_amount'),
+            Bank.ref
+        )
+        .filter(Bank.value_date >= date)
+        .group_by(
+            Bank.bank_name,
+            Bank.value_date,
+            Bank.comment,
+            Bank.posting_amount,
+            Bank.ref
+        )
+        .all()
+    )
+
+    return results
