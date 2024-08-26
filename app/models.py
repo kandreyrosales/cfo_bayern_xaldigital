@@ -24,7 +24,7 @@ class Bank(db.Model):
     file_name = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
-        return f'<Banco {self.id}>'
+        return f"<Banco {self.id}>"
 
     def save(self):
         with app.app_context():
@@ -64,7 +64,7 @@ class Sat(db.Model):
     tax_rate = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
-        return f'<Sat {self.id}>'
+        return f"<Sat {self.id}>"
 
     def save(self):
         with app.app_context():
@@ -84,7 +84,7 @@ class Sap(db.Model):
     state = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
-        return f'<Sap {self.id}>'
+        return f"<Sap {self.id}>"
 
     def save(self):
         with app.app_context():
@@ -98,7 +98,7 @@ class Dof(db.Model):
     exchange_rate = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f'<Dof {self.id}>'
+        return f"<Dof {self.id}>"
 
     def save(self):
         with app.app_context():
@@ -115,7 +115,7 @@ class BankStatement(db.Model):
     bank_payment_date = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
-        return f'<BankStatement {self.id}>'
+        return f"<BankStatement {self.id}>"
 
     def save(self):
         with app.app_context():
@@ -152,53 +152,65 @@ class FBL3N(db.Model):
     document_currency = db.Column(db.String(10), nullable=True)
     amount_in_doc_curr = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
     eff_exchange_rate = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
-    amount_in_local_currency = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_in_local_currency = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     document_date = db.Column(db.DateTime, nullable=True)
     clearing_date = db.Column(db.DateTime, nullable=True)
     withholding_tax_amnt = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
-    withhldg_tax_base_amount = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    withhldg_tax_base_amount = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     local_currency = db.Column(db.String(10), nullable=True)
     entry_date = db.Column(db.DateTime, nullable=True)
 
 
 class BCSIEPS2440020(FBL3N):
-    __tablename__ = 'bcs_ieps_2440020'
+    __tablename__ = "bcs_ieps_2440020"
 
 
 class BCSIVACobrado2440015(FBL3N):
-    __tablename__ = 'bcs_iva_cobrado_2440015'
+    __tablename__ = "bcs_iva_cobrado_2440015"
 
 
 class BCSIVARetenido1250010(FBL3N):
-    __tablename__ = 'bcs_iva_retenido_1250010'
+    __tablename__ = "bcs_iva_retenido_1250010"
 
 
 class BHCIEPS2440020(FBL3N):
-    amount_exempt_withholding_taxes = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_exempt_withholding_taxes = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     general_ledger_account = db.Column(db.String(250), nullable=True)
-    __tablename__ = 'bhc_ieps_2440020'
+    __tablename__ = "bhc_ieps_2440020"
 
 
 class BHCIVATrasladado2440015(FBL3N):
-    amount_exempt_withholding_taxes = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_exempt_withholding_taxes = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     general_ledger_account = db.Column(db.String(250), nullable=True)
-    __tablename__ = 'bhc_iva_traladado_2440015'
+    __tablename__ = "bhc_iva_traladado_2440015"
 
 
 class BHCIVARetenido1250010(FBL3N):
-    amount_exempt_withholding_taxes = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_exempt_withholding_taxes = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     general_ledger_account = db.Column(db.String(250), nullable=True)
-    __tablename__ = 'bhc_iva_retenido_1250010'
+    __tablename__ = "bhc_iva_retenido_1250010"
 
 
 class BHCIVAOTROS(FBL3N):
-    amount_exempt_withholding_taxes = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_exempt_withholding_taxes = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     general_ledger_account = db.Column(db.String(250), nullable=True)
-    __tablename__ = 'bhc_iva_iva_otros'
+    __tablename__ = "bhc_iva_iva_otros"
 
 
 class BCSFBL5N(db.Model):
-    __tablename__ = 'bcs_fbl5n'
+    __tablename__ = "bcs_fbl5n"
 
     id = db.Column(db.Integer, primary_key=True)
     document_number = db.Column(db.String(250), nullable=True)
@@ -220,12 +232,14 @@ class BCSFBL5N(db.Model):
     document_currency = db.Column(db.String(250), nullable=True)
     amount_in_doc_curr = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
     eff_exchange_rate = db.Column(db.Numeric(precision=20, scale=5), nullable=True)
-    amount_in_local_currency = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_in_local_currency = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     local_currency = db.Column(db.String(250), nullable=True)
 
 
 class BHCFBL5N(db.Model):
-    __tablename__ = 'bhc_fbl5n'
+    __tablename__ = "bhc_fbl5n"
     id = db.Column(db.Integer, primary_key=True)
     posting_key = db.Column(db.String(250), nullable=True)
     user_name = db.Column(db.String(250), nullable=True)
@@ -259,17 +273,23 @@ class BHCFBL5N(db.Model):
     document_currency = db.Column(db.String(250), nullable=True)
     amount_in_doc_curr = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
     eff_exchange_rate = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
-    amount_in_local_currency = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    amount_in_local_currency = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     local_currency = db.Column(db.String(250), nullable=True)
     withholding_amount = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
-    exempt_withholding_amount = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
-    withholding_base_amount = db.Column(db.Numeric(precision=20, scale=2), nullable=True)
+    exempt_withholding_amount = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
+    withholding_base_amount = db.Column(
+        db.Numeric(precision=20, scale=2), nullable=True
+    )
     value_date = db.Column(db.DateTime, nullable=True)
     entry_date = db.Column(db.DateTime, nullable=True)
 
 
 class BankPbc(db.Model):
-    __tablename__ = 'bank_pbc'
+    __tablename__ = "bank_pbc"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     business_area = db.Column(db.String, nullable=True)
@@ -307,7 +327,7 @@ class BankPbc(db.Model):
 
 
 class BankN8p(db.Model):
-    __tablename__ = 'bank_n8p'
+    __tablename__ = "bank_n8p"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     business_area = db.Column(db.Float, nullable=True, default=0)
@@ -344,21 +364,25 @@ class BankN8p(db.Model):
     posting_date = db.Column(db.Date, nullable=True)
 
 
-def get_conciliations_view_data(calendar_filter_start_date=None,
-                                calendar_filter_end_date=None,
-                                rfc_selector=None,
-                                customer_name_selector=None,
-                                calendar_filter_value_date_start_date=None):
+def get_conciliations_view_data(
+    calendar_filter_start_date=None,
+    calendar_filter_end_date=None,
+    rfc_selector=None,
+    customer_name_selector=None,
+    calendar_filter_value_date_start_date=None,
+):
     with app.app_context():
         query = "SELECT * FROM conciliations_view WHERE 1=1"
-        query_sum = ("SELECT "
-                     "format_price(SUM(subtotal_16)) AS subtotal_iva_16, "
-                     "format_price(SUM(vat_16)) AS iva_16, "
-                     "format_price(SUM(vat_0)) AS iva_0, "
-                     "format_price(SUM(ieps)) AS ieps, "
-                     "format_price(SUM(total_amount)) AS total_sat "
-                     "FROM conciliations_view WHERE 1=1")
-        query_rfc = "SELECT rfc, SUM(total_amount) from public.conciliations_view WHERE 1=1"
+        query_sum = (
+            "SELECT "
+            "format_price(SUM(subtotal_16)) AS subtotal_iva_16, "
+            "format_price(SUM(vat_16)) AS iva_16, "
+            "format_price(SUM(vat_0)) AS iva_0, "
+            "format_price(SUM(ieps)) AS ieps, "
+            "format_price(SUM(total_amount)) AS total_sat "
+            "FROM conciliations_view WHERE 1=1"
+        )
+        query_rfc = "SELECT clearing_payment_policy, SUM(total_amount) from public.conciliations_view WHERE 1=1"
         params = {}
 
         if calendar_filter_start_date and calendar_filter_end_date:
@@ -366,29 +390,33 @@ def get_conciliations_view_data(calendar_filter_start_date=None,
             query += sub_query
             query_sum += sub_query
             query_rfc += sub_query
-            params['calendar_filter_start_date'] = calendar_filter_start_date
-            params['calendar_filter_end_date'] = calendar_filter_end_date
+            params["calendar_filter_start_date"] = calendar_filter_start_date
+            params["calendar_filter_end_date"] = calendar_filter_end_date
 
         if rfc_selector:
             sub_query = " AND rfc = :rfc_selector"
             query += sub_query
             query_sum += sub_query
             query_rfc += sub_query
-            params['rfc_selector'] = rfc_selector
+            params["rfc_selector"] = rfc_selector
         if customer_name_selector:
             sub_query = " AND client_name = :customer_name_selector"
             query += sub_query
             query_sum += sub_query
             query_rfc += sub_query
-            params['customer_name_selector'] = customer_name_selector
+            params["customer_name_selector"] = customer_name_selector
         if calendar_filter_value_date_start_date:
             sub_query = " AND value_date >= :calendar_filter_value_date_start_date"
             query += sub_query
             query_sum += sub_query
             query_rfc += sub_query
-            params['calendar_filter_value_date_start_date'] = calendar_filter_value_date_start_date
+            params["calendar_filter_value_date_start_date"] = (
+                calendar_filter_value_date_start_date
+            )
 
-        query_rfc += " GROUP BY rfc"
+        query += " ORDER BY clearing_payment_policy"
+
+        query_rfc += " GROUP BY clearing_payment_policy"
 
         result = db.session.execute(text(query), params)
         result_sum = db.session.execute(text(query_sum), params)
@@ -416,16 +444,12 @@ def get_transactions(date):
             Bank.bank_name,
             Bank.comment,
             Bank.value_date,
-            func.sum(Bank.posting_amount).label('total_posting_amount'),
-            Bank.ref
+            func.sum(Bank.posting_amount).label("total_posting_amount"),
+            Bank.ref,
         )
         .filter(Bank.value_date >= date)
         .group_by(
-            Bank.bank_name,
-            Bank.value_date,
-            Bank.comment,
-            Bank.posting_amount,
-            Bank.ref
+            Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
         )
         .all()
     )

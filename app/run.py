@@ -11,13 +11,27 @@ from functools import wraps, reduce
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from concurrent.futures import ThreadPoolExecutor
-from controllers.upload_files import UploadFilesController
-from app import init_app, create_db, app, create_conciliations_view, destroy_db
-from flask import render_template, request, redirect, url_for, session, jsonify, make_response
-from app.models import get_conciliations_view_data, get_rfc_from_conciliations_view, \
-    get_clients_from_conciliations_view, Bank, get_transactions
 
-AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
+from app import init_app, create_db, app, create_conciliations_view, destroy_db
+from flask import (
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
+    make_response,
+)
+from app.controllers.upload_files import UploadFilesController
+from app.models import (
+    get_conciliations_view_data,
+    get_rfc_from_conciliations_view,
+    get_clients_from_conciliations_view,
+    Bank,
+    get_transactions,
+)
+
+AWS_REGION_PREDICTIA = os.getenv("region_aws", "us-east-1")
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
@@ -26,15 +40,24 @@ USER_POOL_ID_COGNITO = os.getenv("user_pool")
 S3_BUCKET_NAME = os.getenv("s3_bucket_name", "test")
 
 # boto3 clients
-cognito_client = boto3.client('cognito-idp', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId,
-                              aws_secret_access_key=secretAccessKey)
-lambda_client = boto3.client('lambda', region_name=AWS_REGION_PREDICTIA, aws_access_key_id=accessKeyId,
-                             aws_secret_access_key=secretAccessKey)
-s3_client = boto3.client('s3',
-                         region_name=AWS_REGION_PREDICTIA,
-                         aws_access_key_id=accessKeyId,
-                         aws_secret_access_key=secretAccessKey
-                         )
+cognito_client = boto3.client(
+    "cognito-idp",
+    region_name=AWS_REGION_PREDICTIA,
+    aws_access_key_id=accessKeyId,
+    aws_secret_access_key=secretAccessKey,
+)
+lambda_client = boto3.client(
+    "lambda",
+    region_name=AWS_REGION_PREDICTIA,
+    aws_access_key_id=accessKeyId,
+    aws_secret_access_key=secretAccessKey,
+)
+s3_client = boto3.client(
+    "s3",
+    region_name=AWS_REGION_PREDICTIA,
+    aws_access_key_id=accessKeyId,
+    aws_secret_access_key=secretAccessKey,
+)
 
 db_host = os.getenv("db_endpoint", "localhost")
 db_name = "postgres"
@@ -45,17 +68,14 @@ db_password = os.getenv("password_db", "root")
 def authenticate_user(username, password):
     try:
         response = cognito_client.admin_initiate_auth(
-            AuthFlow='ADMIN_NO_SRP_AUTH',
-            AuthParameters={
-                'USERNAME': username,
-                'PASSWORD': password
-            },
+            AuthFlow="ADMIN_NO_SRP_AUTH",
+            AuthParameters={"USERNAME": username, "PASSWORD": password},
             ClientId=CLIENT_ID_COGNITO,
             UserPoolId=USER_POOL_ID_COGNITO,
             ClientMetadata={
-                'username': username,
-                'password': password,
-            }
+                "username": username,
+                "password": password,
+            },
         )
         return response
     except cognito_client.exceptions.NotAuthorizedException as e:
@@ -75,15 +95,15 @@ def authenticate_user(username, password):
         return {"reason": "Error general. Por favor contactar al administrador"}
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     """
-        Accessing with Cognito using username and password.
-        After login is redirected to reset password and login again
+    Accessing with Cognito using username and password.
+    After login is redirected to reset password and login again
     """
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         if not username or not password:
             return jsonify(error="Nombre de usuario y Contraseña obligatorios"), 400
@@ -100,100 +120,100 @@ def login():
         if not auth_result:
             return jsonify(error=cognito_response), 400
 
-        session['access_token'] = auth_result.get('AccessToken')
-        session['id_token'] = auth_result.get('IdToken')
-        return redirect(url_for('index'))
+        session["access_token"] = auth_result.get("AccessToken")
+        session["id_token"] = auth_result.get("IdToken")
+        return redirect(url_for("index"))
     else:
         return render_template(
-            'login/login.html',
-            accessKeyId=accessKeyId,
-            secretAccessKey=secretAccessKey
+            "login/login.html", accessKeyId=accessKeyId, secretAccessKey=secretAccessKey
         )
 
 
-@app.route('/registro', methods=['GET', 'POST'])
+@app.route("/registro", methods=["GET", "POST"])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        corporate_title = request.form['corp_title']
-        contact_number = request.form['contact_number']
-        user_id = request.form['worker_custom_id']
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        corporate_title = request.form["corp_title"]
+        contact_number = request.form["contact_number"]
+        user_id = request.form["worker_custom_id"]
         user_attributes = [
-            {
-                'Name': 'custom:corporate_title',
-                'Value': corporate_title
-            },
-            {
-                'Name': 'custom:contact_number',
-                'Value': contact_number
-            },
-            {
-                'Name': 'custom:user_id',
-                'Value': user_id
-            }
+            {"Name": "custom:corporate_title", "Value": corporate_title},
+            {"Name": "custom:contact_number", "Value": contact_number},
+            {"Name": "custom:user_id", "Value": user_id},
         ]
         try:
             response = cognito_client.sign_up(
                 ClientId=CLIENT_ID_COGNITO,
                 Username=username,
                 Password=password,
-                UserAttributes=user_attributes
+                UserAttributes=user_attributes,
             )
-            return render_template('login/confirm_account_code.html', email=username)
+            return render_template("login/confirm_account_code.html", email=username)
         except cognito_client.exceptions.NotAuthorizedException as e:
             # Handle authentication failure
             return jsonify(error="Usuario no Autorizado para ejecutar esta acción"), 400
         except cognito_client.exceptions.UsernameExistsException:
             return jsonify(error="Ya existe una cuenta asociada a este correo"), 400
         except cognito_client.exceptions.InvalidPasswordException:
-            return jsonify(error="Crea una contraseña de al menos "
-                                 "8 dígitos, más segura, usando al menos una letra mayúscula, "
-                                 "un número y un carácter especial"), 400
+            return (
+                jsonify(
+                    error="Crea una contraseña de al menos "
+                    "8 dígitos, más segura, usando al menos una letra mayúscula, "
+                    "un número y un carácter especial"
+                ),
+                400,
+            )
         except Exception as e:
             return jsonify(error=f"Ha ocurrido el siguiente error: {e}"), 400
 
     else:
-        return render_template('login/signup.html')
+        return render_template("login/signup.html")
 
 
-@app.route('/confirmar_cuenta', methods=['GET', 'POST'])
+@app.route("/confirmar_cuenta", methods=["GET", "POST"])
 def confirm_account_code():
-    email = request.form['email_not_confirmed']
-    email_code = request.form['custom_code']
+    email = request.form["email_not_confirmed"]
+    email_code = request.form["custom_code"]
     if request.method == "POST":
         try:
             cognito_client.confirm_sign_up(
-                ClientId=CLIENT_ID_COGNITO,
-                Username=email,
-                ConfirmationCode=email_code
+                ClientId=CLIENT_ID_COGNITO, Username=email, ConfirmationCode=email_code
             )
-            return render_template('login/login.html')
+            return render_template("login/login.html")
         except cognito_client.exceptions.ExpiredCodeException as e:
             return render_template(
-                'login/confirm_account_code.html',
-                error="El código enviado a su correo ha expirado", email=email)
+                "login/confirm_account_code.html",
+                error="El código enviado a su correo ha expirado",
+                email=email,
+            )
         except cognito_client.exceptions.CodeMismatchException as e:
             return render_template(
-                'login/confirm_account_code.html',
-                error="El código no es válido", email=email)
+                "login/confirm_account_code.html",
+                error="El código no es válido",
+                email=email,
+            )
         except cognito_client.exceptions.TooManyFailedAttemptsException as e:
             return render_template(
-                'login/confirm_account_code.html',
-                error="Máximo de intentos superados para validar la cuenta", email=email)
+                "login/confirm_account_code.html",
+                error="Máximo de intentos superados para validar la cuenta",
+                email=email,
+            )
         except cognito_client.exceptions.UserNotFoundException as e:
             return render_template(
-                'login/confirm_account_code.html',
-                error="Error: Usuario no Encontrado o Eliminado", email=email)
+                "login/confirm_account_code.html",
+                error="Error: Usuario no Encontrado o Eliminado",
+                email=email,
+            )
     else:
-        return render_template('login/confirm_account_code.html', email=email)
+        return render_template("login/confirm_account_code.html", email=email)
 
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
     # Clear the session data
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
 def token_required(f):
@@ -201,30 +221,34 @@ def token_required(f):
     def decorated_function(*args, **kwargs):
         token = session.get("access_token")
         if not token:
-            return render_template('login/login.html')
+            return render_template("login/login.html")
         try:
-            decoded_token = jwt.decode(token, options={
-                "verify_signature": False})  # Decode the token without verifying signature
-            expiration_time = datetime.utcfromtimestamp(decoded_token['exp'])
+            decoded_token = jwt.decode(
+                token, options={"verify_signature": False}
+            )  # Decode the token without verifying signature
+            expiration_time = datetime.utcfromtimestamp(decoded_token["exp"])
             current_time = datetime.utcnow()
             if expiration_time > current_time:
                 return f(*args, **kwargs)
             else:
-                return render_template('login/login.html',
-                                       error="Sesión Expirada. Ingrese sus datos de nuevo")
+                return render_template(
+                    "login/login.html",
+                    error="Sesión Expirada. Ingrese sus datos de nuevo",
+                )
         except jwt.ExpiredSignatureError:
-            return render_template('login/login.html',
-                                   error="Sesión Expirada. Ingrese sus datos de nuevo")
+            return render_template(
+                "login/login.html", error="Sesión Expirada. Ingrese sus datos de nuevo"
+            )
 
     return decorated_function
 
 
-@app.route('/olvido_contrasena', methods=['GET', 'POST'])
+@app.route("/olvido_contrasena", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
-        email = request.form['email_forgot_password']
-        password = request.form['password']
-        custom_code = request.form['custom_code']
+        email = request.form["email_forgot_password"]
+        password = request.form["password"]
+        custom_code = request.form["custom_code"]
         try:
             cognito_client.confirm_forgot_password(
                 ClientId=CLIENT_ID_COGNITO,
@@ -232,59 +256,77 @@ def forgot_password():
                 ConfirmationCode=custom_code,
                 Password=password,
             )
-            return render_template('login/login.html')
+            return render_template("login/login.html")
         except cognito_client.exceptions.UserNotFoundException as e:
-            return render_template('login/reset_password.html',
-                                   error="Usuario No Encontrado o Eliminado.", email=email)
+            return render_template(
+                "login/reset_password.html",
+                error="Usuario No Encontrado o Eliminado.",
+                email=email,
+            )
         except cognito_client.exceptions.InvalidPasswordException as e:
-            return render_template('login/reset_password.html',
-                                   error="Usuario No Encontrado o Eliminado.", email=email)
+            return render_template(
+                "login/reset_password.html",
+                error="Usuario No Encontrado o Eliminado.",
+                email=email,
+            )
         except cognito_client.exceptions.CodeMismatchException as e:
-            return render_template('login/reset_password.html',
-                                   error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
-                                         "Intenta de nuevo.",
-                                   email=email)
+            return render_template(
+                "login/reset_password.html",
+                error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
+                "Intenta de nuevo.",
+                email=email,
+            )
         except Exception as e:
-            return render_template('login/reset_password.html',
-                                   error=f"Error: {e}", email=email)
+            return render_template(
+                "login/reset_password.html", error=f"Error: {e}", email=email
+            )
     else:
-        return render_template('login/reset_password.html')
+        return render_template("login/reset_password.html")
 
 
-@app.route('/enviar_link_contrasena', methods=['GET', 'POST'])
+@app.route("/enviar_link_contrasena", methods=["GET", "POST"])
 def send_reset_password_link():
     if request.method == "POST":
-        email = request.form['email_forgot_password']
+        email = request.form["email_forgot_password"]
         try:
-            cognito_client.forgot_password(
-                ClientId=CLIENT_ID_COGNITO,
-                Username=email
-            )
-            return render_template('login/reset_password.html')
+            cognito_client.forgot_password(ClientId=CLIENT_ID_COGNITO, Username=email)
+            return render_template("login/reset_password.html")
 
         except cognito_client.exceptions.UserNotFoundException as e:
-            return render_template('login/send_reset_password_link.html',
-                                   error="Usuario No Encontrado o Eliminado.", email=email)
+            return render_template(
+                "login/send_reset_password_link.html",
+                error="Usuario No Encontrado o Eliminado.",
+                email=email,
+            )
         except cognito_client.exceptions.CodeDeliveryFailureException as e:
-            return render_template('login/send_reset_password_link.html',
-                                   error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
-                                         "Intenta de nuevo.",
-                                   email=email)
+            return render_template(
+                "login/send_reset_password_link.html",
+                error="Ha ocurrido un problema al enviar el código para asignar una nueva contraseña. "
+                "Intenta de nuevo.",
+                email=email,
+            )
         except Exception as e:
-            return render_template('login/send_reset_password_link.html',
-                                   error=f"Error: {e}", email=email)
+            return render_template(
+                "login/send_reset_password_link.html", error=f"Error: {e}", email=email
+            )
     else:
-        return render_template('login/send_reset_password_link.html')
+        return render_template("login/send_reset_password_link.html")
 
 
-@app.route('/', methods=["GET"])
-@token_required
+@app.route("/", methods=["GET"])
+# @token_required
 def index():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
     # except cognito_client.exceptions.UserNotFoundException as e:
     #     return redirect(url_for('logout'))
-    transactions_labels = ["Totales", "Exitosas", "Fallidas", "Fallidas sin CFDI", "Falta emitir Complemento"]
+    transactions_labels = [
+        "Totales",
+        "Exitosas",
+        "Fallidas",
+        "Fallidas sin CFDI",
+        "Falta emitir Complemento",
+    ]
     transactions_data = [35, 26, 6, 1, 3]
 
     start_date = request.args.get("start_date")
@@ -293,10 +335,7 @@ def index():
     customer = request.args.get("customer")
 
     where_statement_sql, filters_present = generate_filter_sql(
-        start_date=start_date,
-        end_date=end_date,
-        rfc=rfc,
-        customer=customer
+        start_date=start_date, end_date=end_date, rfc=rfc, customer=customer
     )
     if not filters_present:
         where_statement_sql = ""
@@ -308,9 +347,8 @@ def index():
         from dashboard {where_statement_sql} limit 5
     """
     query_validador_ivas_rows = get_query_rows(
-        conn=conn,
-        cur=cur,
-        query=query_validador_ivas)
+        conn=conn, cur=cur, query=query_validador_ivas
+    )
 
     # Validador IEPS table data
     conn, cur = connection_db()
@@ -319,9 +357,8 @@ def index():
         from dashboard {where_statement_sql} limit 5
     """
     query_validador_ieps_rows = get_query_rows(
-        conn=conn,
-        cur=cur,
-        query=query_validador_ieps)
+        conn=conn, cur=cur, query=query_validador_ieps
+    )
 
     # # Cliente con mayor variacion Chart Data
     # conn, cur = connection_db()
@@ -347,23 +384,22 @@ def index():
     #     variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
     #     variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
 
-    variation_labels = ["MONSANTO COMERCIAL", "Bayer AG Crop Science", "TIENDAS SORIANA",
-                        "2022 ENVIRONMENTAL SCIENCE", "Bayer HealthCare LLC Consumer Care Division"]
+    result_clients = get_clients_from_conciliations_view()
+    variation_labels = list([row[0] for row in result_clients])
+
     variation_data = [93.79, 24.66, 2.45, 1.38, 0.58]
 
+    '''
+    
     conn, cur = connection_db()
     transaction_sum_query_result = get_query_rows(
-        conn=conn,
-        cur=cur,
-        query=f"""select count(*) from cfdi_ingreso;"""
+        conn=conn, cur=cur, query=f"""select count(*) from cfdi_ingreso;"""
     )[0][0]
 
     conn, cur = connection_db()
     ingresos_totales_query = """select SUM(total_cfdi) FROM cfdi_ingreso;"""
     ingresos_totales_query_result = get_query_rows(
-        conn=conn,
-        cur=cur,
-        query=ingresos_totales_query
+        conn=conn, cur=cur, query=ingresos_totales_query
     )[0][0]
 
     conn, cur = connection_db()
@@ -371,29 +407,39 @@ def index():
         select cliente, sum(depositos) as total from conciliaciones_raw_data
         group by cliente order by total DESC;"""
     ingresos_data_chart_query_result = get_query_rows(
-        conn=conn,
-        cur=cur,
-        query=ingresos_data_chart_query
+        conn=conn, cur=cur, query=ingresos_data_chart_query
     )
     ingresos_chart_labels = [row[0] for row in ingresos_data_chart_query_result]
     ingresos_chart_data = [row[1] for row in ingresos_data_chart_query_result]
+    '''
+
+    result_rfc = get_rfc_from_conciliations_view()
+    column_names_rfc = result_rfc.keys()
+    rfc_list = [dict(zip(column_names_rfc, row)) for row in result_rfc]
+
+    result_clients = get_clients_from_conciliations_view()
+    column_names_clients = result_clients.keys()
+    client_list = [dict(zip(column_names_clients, row)) for row in result_clients]
 
     return render_template(
-        'index.html',
+        "index.html",
         variation_data=variation_data,
         variation_labels=variation_labels,
         transactions_labels=transactions_labels,
         transactions_data=transactions_data,
         validador_iva_rows=query_validador_ivas_rows,
         validador_ieps_rows=query_validador_ieps_rows,
-        transactions_count=transaction_sum_query_result,
-        ingresos_totales=ingresos_totales_query_result,
-        ingresos_chart_data=ingresos_chart_data,
-        ingresos_chart_labels=ingresos_chart_labels
+        transactions_count=[],
+        ingresos_totales=[],
+        ingresos_chart_data=[],
+        ingresos_chart_labels=[],
+        search=True,
+        rfc_list=rfc_list,
+        client_list=client_list,
     )
 
 
-@app.route('/get_rfc_list', methods=["GET"])
+@app.route("/get_rfc_list", methods=["GET"])
 def get_rfc_list():
     """
     Getting the RFC list from the Database
@@ -402,10 +448,10 @@ def get_rfc_list():
         data = []
         return jsonify(data), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-@app.route('/get_customer_name_list', methods=["GET"])
+@app.route("/get_customer_name_list", methods=["GET"])
 def get_customer_name_list():
     """
     Getting customer names list from the Database
@@ -419,10 +465,10 @@ def get_customer_name_list():
     try:
         return []
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({"error": str(e)})
 
 
-@app.route('/conciliaciones')
+@app.route("/conciliaciones")
 # @token_required
 def reconciliations_data_cfo():
     # try:
@@ -439,10 +485,10 @@ def reconciliations_data_cfo():
     client_list = [dict(zip(column_names_clients, row)) for row in result_clients]
 
     return render_template(
-        'reconciliations_data_cfo.html',
+        "reconciliations_data_cfo.html",
         search=True,
         rfc_list=rfc_list,
-        client_list=client_list
+        client_list=client_list,
     )
 
 
@@ -459,13 +505,13 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
     if start_date and end_date:
         field_flag = True
         where_query += f"{query_date_range}"
-    if rfc and rfc != 'all':
+    if rfc and rfc != "all":
         if field_flag:
             where_query += f" AND {query_rfc}"
         else:
             where_query += f"{query_rfc}"
         field_flag = True
-    if customer and customer != 'all':
+    if customer and customer != "all":
         if field_flag:
             where_query += f" AND {query_customer}"
         else:
@@ -476,22 +522,28 @@ def generate_filter_sql(start_date, end_date, rfc, customer):
     return where_query, False
 
 
-@app.route('/get_filtered_data_conciliations', methods=["GET"])
+@app.route("/get_filtered_data_conciliations", methods=["GET"])
 def get_filtered_data_conciliations():
     if request.method == "GET":
-        page = int(request.args.get('page', 1))
-        page_size = int(request.args.get('page_size', 10))
+        page = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 10))
 
-        calendar_filter_start_date = request.args.get('calendar_filter_start_date', None)
-        calendar_filter_end_date = request.args.get('calendar_filter_end_date', None)
-        rfc_selector = request.args.get('rfc_selector', None)
-        customer_name_selector = request.args.get('customer_name_selector', None)
-        calendar_filter_value_date_start_date = request.args.get('calendar_filter_value_date_start_date', None)
+        calendar_filter_start_date = request.args.get(
+            "calendar_filter_start_date", None
+        )
+        calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
+        rfc_selector = request.args.get("rfc_selector", None)
+        customer_name_selector = request.args.get("customer_name_selector", None)
+        calendar_filter_value_date_start_date = request.args.get(
+            "calendar_filter_value_date_start_date", None
+        )
 
         # Format the dates to 'Y-m-d' before passing them to the query
         calendar_filter_start_date = format_date(calendar_filter_start_date)
-        calendar_filter_end_date = format_date(calendar_filter_end_date)
-        calendar_filter_value_date_start_date = format_date(calendar_filter_value_date_start_date)
+        calendar_filter_end_date = format_date(calendar_filter_end_date, True)
+        calendar_filter_value_date_start_date = format_date(
+            calendar_filter_value_date_start_date
+        )
 
         if calendar_filter_end_date:
             filter_date = calendar_filter_end_date
@@ -503,7 +555,7 @@ def get_filtered_data_conciliations():
             calendar_filter_end_date=calendar_filter_end_date,
             rfc_selector=rfc_selector,
             customer_name_selector=customer_name_selector,
-            calendar_filter_value_date_start_date=calendar_filter_value_date_start_date
+            calendar_filter_value_date_start_date=calendar_filter_value_date_start_date,
         )
 
         bank_records = get_transactions(filter_date)
@@ -514,10 +566,14 @@ def get_filtered_data_conciliations():
         rcf_column_names = sum_by_rfc.keys()
         sum_rfc_data = [dict(zip(rcf_column_names, row)) for row in sum_by_rfc]
 
-        bank_transactions_filtered = filter_bank_transactions(sum_rfc_data, bank_records)
+        bank_transactions_filtered = filter_bank_transactions(
+            sum_rfc_data, bank_records
+        )
 
-        full_data = list(map(lambda x: update_bank_info(x, bank_transactions_filtered), data))
-        
+        full_data = list(
+            map(lambda x: update_bank_info(x, bank_transactions_filtered), data)
+        )
+
         column_names_totals = totals.keys()
         data_totals = [dict(zip(column_names_totals, row)) for row in totals]
 
@@ -526,32 +582,38 @@ def get_filtered_data_conciliations():
         paginated_data = full_data[start:end]
 
         response = {
-            'data': paginated_data,
-            'total_data': data_totals,
-            'total': len(data),
-            'page': page,
-            'page_size': page_size,
-            'total_pages': (len(data) + page_size - 1) // page_size,
+            "data": paginated_data,
+            "total_data": data_totals,
+            "total": len(data),
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (len(data) + page_size - 1) // page_size,
         }
         return jsonify(response), 200
 
 
-@app.route('/download_data_conciliations', methods=["GET"])
+@app.route("/download_data_conciliations", methods=["GET"])
 def download_data_conciliations():
     if request.method == "GET":
-        page = int(request.args.get('page', 1))
-        page_size = int(request.args.get('page_size', 10))
+        page = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 10))
 
-        calendar_filter_start_date = request.args.get('calendar_filter_start_date', None)
-        calendar_filter_end_date = request.args.get('calendar_filter_end_date', None)
-        rfc_selector = request.args.get('rfc_selector', None)
-        customer_name_selector = request.args.get('customer_name_selector', None)
-        calendar_filter_value_date_start_date = request.args.get('calendar_filter_value_date_start_date', None)
+        calendar_filter_start_date = request.args.get(
+            "calendar_filter_start_date", None
+        )
+        calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
+        rfc_selector = request.args.get("rfc_selector", None)
+        customer_name_selector = request.args.get("customer_name_selector", None)
+        calendar_filter_value_date_start_date = request.args.get(
+            "calendar_filter_value_date_start_date", None
+        )
 
         # Format the dates to 'Y-m-d' before passing them to the query
         calendar_filter_start_date = format_date(calendar_filter_start_date)
         calendar_filter_end_date = format_date(calendar_filter_end_date)
-        calendar_filter_value_date_start_date = format_date(calendar_filter_value_date_start_date)
+        calendar_filter_value_date_start_date = format_date(
+            calendar_filter_value_date_start_date
+        )
 
         if calendar_filter_end_date:
             filter_date = calendar_filter_end_date
@@ -563,7 +625,7 @@ def download_data_conciliations():
             calendar_filter_end_date=calendar_filter_end_date,
             rfc_selector=rfc_selector,
             customer_name_selector=customer_name_selector,
-            calendar_filter_value_date_start_date=calendar_filter_value_date_start_date
+            calendar_filter_value_date_start_date=calendar_filter_value_date_start_date,
         )
 
         bank_records = get_transactions(filter_date)
@@ -574,9 +636,13 @@ def download_data_conciliations():
         rcf_column_names = sum_by_rfc.keys()
         sum_rfc_data = [dict(zip(rcf_column_names, row)) for row in sum_by_rfc]
 
-        bank_transactions_filtered = filter_bank_transactions(sum_rfc_data, bank_records)
+        bank_transactions_filtered = filter_bank_transactions(
+            sum_rfc_data, bank_records
+        )
 
-        full_data = list(map(lambda x: update_bank_info(x, bank_transactions_filtered), data))
+        full_data = list(
+            map(lambda x: update_bank_info(x, bank_transactions_filtered), data)
+        )
 
         column_names_totals = totals.keys()
         data_totals = [dict(zip(column_names_totals, row)) for row in totals]
@@ -591,16 +657,20 @@ def download_data_conciliations():
 
         # Create a bytes buffer for the Excel file
         output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Conciliations')
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="Conciliations")
 
         # Rewind the buffer
         output.seek(0)
 
         # Create a response
         response = make_response(output.read())
-        response.headers['Content-Disposition'] = 'attachment; filename=conciliations_data.xlsx'
-        response.headers['Content-type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers["Content-Disposition"] = (
+            "attachment; filename=conciliations_data.xlsx"
+        )
+        response.headers["Content-type"] = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
         return response, 200
 
@@ -608,14 +678,19 @@ def download_data_conciliations():
 def filter_bank_transactions(rfcs, transactions):
     match_transactions = []
     for item in rfcs:
-        result = list(filter(lambda transaction: int(transaction[3]) == int(item['sum']), transactions))
+        result = list(
+            filter(
+                lambda transaction: int(transaction[3]) == int(item["sum"]),
+                transactions,
+            )
+        )
         if len(result) > 0:
             bank = result[0]
-            item['bank_name'] = bank[0]
-            item['comment'] = bank[1]
-            item['value_date'] = bank[2]
-            item['posting_amount'] = bank[3]
-            item['ref'] = bank[4]
+            item["bank_name"] = bank[0]
+            item["comment"] = bank[1]
+            item["value_date"] = bank[2]
+            item["posting_amount"] = bank[3]
+            item["ref"] = bank[4]
             match_transactions.append(item)
 
     return match_transactions
@@ -623,39 +698,49 @@ def filter_bank_transactions(rfcs, transactions):
 
 def update_bank_info(item, bank_info_list) -> Dict:
     for bank_info in bank_info_list:
-        if item['rfc'] == bank_info['rfc']:
-            item['bank_name'] = bank_info['bank_name']
-            item['bank_ref'] = bank_info['ref']
-            item['value_date'] = bank_info['value_date'].strftime('%d/%m/%Y')
-            item['posting_amount_number'] = bank_info['posting_amount']
-            item['posting_amount'] = f"${bank_info['posting_amount']:,.2f}"
-            item['comment'] = bank_info['comment']
+        if item["clearing_payment_policy"] == bank_info["clearing_payment_policy"]:
+            item["bank_name"] = bank_info["bank_name"]
+            item["bank_ref"] = bank_info["ref"]
+            item["value_date"] = bank_info["value_date"].strftime("%d/%m/%Y")
+            item["posting_amount_number"] = bank_info["posting_amount"]
+            item["posting_amount"] = f"${bank_info['posting_amount']:,.2f}"
+            item["comment"] = bank_info["comment"]
             break
     return item
 
 
-def format_date(date_str):
+def format_date(date_str, end_date: bool = False):
     """Helper function to convert a date string to 'Y-m-d' format."""
     if date_str:
         try:
+            if end_date:
+                return datetime.strptime(date_str, "%Y-%m-%d").replace(
+                    hour=23, minute=59, second=00
+                )
             return datetime.strptime(date_str, "%Y-%m-%d")
+
         except ValueError:
             try:
                 # If the above fails, assume the date is already in 'Y-m-d' format
                 return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
             except ValueError:
-                raise ValueError(f"Date {date_str} does not match expected formats '%d/%m/%Y' or '%Y-%m-%d'")
+                raise ValueError(
+                    f"Date {date_str} does not match expected formats '%d/%m/%Y' or '%Y-%m-%d'"
+                )
     return None
 
 
 def custom_values_for_insert(data_sheet, max_col: int):
     # Prepare data for bulk insertion
     data_collection = []
-    for row in data_sheet.iter_rows(min_row=2, max_col=max_col):  # Start from the second row (data)
+    for row in data_sheet.iter_rows(
+        min_row=2, max_col=max_col
+    ):  # Start from the second row (data)
         if row[0].value == "" or row[0].value is None:
             continue
         data_collection.append(
-            f"""{tuple(str(cell.value).replace("'", "") if cell.value is not None else '' for cell in row)}""")
+            f"""{tuple(str(cell.value).replace("'", "") if cell.value is not None else '' for cell in row)}"""
+        )
     return data_collection
 
 
@@ -666,7 +751,8 @@ def connection_db():
             user=db_user,
             password=db_password,
             host=db_host.split(":")[0],
-            port=5432)
+            port=5432,
+        )
         cur = conn.cursor()
         return conn, cur
     except Exception as e:
@@ -701,80 +787,103 @@ def execute_query(cur, conn, query):
         conn.rollback()  # Rollback changes in case of errors
 
 
-@app.route('/vista_subir_archivo/')
+@app.route("/vista_subir_archivo/")
 def uploadfile(extension):
-    return render_template('uploadfile.html', extension=extension)
+    return render_template("uploadfile.html", extension=extension)
 
 
-@app.route("/subir_info", methods=['GET', 'POST'])
+@app.route("/subir_info", methods=["GET", "POST"])
 def upload_banks_info():
-    if request.method == 'GET':
-        return render_template('uploader_info_files.html', title='Importador de archivos')
+    if request.method == "GET":
+        return render_template(
+            "uploader_info_files.html", title="Importador de archivos"
+        )
 
     if request.method == "POST":
         with ThreadPoolExecutor(max_workers=2) as executor:
-            executor.submit(UploadFilesController.upload_ban_info, request.files, request.form['dof'])
-        return jsonify(message="Ha comenzado el proceso de carga de la información bancaria. "
-                               "Por favor, espere unos minutos. El tiempo de "
-                               "carga depende del tamaño de los archivos."), 200
+            executor.submit(
+                UploadFilesController.upload_ban_info,
+                request.files,
+                request.form["dof"],
+            )
+        return (
+            jsonify(
+                message="Ha comenzado el proceso de carga de la información bancaria. "
+                "Por favor, espere unos minutos. El tiempo de "
+                "carga depende del tamaño de los archivos."
+            ),
+            200,
+        )
 
 
-@app.route("/subir_info_sat_sap", methods=['POST'])
+@app.route("/subir_info_sat_sap", methods=["POST"])
 def upload_sat_sap():
     if request.method == "POST":
         with ThreadPoolExecutor(max_workers=5) as executor:
             executor.submit(UploadFilesController.upload_sap_info, request.files)
-        return jsonify(message="Se está cargando información de SAP. "
-                               "Por favor, espere unos minutos. El tiempo de "
-                               "carga depende del tamaño de los archivos."), 200
+        return (
+            jsonify(
+                message="Se está cargando información de SAP. "
+                "Por favor, espere unos minutos. El tiempo de "
+                "carga depende del tamaño de los archivos."
+            ),
+            200,
+        )
 
 
-@app.route("/subir_info_sat", methods=['POST'])
+@app.route("/subir_info_sat", methods=["POST"])
 def upload_sat():
     if request.method == "POST":
         with ThreadPoolExecutor(max_workers=5) as executor:
             executor.submit(UploadFilesController.upload_sat_info, request.files)
-        return jsonify(message="Se está cargando información de SAT. "
-                               "Por favor, espere unos minutos. El tiempo de "
-                               "carga depende del tamaño de los archivos."), 200
+        return (
+            jsonify(
+                message="Se está cargando información de SAT. "
+                "Por favor, espere unos minutos. El tiempo de "
+                "carga depende del tamaño de los archivos."
+            ),
+            200,
+        )
 
 
-@app.route('/subir_archivo/<extension>', methods=['GET', 'POST'])
+@app.route("/subir_archivo/<extension>", methods=["GET", "POST"])
 def subir_archivo(extension):
-    if request.method == 'GET':
-        return render_template('uploadfile.html', extension=extension)
+    if request.method == "GET":
+        return render_template("uploadfile.html", extension=extension)
 
-    if 'archivo' not in request.files:
-        error = 'No se ha enviado ningún archivo'
-        return render_template('uploadfile.html', error=error, extension=extension)
+    if "archivo" not in request.files:
+        error = "No se ha enviado ningún archivo"
+        return render_template("uploadfile.html", error=error, extension=extension)
 
-    archivo = request.files['archivo']
+    archivo = request.files["archivo"]
 
-    if archivo.filename == '':
-        error = 'No se ha seleccionado ningún archivo'
-        return render_template('uploadfile.html', error=error, extension=extension)
+    if archivo.filename == "":
+        error = "No se ha seleccionado ningún archivo"
+        return render_template("uploadfile.html", error=error, extension=extension)
 
     # Verificar si el archivo tiene la extensión permitida
     if not archivo.filename.endswith(extension):
-        error = f'La extensión del archivo no está permitida. Se permiten solo archivos {extension}'
-        return render_template('uploadfile.html', error=error, extension=extension)
+        error = f"La extensión del archivo no está permitida. Se permiten solo archivos {extension}"
+        return render_template("uploadfile.html", error=error, extension=extension)
 
     is_valid, error, data = UploadFilesController.valid_file(archivo, extension)
 
     if not is_valid:
         error = error
-        return render_template('uploadfile.html', error=error, extension=extension)
+        return render_template("uploadfile.html", error=error, extension=extension)
 
     s3_client.upload_fileobj(archivo, S3_BUCKET_NAME, archivo.filename)
 
-    return render_template('uploadfile.html',
-                           error=None,
-                           extension=extension,
-                           success="El archivo se ha cargado y se esta procesando en estos momentos")
+    return render_template(
+        "uploadfile.html",
+        error=None,
+        extension=extension,
+        success="El archivo se ha cargado y se esta procesando en estos momentos",
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_app()
-    #destroy_db()
+    # destroy_db()
     create_db()
     create_conciliations_view()

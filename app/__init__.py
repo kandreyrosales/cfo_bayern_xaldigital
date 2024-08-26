@@ -1,11 +1,11 @@
 from flask import Flask
-from config import Config
+from .config import Config
 from sqlalchemy import text
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = 'xaldigitalcfobayer!'
-app.config['MAX_CONTENT_LENGTH'] = 40 * 1024 * 1024
+app.secret_key = "xaldigitalcfobayer!"
+app.config["MAX_CONTENT_LENGTH"] = 40 * 1024 * 1024
 app.config.from_object(Config)
 
 db = SQLAlchemy(app)
@@ -24,7 +24,8 @@ def destroy_db():
 def create_conciliations_view():
     with app.app_context():
         # First, create the format_price function
-        create_function_query = text("""
+        create_function_query = text(
+            """
             CREATE OR REPLACE FUNCTION format_price(price DOUBLE PRECISION)
             RETURNS TEXT AS $$
             BEGIN
@@ -35,13 +36,15 @@ def create_conciliations_view():
               END IF;
             END;
             $$ LANGUAGE plpgsql;
-        """)
+        """
+        )
 
         # Execute the function creation query
         db.session.execute(create_function_query)
 
         # Then, create or replace the view
-        create_view_query = text("""
+        create_view_query = text(
+            """
             CREATE OR REPLACE VIEW conciliations_view AS
                 SELECT 
                     (
@@ -113,7 +116,8 @@ def create_conciliations_view():
                     sat
                 WHERE 
                     sat.payment_method = 'PUE' OR sat.payment_method = 'PPD';
-               """)
+               """
+        )
 
         # Execute the view creation query
         db.session.execute(create_view_query)
