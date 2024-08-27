@@ -1,49 +1,40 @@
-<form class="d-flex" id="form-search"
-      hx-get="/get_filtered_data_conciliations"
-      hx-trigger="submit"
-      hx-target="#result-conciliations"
-      hx-swap="innerHTML">
+<form class="d-flex" id="form-search" hx-get="{{url}}" hx-trigger="submit" hx-target="{{target}}" hx-swap="innerHTML">
     <div class="form-group me-4">
         <label for="calendar_filter_start_date" class="form-label filter_label mb-0">Fecha de Inicio</label>
-        <input
-                type="date" name="calendar_filter_start_date" id="calendar_filter_start_date" lang="es-MX"
-                class="input_button form-control btn-outline-light btn-sm">
+        <input type="date" name="calendar_filter_start_date" id="calendar_filter_start_date" lang="es-MX"
+            class="input_button form-control btn-outline-light btn-sm">
     </div>
     <div class="form-group me-4">
         <label for="calendar_filter_start_date" class="form-label filter_label mb-0">Fecha de Fin</label>
         <input type="date" name="calendar_filter_end_date" id="calendar_filter_end_date"
-        class="input_button form-control btn-outline-light btn-sm">
+            class="input_button form-control btn-outline-light btn-sm">
     </div>
     <div class="form-group me-4">
         <label for="rfc_selector" class="form-label filter_label mb-0" style="display: block">RFC</label>
-         <select id="rfc_selector" name="rfc_selector"
-            class="input_button form-control btn-outline-light btn-sm"
-            style="width: 180px; height:45px !important">
-             <option value="">Selecciones un RFC</option>
-             {% for rfc in rfc_list%}
-                <option value="{{rfc.rfc}}">{{rfc.rfc}}</option>
-             {% endfor %}
-         </select>
+        <select id="rfc_selector" name="rfc_selector" class="input_button form-control btn-outline-light btn-sm"
+            style="width: 180px; height:35px !important">
+            <option value="">Selecciones un RFC</option>
+            {% for rfc in rfc_list%}
+            <option value="{{rfc.rfc}}">{{rfc.rfc}}</option>
+            {% endfor %}
+        </select>
     </div>
     <div class="form-group me-4">
         <label class="form-label filter_label mb-0" style="display: block">Cliente</label>
-        <select id="customer_name_selector"
-                name="customer_name_selector"
-                class="input_button form-control btn-outline-light btn-sm"
-                style="width: 180px; height:45px !important">
+        <select id="customer_name_selector" name="customer_name_selector"
+            class="input_button form-control btn-outline-light btn-sm" style="width: 180px; height:35px !important">
             <option value="">Selecciones un client</option>
             {% for client in client_list%}
-                <option value="{{client.client_name}}">{{client.client_name}}</option>
-             {% endfor %}
+            <option value="{{client.client_name}}">{{client.client_name}}</option>
+            {% endfor %}
         </select>
     </div>
     <div class="form-group me-4">
         <label for="calendar_filter_start_date" class="form-label filter_label mb-0">Mes Cobranza</label>
         <input type="month" name="calendar_filter_value_date_start_date" id="calendar_filter_value_date_start_date"
-                class="input_button form-control btn-outline-light btn-sm" lang="es-MX">
+            class="input_button form-control btn-outline-light btn-sm" lang="es-MX">
     </div>
     <div class="form-group me-4 align-self-end">
         <input type="submit" class="btn btn-light" value="Filtrar">
     </div>
 </form>
-

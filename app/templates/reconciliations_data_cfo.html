@@ -13,65 +13,61 @@
         </div>
         <div id="pagination" class="d-flex align-items-center" style="text-color: #0075a6"></div>
         <div class="d-flex align-items-end">
-            <button
-                    id="report-download"
-                    class="btn btn-light validador_ieps_table_button_headers"
-                    style="background-color: #0075a6"
-            >Descargar Reporte</button>
+            <button id="report-download" class="btn btn-light validador_ieps_table_button_headers"
+                style="background-color: #0075a6">Descargar Reporte</button>
         </div>
     </div>
     <div class="table-responsive">
         <table id="cfo_reconciliations" class="table table-striped table-bordered table-hove">
             <thead>
-            <tr>
-                <th style="background-color: #0075a6; color: #FFFFFF;">División del negocio</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">No. de cliente</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Nombre del cliente</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">RFC</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Fecha de CFDI</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Folio</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">UUID fiscal</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Producto o servicio</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Moneda</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Subtotal M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Descuento M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">IVA 16% M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">IEPS M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Retención ISR M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Retención IVA 4% M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Retención IVA 2/3 M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Total M.E.</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Póliza de pago clearing</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Póliza de provisión documento</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">T.C. DOF</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Subtotal 16%</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">IVA 16%</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">IVA 0%</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">IEPS</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Importe total</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Tasa de Impuesto</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Método de pago</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Nombre y no. de cuenta del banco</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Referencia del banco</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Fecha de pago del banco</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Monto Tranferido</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Comentarios</th>
-                <th style="background-color: #0075a6; color: #FFFFFF;">Diferencia entre Banco y SAT</th>
-            </tr>
+                <tr>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">División del negocio</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">No. de cliente</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Nombre del cliente</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">RFC</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Fecha de CFDI</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Folio</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">UUID fiscal</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Producto o servicio</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Moneda</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Subtotal M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Descuento M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">IVA 16% M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">IEPS M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Retención ISR M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Retención IVA 4% M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Retención IVA 2/3 M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Total M.E.</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Póliza de pago clearing</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Póliza de provisión documento</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">T.C. DOF</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Subtotal 16%</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">IVA 16%</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">IVA 0%</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">IEPS</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Importe total</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Tasa de Impuesto</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Método de pago</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Nombre y no. de cuenta del banco</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Referencia del banco</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Fecha de pago del banco</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Monto Tranferido</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Comentarios</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Diferencia entre Banco y SAT</th>
+                </tr>
             </thead>
-            <tbody
-                    id="result-conciliations">
-            <!-- Aquí van las filas de datos -->
+            <tbody id="result-conciliations">
+                <!-- Aquí van las filas de datos -->
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-     let currentPage = 1;
-     let pageSize = 10;  // Default page size
+    let currentPage = 1;
+    let pageSize = 10;  // Default page size
 
-     document.getElementById('pageSizeSelect').addEventListener('change', (event) => {
+    document.getElementById('pageSizeSelect').addEventListener('change', (event) => {
         pageSize = parseInt(event.target.value);
         loadPage(1);  // Reload data with the new page size, starting from page 1
     });
@@ -135,10 +131,10 @@
                     tbody.appendChild(row);
                 });
 
-                if (Array.isArray(data.total_data) && data.total_data.length > 0){
+                if (Array.isArray(data.total_data) && data.total_data.length > 0) {
                     const item = data.total_data[0]
-                     const row = document.createElement('tr');
-                     row.setAttribute('class', 'table-primary');
+                    const row = document.createElement('tr');
+                    row.setAttribute('class', 'table-primary');
 
                     // Populate the table cells
                     row.innerHTML += `<td class='fw-bold'>TOTALES</td>`;
@@ -224,6 +220,8 @@
         htmx.ajax('GET', url, {
             target: '#result-conciliations',
         });
+
+        console.log("loadPage")
     }
 
     // Initialize first page load

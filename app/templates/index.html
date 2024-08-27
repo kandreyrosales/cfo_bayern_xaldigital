@@ -1,359 +1,410 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="row">
-        <div class="container text-left">
-            <div class="row align-items-start">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h5 class="card-title">Ingresos</h5>
-                                </div>
-                                <div>
-                                    <div class="custom_icon_rectangle">
-                                        <img src="{{ url_for('static', filename='assets/img/ingresos.png') }}" alt="Logo Ingresos" class="logo">
-                                    </div>
+<div class="row ms-5 me-5">
+    <div class="container text-left">
+        <div class="row align-items-start">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Ingresos</h5>
+                            </div>
+                            <div>
+                                <div class="custom_icon_rectangle">
+                                    <img src="{{ url_for('static', filename='assets/img/ingresos.png') }}"
+                                        alt="Logo Ingresos" class="logo">
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="row">
-                                <p class="second_value_card">$122,861,334.43</p>
-                            </div>
-                            <div class="row">
-                                <div class="col" style="margin-left: 20px">
-                                    <div class="row transactions_card_value">{{ transactions_count }} transacciones</div>
-                                    <div class="row versus_card_value">100% vs objetivo</div>
-                                </div>
+                        <div class="row">
+                            <p class="second_value_card" id="total-value-incomes"></p>
+                        </div>
+                        <div class="row">
+                            <div class="col" style="margin-left: 20px">
+                                <div class="row transactions_card_value" id="total-transactions-incomes"></div>
+                                <div class="row versus_card_value">100% vs objetivo</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Validador IVA Traslado</h5>
-                            <div class="table-responsive">
-                                <table id="validador_iva_table" class="table">
-                                    <thead>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Validador IVA Traslado</h5>
+                        <div class="table-responsive" style="height: 300px; max-height: 300px; overflow-y: auto;">
+                            <table id="validador_iva_table" class="table">
+                                <thead>
                                     <tr style="text-align: center;">
-                                        <th><button class="btn btn-light validador_table_button_headers">SAP</button></th>
-                                        <th><button class="btn btn-light validador_table_button_headers">SAT</button></th>
-                                        <th><button class="btn btn-light validador_table_button_headers">Variación</button></th>
+                                        <th><button class="btn btn-light validador_table_button_headers">SAP</button>
+                                        </th>
+                                        <th><button class="btn btn-light validador_table_button_headers">SAT</button>
+                                        </th>
+                                        <th><button
+                                                class="btn btn-light validador_table_button_headers">Variación</button>
+                                        </th>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-{#                                    {% for validador_iva_row in validador_iva_rows %}#}
-{#                                        <tr class="tr_style_validador_iva_table">#}
-{#                                            {% for validador_iva_cell in validador_iva_row %}#}
-{#                                                <td>{{ validador_iva_cell }}</td>#}
-{#                                            {% endfor %}#}
-{#                                        </tr>#}
-{#                                    {% endfor %}#}
-                                    <tr class="tr_style_validador_iva_table">
-                                        <td>$4,420,584</td>
-                                        <td>$4,423,586</td>
-                                        <td style="color: red">$-3,002</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="col">
-                    <div class="card" >
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div class="form-group">
-                                    <h5 class="card-title">Validador IEPS</h5>
-                                </div>
-                                <div class="form-group">
-                                    <p id="more_info_ingresos"><a href="{{ url_for('reconciliations_data_cfo') }}" style="text-decoration:none;color: #000000;">Ver Más</a></p>
-                                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div class="form-group">
+                                <h5 class="card-title">Validador IEPS</h5>
                             </div>
-                            <div class="table-responsive">
-                                <table id="validador_ieps_table" class="table spaced-table">
-                                    <thead>
+                            <div class="form-group">
+                                <p id="more_info_ingresos"><a href="{{ url_for('reconciliations_data_cfo') }}"
+                                        style="text-decoration:none;color: #000000;">Ver Más</a></p>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="height: 300px; max-height: 300px; overflow-y: auto;">
+                            <table id="validador_ieps_table" class="table spaced-table">
+                                <thead>
                                     <tr id="tr_validador_ieps_table">
-                                        <th><button class="btn btn-light validador_ieps_table_button_headers">SAP</button></th>
-                                        <th><button class="btn btn-light validador_ieps_table_button_headers">SAT</button></th>
-                                        <th><button class="btn btn-light validador_ieps_table_button_headers">Variación</button></th>
+                                        <th><button
+                                                class="btn btn-light validador_ieps_table_button_headers">SAP</button>
+                                        </th>
+                                        <th><button
+                                                class="btn btn-light validador_ieps_table_button_headers">SAT</button>
+                                        </th>
+                                        <th><button
+                                                class="btn btn-light validador_ieps_table_button_headers">Variación</button>
+                                        </th>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-{#                                    {% for validador_ieps_row in validador_ieps_rows %}#}
-{#                                        <tr class="tr_style_validador_ieps_table">#}
-{#                                            {% for ieps_cell in validador_ieps_row %}#}
-{#                                                <td>{{ ieps_cell }}</td>#}
-{#                                            {% endfor %}#}
-{#                                        </tr>#}
-{#                                    {% endfor %}#}
-                                        <tr class="tr_style_validador_ieps_table">
-                                            <td>$2,433,760</td>
-                                            <td>$2,433,760</td>
-                                            <td>$0</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
+
                     </div>
                 </div>
-
             </div>
-            <div class="row align-items-start" style="display: flex; justify-content: center;margin-top: 20px">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h5 class="card-title">Bancos</h5>
-                                </div>
-                                <div>
-                                    <div class="custom_icon_rectangle">
-                                        <img src="{{ url_for('static', filename='assets/img/banco.png') }}" alt="Logo Banco" class="logo">
-                                    </div>
+
+        </div>
+        <div class="row align-items-start" style="display: flex; justify-content: center;margin-top: 20px">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Bancos</h5>
+                            </div>
+                            <div>
+                                <div class="custom_icon_rectangle">
+                                    <img src="{{ url_for('static', filename='assets/img/banco.png') }}" alt="Logo Banco"
+                                        class="logo">
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
+                        </div>
+                        <div class="row">
+                            <div class="table-responsive" style="height: 300px;max-height: 300px; overflow-y: auto;">
+                                <table class="table" id="bank-info">
+                                    <thead>
                                         <tr style="text-align: left;">
-                                            <th><button class="btn btn-light validador_table_button_headers">Nombre</button></th>
-                                            <th><button class="btn btn-light validador_table_button_headers">Total</button></th>
-                                            <th><button class="btn btn-light validador_table_button_headers">Transacciones</button></th>
+                                            <th><button
+                                                    class="btn btn-light validador_table_button_headers">Nombre</button>
+                                            </th>
+                                            <th><button
+                                                    class="btn btn-light validador_table_button_headers">Total</button>
+                                            </th>
+                                            <th><button
+                                                    class="btn btn-light validador_table_button_headers">Transacciones</button>
+                                            </th>
                                         </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr class="tr_bancos_table">
-                                            <td>Banamex</td>
-                                            <td>$3,834,196</td>
-                                            <td>2</td>
-                                        </tr>
-                                        <tr class="tr_bancos_table">
-                                            <td>IH Bank</td>
-                                            <td>$119,035,431</td>
-                                            <td>4</td>
-                                        </tr>
-                                        <tr class="tr_bancos_table">
-                                            <td class="table-info" style="color: black">Total</td>
-                                            <td class="table-info" style="color: black">$122,861,334.43</td>
-                                            <td class="table-info" style="color: black">6</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Transacciones</h5>
-                            <div class="chart-container">
-                                <canvas id="transactionsBarsHorizontal"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row align-items-start" style="margin-top: 20px">
-                <div class="col">
-                    <div class="card" >
-                        <div class="card-body">
-                            <h5 class="card-title">Cliente con mayor Ingreso</h5>
-                            <div>
-                                <canvas id="ingresosBarsVertical"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card" >
-                        <div class="card-body">
-                            <h5 class="card-title">Variación Ingresos vs Cobros</h5>
-                            <div>
-                                <canvas id="variationBarsVertical"></canvas>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="row align-items-start" style="margin-top: 20px">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Cliente con mayor Ingreso</h5>
+                        <div>
+                            <canvas id="ingresosBarsVertical"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Variación Ingresos vs Cobros</h5>
+                        <div>
+                            <canvas id="variationBarsVertical"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script type="text/javascript">
-        Chart.register(ChartDataLabels);
-        Chart.defaults.set('plugins.datalabels', {
-            color: '#00617F',
-            display: false,
-            font: {
-                size: 18,
-                family: "Inter"
-            }
-        });
-        $(document).ready(function() {
+<div id="result-dashboard" style="display: none;"></div>
 
-            // Retrieve data for filters
-            const start_date = localStorage.getItem('start_date');
-            const end_date = localStorage.getItem('end_date');
-            const calendar_filter_value_date_start_date = localStorage.getItem('calendar_filter_value_date_start_date');
-            const rfc = localStorage.getItem('rfc');
-            const customer_name = localStorage.getItem('customer_name');
-            if(calendar_filter_value_date_start_date != null){
-                $('#calendar_filter_value_date_start_date').val(calendar_filter_value_date_start_date);
-            }
-            if (start_date !== null){
-                $('#calendar_filter_start_date').val(start_date);
-                $('#calendar_filter_end_date').val(end_date);
-            }
-            if(rfc !== null){
-                $('#rfc_selector').val(rfc).trigger('change'); // Select option by value
-                $('#rfc_selector option:first').prop('selected', true).trigger('change');
-            }
-            if(customer_name !== null){
-                $('#customer_name_selector').val(rfc).trigger('change'); // Select option by value
-                $('#customer_name_selector option:first').prop('selected', true).trigger('change');
-            }
-            /* End retrieving data for filters */
+<script>
+    Chart.register(ChartDataLabels);
+    Chart.defaults.set('plugins.datalabels', {
+        color: '#00617F',
+        display: false,
+        font: {
+            size: 18,
+            family: "Inter"
+        }
+    });
 
-            // initial color of buttons
-            $("#btn-executive-page").css("background-color", "#0075A6");
-            $("#btn-executive-page").css("color", "#FFFFFF");
-            $(".rect_resumen_icon").attr("stroke", "white");
+    document.body.addEventListener('htmx:afterRequest', (event) => {
+        let data;
+        try {
+            data = JSON.parse(event.detail.xhr.responseText);
+            [
+                result_transactions,
+                total_amount_transactions,
+                total_transactions_sum,
+                tax_info,
+                total_income,
+                income_expenses
+            ] = data
+        } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            return;
+        }
 
-            /* Variations Chart and Data */
-            const variation_data = {{ variation_data|tojson }};
-            const labels_variation_data = {{ variation_labels|tojson }};
-            const canvas_variations = document.getElementById("variationBarsVertical");
-            const ctx_variations_chart = canvas_variations.getContext("2d");
-            const gradient_variations = ctx_variations_chart.createLinearGradient(0, 0, 0, 400);
-            gradient_variations.addColorStop(0, "#00BCFF");
-            gradient_variations.addColorStop(1, "#89D329");
-            const variations_data = {
-                labels: labels_variation_data,
-                datasets: [{
-                    label: 'Ingresos',
-                    data: variation_data,
-                    backgroundColor: gradient_variations
-                },
-                    {
-                        label: 'Cobros',
-                        data: variation_data,
-                        backgroundColor: "#727272"
-                    }]
-            };
-            const variations_options = {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true,
+        if (event.detail.xhr.status === 200) {
+            const tableBody = document.querySelector('#bank-info tbody');
+            tableBody.innerHTML = '';
+
+            if (Array.isArray(result_transactions.result_transactions) && result_transactions.result_transactions.length > 0) {
+                result_transactions.result_transactions.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.classList.add('tr_bancos_table');
+
+                    // Create and append cells to the row
+                    const bankNameCell = document.createElement('td');
+                    bankNameCell.textContent = item.bank_name;
+                    row.appendChild(bankNameCell);
+
+                    const totalAmountCell = document.createElement('td');
+                    totalAmountCell.textContent = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                    }).format(item.total_posting_amount);
+                    row.appendChild(totalAmountCell);
+
+                    const transactionsCell = document.createElement('td');
+                    transactionsCell.textContent = item.total_transactions;
+                    row.appendChild(transactionsCell);
+
+                    // Append the row to the table body
+                    tableBody.appendChild(row);
+                });
+            }
+
+            if (Array.isArray(tax_info.tax_info) && tax_info.tax_info.length > 0) {
+                const validadorIvaTable = document.getElementById('validador_iva_table');
+                const validadorIvaTableBody = validadorIvaTable.querySelector('tbody');
+                validadorIvaTableBody.innerHTML = '';
+
+                const validadorIepsTable = document.getElementById('validador_ieps_table');
+                const validadorIepsTableBody = validadorIepsTable.querySelector('tbody');
+                validadorIepsTableBody.innerHTML = '';
+
+                tax_info.tax_info.forEach(item => {
+                    if (item.vat_16 > 0) {
+                        const row = document.createElement('tr');
+                        row.classList.add('tr_style_validador_iva_table');
+
+                        // Create and append cells to the row
+                        const sapCell = document.createElement('td');
+                        sapCell.textContent = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }).format(item.amount_in_doc_curr_iva_traladado);
+                        row.appendChild(sapCell);
+
+                        const satCell = document.createElement('td');
+                        satCell.textContent = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }).format(item.vat_16);
+                        row.appendChild(satCell);
+
+                        const variationCell = document.createElement('td');
+                        diff_iva = item.amount_in_doc_curr_iva_traladado - item.vat_16
+                        variationCell.textContent = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }).format(diff_iva);
+                        if (diff_iva < 0) {
+                            variationCell.style.color = 'red';
+                        } else {
+                            variationCell.style.color = 'green';
+                        }
+                        row.appendChild(satCell);
+                        row.appendChild(variationCell);
+
+                        // Append the row to the table body
+                        validadorIvaTableBody.appendChild(row);
                     }
-                },
-                indexAxis: 'y'
-            };
 
-            const variationChart = new Chart("variationBarsVertical", {
-                type: 'bar',
-                data: variations_data,
-                options: variations_options
-            });
-            /* End Variation Chart and Data */
+                    if (item.ieps > 0) {
+                        const row = document.createElement('tr');
+                        row.classList.add('tr_style_validador_ieps_table');
 
-            /* Ingresos Chart and Data */
-            const ingreso_data = {{ ingresos_chart_data|tojson }};
-            const labels_ingresos_data = {{ ingresos_chart_labels|tojson }};
-            const canvas_ingresos = document.getElementById("ingresosBarsVertical");
-            const ctx_ingresos_chart = canvas_ingresos.getContext("2d");
-            const gradient_ingresos = ctx_ingresos_chart.createLinearGradient(0, 0, 0, 400);
-            gradient_ingresos.addColorStop(0, "#00BCFF");
-            gradient_ingresos.addColorStop(1, "#89D329");
-            const ingresos_data = {
-                labels: labels_ingresos_data,
-                datasets: [{
-                    label: 'Ingresos',
-                    data: ingreso_data,
-                    backgroundColor: gradient_ingresos
-                }]
-            };
-            const ingresos_options = {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false,
+                        // Create and append cells to the row
+                        const sapCell = document.createElement('td');
+                        sapCell.textContent = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }).format(item.amount_in_doc_curr_ieps);
+                        row.appendChild(sapCell);
+
+                        const satCell = document.createElement('td');
+                        satCell.textContent = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }).format(item.ieps);
+                        row.appendChild(satCell);
+
+                        const variationCell = document.createElement('td');
+                        diff_ieps = item.amount_in_doc_curr_ieps - item.ieps
+                        variationCell.textContent = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }).format(diff_ieps);
+                        if (diff_ieps < 0) {
+                            variationCell.style.color = 'red';
+                        } else {
+                            variationCell.style.color = 'green';
+                        }
+                        row.appendChild(satCell);
+                        row.appendChild(variationCell);
+
+                        // Append the row to the table body
+                        validadorIepsTableBody.appendChild(row);
                     }
-                },
-                indexAxis: 'y'
-            };
+                });
+            }
 
-            const ingresosChart = new Chart("ingresosBarsVertical", {
-                type: 'bar',
-                data: ingresos_data,
-                options: ingresos_options
-            });
-            /* End Ingresos Chart and Data */
+            if (total_amount_transactions.total_amount_transactions > 0) {
+                totalValueIncome = document.getElementById("total-value-incomes")
+                totalValueIncome.textContent = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(total_amount_transactions.total_amount_transactions)
+
+                totalTransactionsIncomes = document.getElementById("total-transactions-incomes")
+                totalTransactionsIncomes.textContent = total_transactions_sum.total_transactions_sum
+
+                const totalRow = document.createElement('tr');
+                totalRow.classList.add('tr_bancos_table');
+
+                totalRow.classList.add('table-info');
+                totalRow.style.color = 'black';
 
 
+                const totalNameCell = document.createElement('td');
+                totalNameCell.textContent = 'Total';
+                totalRow.appendChild(totalNameCell);
 
-            /* Transactions Chart and Data */
-            const transactions_data_list = {{ transactions_data|tojson }};
-            const labels_transactions_data_list = {{ transactions_labels|tojson }};
-            const canvas_transactions = document.getElementById("transactionsBarsHorizontal");
-            const ctx_transactions_chart = canvas_transactions.getContext("2d");
-            const gradient_transactions = ctx_transactions_chart.createLinearGradient(0, 0, 0, 400);
-            gradient_transactions.addColorStop(0, "#00BCFF");
-            gradient_transactions.addColorStop(1, "#89D329");
-            const transactions_data = {
-                labels: labels_transactions_data_list,
-                datasets: [{
-                    label: 'Transacciones',
-                    data: transactions_data_list,
-                    backgroundColor: gradient_transactions
-                }]
-            };
-            const transactions_options = {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false,
+                const totalAmountCell = document.createElement('td');
+                totalAmountCell.textContent = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(total_amount_transactions.total_amount_transactions)
+                totalRow.appendChild(totalAmountCell);
+
+                const totalTransactionsCell = document.createElement('td');
+                totalTransactionsCell.textContent = total_transactions_sum.total_transactions_sum;
+                totalRow.appendChild(totalTransactionsCell);
+
+                tableBody.appendChild(totalRow);
+
+                const clientNames = income_expenses.income_expenses.map(item => item.client_name);
+                const incomeSums = income_expenses.income_expenses.map(item => item.sum);
+                const expenseAmounts = income_expenses.income_expenses.map(item => item.posting_amount);
+
+                const ctxVariationsChart = document.getElementById('variationBarsVertical').getContext('2d');
+                const gradientVariations = ctxVariationsChart.createLinearGradient(0, 0, 0, 400);
+                gradientVariations.addColorStop(0, "#00BCFF");
+                gradientVariations.addColorStop(1, "#89D329");
+
+
+                // Chart data
+                const chartData = {
+                    labels: clientNames,
+                    datasets: [
+                        {
+                            label: 'Ingresos',
+                            data: incomeSums,
+                            backgroundColor: gradientVariations,
+                            borderColor: '#00BCFF',
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Cobros',
+                            data: expenseAmounts,
+                            backgroundColor: '#FF6384',
+                            borderColor: '#FF6384',
+                            borderWidth: 1,
+                        }
+                    ]
+                };
+
+                // Chart options
+                const chartOptions = {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                        }
                     },
-                },
-            };
+                    indexAxis: 'y'
+                };
 
-            const transactionsChart = new Chart("transactionsBarsHorizontal", {
-                type: 'bar',
-                data: transactions_data,
-                options: transactions_options
-            });
-            /* End Variation Chart and Data */
+                // Create the chart
 
-            $("#search_data_filter_button").click(function() {
-                let start_date_data = $('#calendar_filter_start_date').val();
-                let end_date_data = $('#calendar_filter_end_date').val();
-                let calendar_filter_value_date_start_date_data = $('#calendar_filter_value_date_start_date').val();
-                let rfc_data = $("#rfc_selector option:selected").text();
-                let customer_name_data = $("#customer_name_selector option:selected").text();
-                if (rfc_data === '' || rfc_data === 'Todos') {
-                    rfc_data = 'all';
-                }
-                if (customer_name_data === '' || customer_name_data === 'Todos') {
-                    customer_name_data = 'all';
-                }
+                new Chart(ctxVariationsChart, {
+                    type: 'bar',
+                    data: chartData,
+                    options: chartOptions
+                });
+            }
+        }
+    });
 
-                // Store data for filters
-                localStorage.setItem('start_date', start_date_data);
-                localStorage.setItem('end_date', end_date_data);
-                localStorage.setItem('calendar_filter_value_date_start_date', calendar_filter_value_date_start_date_data);
-                localStorage.setItem('rfc', rfc_data);
-                localStorage.setItem('customer_name', customer_name_data);
+    function initData() {
+        const form = document.getElementById("form-search");
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData).toString();
 
-                location.href="{{ url_for('index') }}" + "?start_date=" + start_date_data + "&end_date=" + end_date_data + "&rfc=" + rfc_data + "&customer=" + customer_name_data;
-            });
+        const url = `/get_dashboard_data?${params}`;
+
+        htmx.ajax('GET', url, {
+            target: '#result-dashboard',
         });
-    </script>
-{% endblock %}
+    }
 
+    // Initialize first page load
+    initData();
+</script>
+{% endblock %}

@@ -382,7 +382,7 @@ def get_conciliations_view_data(
             "format_price(SUM(total_amount)) AS total_sat "
             "FROM conciliations_view WHERE 1=1"
         )
-        query_rfc = "SELECT clearing_payment_policy, SUM(total_amount) from public.conciliations_view WHERE 1=1"
+        query_rfc = "SELECT client_name, clearing_payment_policy, SUM(total_amount) from public.conciliations_view WHERE 1=1"
         params = {}
 
         if calendar_filter_start_date and calendar_filter_end_date:
@@ -416,12 +416,68 @@ def get_conciliations_view_data(
 
         query += " ORDER BY clearing_payment_policy"
 
-        query_rfc += " GROUP BY clearing_payment_policy"
+        query_rfc += " GROUP BY clearing_payment_policy, client_name"
 
         result = db.session.execute(text(query), params)
         result_sum = db.session.execute(text(query_sum), params)
         result_sum_rfc = db.session.execute(text(query_rfc), params)
         return result, result_sum, result_sum_rfc
+
+
+def get_eips_iva_conciliations_view_data(
+    calendar_filter_start_date=None,
+    calendar_filter_end_date=None,
+    rfc_selector=None,
+    customer_name_selector=None,
+    calendar_filter_value_date_start_date=None,
+):
+    with app.app_context():
+
+        query = (
+            "SELECT vat_0 AS vat_16, ieps , "
+            "amount_in_doc_curr_iva_traladado, amount_in_doc_curr_ieps FROM conciliations_view WHERE 1=1"
+        )
+
+        query_sum_total_incomes = (
+            "SELECT SUM(total_amount) AS sum_total FROM conciliations_view WHERE 1=1"
+        )
+        params = {}
+
+        if calendar_filter_start_date and calendar_filter_end_date:
+            sub_query = " AND cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
+            query += sub_query
+            query_sum_total_incomes += sub_query
+            params["calendar_filter_start_date"] = calendar_filter_start_date
+            params["calendar_filter_end_date"] = calendar_filter_end_date
+
+        if rfc_selector:
+            sub_query = " AND rfc = :rfc_selector"
+            query += sub_query
+            query_sum_total_incomes += sub_query
+            params["rfc_selector"] = rfc_selector
+        if customer_name_selector:
+            sub_query = " AND client_name = :customer_name_selector"
+            query += sub_query
+            query_sum_total_incomes += sub_query
+            params["customer_name_selector"] = customer_name_selector
+        if calendar_filter_value_date_start_date:
+            sub_query = " AND value_date >= :calendar_filter_value_date_start_date"
+            query += sub_query
+            query_sum_total_incomes += sub_query
+            params["calendar_filter_value_date_start_date"] = (
+                calendar_filter_value_date_start_date
+            )
+
+        print(f"{calendar_filter_start_date} - {calendar_filter_end_date}")
+
+        print(query)
+        print(query_sum_total_incomes)
+
+        result = db.session.execute(text(query), params)
+        result_sum_total_incomes = db.session.execute(
+            text(query_sum_total_incomes), params
+        )
+        return result, result_sum_total_incomes
 
 
 def get_rfc_from_conciliations_view():
@@ -451,6 +507,21 @@ def get_transactions(date):
         .group_by(
             Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
         )
+        .all()
+    )
+
+    return results
+
+
+def get_count_transactions(start_date, end_date):
+    results = (
+        db.session.query(
+            Bank.bank_name,
+            func.sum(Bank.posting_amount).label("total_posting_amount"),
+            func.count(Bank.id).label("total_transactions"),
+        )
+        .filter(Bank.value_date.between(start_date, end_date))
+        .group_by(Bank.bank_name)
         .all()
     )
 

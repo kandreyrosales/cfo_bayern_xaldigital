@@ -22,9 +22,12 @@ from flask import (
     jsonify,
     make_response,
 )
+from app.controllers.conciliation import ConciliationController
 from app.controllers.upload_files import UploadFilesController
 from app.models import (
     get_conciliations_view_data,
+    get_count_transactions,
+    get_eips_iva_conciliations_view_data,
     get_rfc_from_conciliations_view,
     get_clients_from_conciliations_view,
     Bank,
@@ -316,103 +319,6 @@ def send_reset_password_link():
 @app.route("/", methods=["GET"])
 # @token_required
 def index():
-    # try:
-    #     cognito_client.get_user(AccessToken=session.get("access_token"))
-    # except cognito_client.exceptions.UserNotFoundException as e:
-    #     return redirect(url_for('logout'))
-    transactions_labels = [
-        "Totales",
-        "Exitosas",
-        "Fallidas",
-        "Fallidas sin CFDI",
-        "Falta emitir Complemento",
-    ]
-    transactions_data = [35, 26, 6, 1, 3]
-
-    start_date = request.args.get("start_date")
-    end_date = request.args.get("end_date")
-    rfc = request.args.get("rfc")
-    customer = request.args.get("customer")
-
-    where_statement_sql, filters_present = generate_filter_sql(
-        start_date=start_date, end_date=end_date, rfc=rfc, customer=customer
-    )
-    if not filters_present:
-        where_statement_sql = ""
-
-    # Validador IVA table data
-    conn, cur = connection_db()
-    query_validador_ivas = f"""
-        select iva_cobrado_sat,  iva, validar_ivas_validador_iva
-        from dashboard {where_statement_sql} limit 5
-    """
-    query_validador_ivas_rows = get_query_rows(
-        conn=conn, cur=cur, query=query_validador_ivas
-    )
-
-    # Validador IEPS table data
-    conn, cur = connection_db()
-    query_validador_ieps = f"""
-        select ieps_cobrado_sat,  ieps, validador_ieps_validador_iva
-        from dashboard {where_statement_sql} limit 5
-    """
-    query_validador_ieps_rows = get_query_rows(
-        conn=conn, cur=cur, query=query_validador_ieps
-    )
-
-    # # Cliente con mayor variacion Chart Data
-    # conn, cur = connection_db()
-    # query_clientes_mayor_variacion = f"""
-    # select cliente,
-    #    CASE
-    #         WHEN SUM(total_variacion_validador_iva) > 0
-    #             THEN round(SUM(total_variacion_validador_iva), 2)
-    #         ELSE 0
-    #    END AS total_variacion_por_cliente
-    # from conciliaciones_raw_data
-    # {where_statement_sql}
-    # group by cliente
-    # order by total_variacion_por_cliente DESC"""
-    # query_clientes_mayor_variacion_rows = get_query_rows(
-    #     conn=conn,
-    #     cur=cur,
-    #     query=query_clientes_mayor_variacion)
-    #
-    # variation_labels = []
-    # variation_data = []
-    # if query_clientes_mayor_variacion_rows:
-    #     variation_labels = [row[0] for row in query_clientes_mayor_variacion_rows]
-    #     variation_data = [row[1] for row in query_clientes_mayor_variacion_rows]
-
-    result_clients = get_clients_from_conciliations_view()
-    variation_labels = list([row[0] for row in result_clients])
-
-    variation_data = [93.79, 24.66, 2.45, 1.38, 0.58]
-
-    '''
-    
-    conn, cur = connection_db()
-    transaction_sum_query_result = get_query_rows(
-        conn=conn, cur=cur, query=f"""select count(*) from cfdi_ingreso;"""
-    )[0][0]
-
-    conn, cur = connection_db()
-    ingresos_totales_query = """select SUM(total_cfdi) FROM cfdi_ingreso;"""
-    ingresos_totales_query_result = get_query_rows(
-        conn=conn, cur=cur, query=ingresos_totales_query
-    )[0][0]
-
-    conn, cur = connection_db()
-    ingresos_data_chart_query = """
-        select cliente, sum(depositos) as total from conciliaciones_raw_data
-        group by cliente order by total DESC;"""
-    ingresos_data_chart_query_result = get_query_rows(
-        conn=conn, cur=cur, query=ingresos_data_chart_query
-    )
-    ingresos_chart_labels = [row[0] for row in ingresos_data_chart_query_result]
-    ingresos_chart_data = [row[1] for row in ingresos_data_chart_query_result]
-    '''
-
     result_rfc = get_rfc_from_conciliations_view()
     column_names_rfc = result_rfc.keys()
     rfc_list = [dict(zip(column_names_rfc, row)) for row in result_rfc]
@@ -423,49 +329,84 @@ def index():
 
     return render_template(
         "index.html",
-        variation_data=variation_data,
-        variation_labels=variation_labels,
-        transactions_labels=transactions_labels,
-        transactions_data=transactions_data,
-        validador_iva_rows=query_validador_ivas_rows,
-        validador_ieps_rows=query_validador_ieps_rows,
-        transactions_count=[],
-        ingresos_totales=[],
-        ingresos_chart_data=[],
-        ingresos_chart_labels=[],
         search=True,
         rfc_list=rfc_list,
         client_list=client_list,
+        url="/get_dashboard_data",
+        target="#result-dashboard",
     )
 
 
-@app.route("/get_rfc_list", methods=["GET"])
-def get_rfc_list():
-    """
-    Getting the RFC list from the Database
-    """
-    try:
-        data = []
-        return jsonify(data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route("/get_dashboard_data", methods=["GET"])
+# @token_required
+def dashboard_data():
+    calendar_filter_start_date = request.args.get("calendar_filter_start_date", None)
+    calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
+    rfc_selector = request.args.get("rfc_selector", None)
+    customer_name_selector = request.args.get("customer_name_selector", None)
 
+    if calendar_filter_start_date != "" and calendar_filter_end_date != "":
+        calendar_filter_start_date = format_date(calendar_filter_start_date)
+        calendar_filter_end_date = format_date(calendar_filter_end_date, True)
+    else:
+        now = datetime.now()
+        calendar_filter_start_date = now.replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        calendar_filter_end_date = now.replace(minute=23, second=59, microsecond=0)
 
-@app.route("/get_customer_name_list", methods=["GET"])
-def get_customer_name_list():
-    """
-    Getting customer names list from the Database
-    """
-    '''
-    conn, cur = connection_db()
-    query_uuid = """select DISTINCT (cliente) from conciliaciones ;"""
-    data_from_db = get_query_rows(cur=cur, conn=conn, query=query_uuid)
-    new_item = ("Todos",)
-    '''
-    try:
-        return []
-    except Exception as e:
-        return jsonify({"error": str(e)})
+    _, _, sum_rfc_data = ConciliationController.get_conciliations_view_data(
+        calendar_filter_start_date=calendar_filter_start_date,
+        calendar_filter_end_date=calendar_filter_end_date,
+        rfc_selector=rfc_selector,
+        customer_name_selector=customer_name_selector,
+    )
+
+    tax_data, total_income = (
+        ConciliationController.get_eips_iva_conciliations_view_data(
+            calendar_filter_start_date=calendar_filter_start_date,
+            calendar_filter_end_date=calendar_filter_end_date,
+            rfc_selector=rfc_selector,
+            customer_name_selector=customer_name_selector,
+        )
+    )
+
+    if calendar_filter_start_date:
+        filter_date = calendar_filter_start_date
+    else:
+        filter_date = datetime.now()
+
+    bank_records = get_transactions(filter_date)
+
+    bank_transactions_filtered = ConciliationController.filter_bank_transactions(
+        sum_rfc_data, bank_records
+    )
+
+    data_trasactions = ConciliationController.group_transactions(
+        bank_transactions_filtered
+    )
+
+    total_posting_amount_sum = sum(
+        [float(item["total_posting_amount"]) for item in data_trasactions]
+    )
+
+    total_transactions_sum = sum(
+        [item["total_transactions"] for item in data_trasactions]
+    )
+
+    return (
+        jsonify(
+            [
+                {"result_transactions": data_trasactions},
+                {"total_amount_transactions": total_posting_amount_sum},
+                {"total_transactions_sum": total_transactions_sum},
+                {"tax_info": tax_data},
+                {"total_income": total_income.all()[0][0]},
+                {"income_expenses": sum_rfc_data},
+            ]
+        ),
+        200,
+    )
 
 
 @app.route("/conciliaciones")
@@ -487,6 +428,8 @@ def reconciliations_data_cfo():
     return render_template(
         "reconciliations_data_cfo.html",
         search=True,
+        url="/get_filtered_data_conciliations",
+        target="#result-conciliations",
         rfc_list=rfc_list,
         client_list=client_list,
     )
@@ -615,8 +558,8 @@ def download_data_conciliations():
             calendar_filter_value_date_start_date
         )
 
-        if calendar_filter_end_date:
-            filter_date = calendar_filter_end_date
+        if calendar_filter_start_date:
+            filter_date = calendar_filter_start_date
         else:
             filter_date = datetime.now()
 

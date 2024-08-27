@@ -90,13 +90,13 @@ def create_conciliations_view():
                     format_price(sat.vat_16) AS formatted_vat_16,
                     format_price(sat.vat_0) AS formatted_vat_0,
                     format_price(sat.ieps) AS formatted_ieps,
-                    format_price(total_amount) AS formatted_total_amount,
+                    format_price(sat.total_amount) AS formatted_total_amount,
                     format_price(sat.income_tax_withholding_me) AS formatted_income_tax_withholding_me,
                     sat.subtotal_16,
                     sat.vat_16,
                     sat.vat_0,
                     sat.ieps,
-                    (sat.subtotal_16 + sat.vat_16 + sat.vat_0 + sat.ieps) AS total_amount,
+                    sat.total_amount AS total_amount,
                     sat.income_tax_withholding_me,
                     sat.tax_rate,
                     sat.payment_method,
@@ -111,7 +111,35 @@ def create_conciliations_view():
                         FROM bcs_fbl5n 
                         WHERE bcs_fbl5n.reference = sat.receipt_number
                         LIMIT 1
-                    )) AS diff_sat_sap
+                    )) AS diff_sat_sap,
+                    COALESCE(
+                        (
+                            SELECT bcs_ieps_2440020.amount_in_doc_curr
+                            FROM bcs_ieps_2440020
+                            WHERE bcs_ieps_2440020.clearing_document = (
+                                SELECT bcs_fbl5n.clearing_document 
+                                FROM bcs_fbl5n 
+                                WHERE bcs_fbl5n.reference = sat.receipt_number
+                                LIMIT 1
+                            )
+                            LIMIT 1
+                        ), 
+                        0
+                    ) AS amount_in_doc_curr_ieps,
+                    COALESCE(
+                        (
+                            SELECT bhc_iva_traladado_2440015.amount_in_doc_curr
+                            FROM bhc_iva_traladado_2440015
+                            WHERE bhc_iva_traladado_2440015.clearing_document = (
+                                SELECT bcs_fbl5n.clearing_document 
+                                FROM bcs_fbl5n 
+                                WHERE bcs_fbl5n.reference = sat.receipt_number
+                                LIMIT 1
+                            )
+                            LIMIT 1
+                        ), 
+                        0
+                    ) AS amount_in_doc_curr_iva_traladado
                 FROM 
                     sat
                 WHERE 
