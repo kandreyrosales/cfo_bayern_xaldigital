@@ -26,6 +26,7 @@ from app.controllers.conciliation import ConciliationController
 from app.controllers.upload_files import UploadFilesController
 from app.models import (
     get_conciliations_view_data,
+    get_count_incomes,
     get_count_transactions,
     get_eips_iva_conciliations_view_data,
     get_rfc_from_conciliations_view,
@@ -349,39 +350,80 @@ def dashboard_data():
         calendar_filter_start_date = format_date(calendar_filter_start_date)
         calendar_filter_end_date = format_date(calendar_filter_end_date, True)
     else:
-        now = datetime.now()
-        calendar_filter_start_date = now.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        calendar_filter_end_date = now.replace(minute=23, second=59, microsecond=0)
+        calendar_filter_start_date = None
+        calendar_filter_end_date = None
 
-    _, _, sum_rfc_data = ConciliationController.get_conciliations_view_data(
-        calendar_filter_start_date=calendar_filter_start_date,
-        calendar_filter_end_date=calendar_filter_end_date,
-        rfc_selector=rfc_selector,
-        customer_name_selector=customer_name_selector,
+    bank_records = get_count_transactions(
+        calendar_filter_start_date, calendar_filter_end_date
     )
 
-    tax_data, total_income = (
-        ConciliationController.get_eips_iva_conciliations_view_data(
-            calendar_filter_start_date=calendar_filter_start_date,
-            calendar_filter_end_date=calendar_filter_end_date,
-            rfc_selector=rfc_selector,
-            customer_name_selector=customer_name_selector,
+    bank_records_dicts = list(
+        map(
+            lambda x: {
+                "bank_name": x[0],
+                "total_posting_amount": x[1],
+                "total_transactions": x[2],
+            },
+            bank_records,
         )
     )
 
-    if calendar_filter_start_date:
-        filter_date = calendar_filter_start_date
-    else:
-        filter_date = datetime.now()
-
-    bank_records = get_transactions(filter_date)
-
-    bank_transactions_filtered = ConciliationController.filter_bank_transactions(
-        sum_rfc_data, bank_records
+    total_amount_transactions = sum(
+        map(lambda x: x["total_posting_amount"], bank_records_dicts)
     )
 
+    total_transactions_sum = sum(
+        map(lambda x: x["total_transactions"], bank_records_dicts)
+    )
+
+    income_records = get_count_incomes(
+        calendar_filter_start_date, calendar_filter_end_date
+    )
+
+    income_records_dicts = list(
+        map(
+            lambda x: {
+                "client": x[0],
+                "sum_total_amount": x[1],
+                "sum_total_vat_16": x[2],
+                "sum_total_ieps": x[3],
+            },
+            income_records,
+        )
+    )
+
+    total_incomes_sum = sum(map(lambda x: x["sum_total_amount"], income_records_dicts))
+    total_iva_sum = sum(map(lambda x: x["sum_total_vat_16"], income_records_dicts))
+    total_ieps_sum = sum(map(lambda x: x["sum_total_ieps"], income_records_dicts))
+
+    income_expenses = {
+        "total_income": total_incomes_sum,
+        "total_expenses": total_amount_transactions,
+    }
+
+    tax_info = {
+        "vat_16": total_iva_sum,
+        "ieps": total_ieps_sum,
+        "amount_in_doc_curr_ieps": 0,
+        "amount_in_doc_curr_iva_traladado": 0,
+    }
+
+    return (
+        jsonify(
+            [
+                {"result_transactions": bank_records_dicts},
+                {"total_amount_transactions": total_amount_transactions},
+                {"total_transactions_sum": total_transactions_sum},
+                {"tax_info": tax_info},
+                {"total_income": []},
+                {"income_expenses": income_expenses},
+                {"income_records_dicts": income_records_dicts},
+            ]
+        ),
+        200,
+    )
+
+    """
     data_trasactions = ConciliationController.group_transactions(
         bank_transactions_filtered
     )
@@ -394,19 +436,10 @@ def dashboard_data():
         [item["total_transactions"] for item in data_trasactions]
     )
 
-    return (
-        jsonify(
-            [
-                {"result_transactions": data_trasactions},
-                {"total_amount_transactions": total_posting_amount_sum},
-                {"total_transactions_sum": total_transactions_sum},
-                {"tax_info": tax_data},
-                {"total_income": total_income.all()[0][0]},
-                {"income_expenses": sum_rfc_data},
-            ]
-        ),
-        200,
-    )
+    
+    """
+
+    return jsonify([]), 200
 
 
 @app.route("/conciliaciones")
@@ -828,5 +861,5 @@ def subir_archivo(extension):
 if __name__ == "__main__":
     init_app()
     # destroy_db()
-    create_db()
-    create_conciliations_view()
+    # create_db()
+    # create_conciliations_view()

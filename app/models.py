@@ -513,16 +513,85 @@ def get_transactions(date):
     return results
 
 
-def get_count_transactions(start_date, end_date):
-    results = (
-        db.session.query(
-            Bank.bank_name,
-            func.sum(Bank.posting_amount).label("total_posting_amount"),
-            func.count(Bank.id).label("total_transactions"),
+def get_count_transactions(start_date=None, end_date=None):
+    if start_date and end_date:
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                func.count(Bank.id).label("total_transactions"),
+            )
+            .filter(Bank.value_date.between(start_date, end_date))
+            .group_by(Bank.bank_name)
+            .all()
         )
-        .filter(Bank.value_date.between(start_date, end_date))
-        .group_by(Bank.bank_name)
-        .all()
-    )
+    else:
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                func.count(Bank.id).label("total_transactions"),
+            )
+            .group_by(Bank.bank_name)
+            .all()
+        )
 
+    return results
+
+
+def get_count_incomes(start_date=None, end_date=None):
+    if start_date and end_date:
+        results = (
+            db.session.query(
+                Sat.client_name,
+                func.sum(Sat.total_amount).label("sum_total_amount"),
+                func.sum(Sat.vat_16).label("sum_total_vat_16"),
+                func.sum(Sat.ieps).label("sum_total_ieps"),
+            )
+            .filter(Bank.value_date.between(start_date, end_date))
+            .group_by(Sat.client_name)
+            .limit(5)
+            .all()
+        )
+    else:
+        results = (
+            db.session.query(
+                Sat.client_name,
+                func.sum(Sat.total_amount).label("sum_total_amount"),
+                func.sum(Sat.vat_16).label("sum_total_vat_16"),
+                func.sum(Sat.ieps).label("sum_total_ieps"),
+            )
+            .group_by(Sat.client_name)
+            .limit(5)
+            .all()
+        )
+    return results
+
+
+def get_count_incomes_sap(start_date=None, end_date=None):
+    if start_date and end_date:
+        results = (
+            db.session.query(
+                Sat.client_name,
+                func.sum(Sat.total_amount).label("sum_total_amount"),
+                func.sum(Sat.vat_16).label("sum_total_vat_16"),
+                func.sum(Sat.ieps).label("sum_total_ieps"),
+            )
+            .filter(Bank.value_date.between(start_date, end_date))
+            .group_by(Sat.client_name)
+            .limit(5)
+            .all()
+        )
+    else:
+        results = (
+            db.session.query(
+                Sat.client_name,
+                func.sum(Sat.total_amount).label("sum_total_amount"),
+                func.sum(Sat.vat_16).label("sum_total_vat_16"),
+                func.sum(Sat.ieps).label("sum_total_ieps"),
+            )
+            .group_by(Sat.client_name)
+            .limit(5)
+            .all()
+        )
     return results

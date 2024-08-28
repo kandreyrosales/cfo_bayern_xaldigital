@@ -34,7 +34,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Validador IVA Traslado</h5>
-                        <div class="table-responsive" style="height: 300px; max-height: 300px; overflow-y: auto;">
+                        <div class="table-responsive" style="height: 110px; max-height: 110px;">
                             <table id="validador_iva_table" class="table">
                                 <thead>
                                     <tr style="text-align: center;">
@@ -67,7 +67,7 @@
                                         style="text-decoration:none;color: #000000;">Ver Más</a></p>
                             </div>
                         </div>
-                        <div class="table-responsive" style="height: 300px; max-height: 300px; overflow-y: auto;">
+                        <div class="table-responsive" style="height: 110px; max-height: 110px;">
                             <table id="validador_ieps_table" class="table spaced-table">
                                 <thead>
                                     <tr id="tr_validador_ieps_table">
@@ -178,7 +178,8 @@
                 total_transactions_sum,
                 tax_info,
                 total_income,
-                income_expenses
+                income_expenses,
+                income_records_dicts
             ] = data
         } catch (e) {
             console.error('Failed to parse JSON:', e);
@@ -215,91 +216,86 @@
                 });
             }
 
-            if (Array.isArray(tax_info.tax_info) && tax_info.tax_info.length > 0) {
-                const validadorIvaTable = document.getElementById('validador_iva_table');
-                const validadorIvaTableBody = validadorIvaTable.querySelector('tbody');
-                validadorIvaTableBody.innerHTML = '';
 
-                const validadorIepsTable = document.getElementById('validador_ieps_table');
-                const validadorIepsTableBody = validadorIepsTable.querySelector('tbody');
-                validadorIepsTableBody.innerHTML = '';
+            const validadorIvaTable = document.getElementById('validador_iva_table');
+            const validadorIvaTableBody = validadorIvaTable.querySelector('tbody');
+            validadorIvaTableBody.innerHTML = '';
 
-                tax_info.tax_info.forEach(item => {
-                    if (item.vat_16 > 0) {
-                        const row = document.createElement('tr');
-                        row.classList.add('tr_style_validador_iva_table');
+            const validadorIepsTable = document.getElementById('validador_ieps_table');
+            const validadorIepsTableBody = validadorIepsTable.querySelector('tbody');
+            validadorIepsTableBody.innerHTML = '';
 
-                        // Create and append cells to the row
-                        const sapCell = document.createElement('td');
-                        sapCell.textContent = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(item.amount_in_doc_curr_iva_traladado);
-                        row.appendChild(sapCell);
 
-                        const satCell = document.createElement('td');
-                        satCell.textContent = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(item.vat_16);
-                        row.appendChild(satCell);
+            const row = document.createElement('tr');
+            row.classList.add('tr_style_validador_iva_table');
 
-                        const variationCell = document.createElement('td');
-                        diff_iva = item.amount_in_doc_curr_iva_traladado - item.vat_16
-                        variationCell.textContent = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(diff_iva);
-                        if (diff_iva < 0) {
-                            variationCell.style.color = 'red';
-                        } else {
-                            variationCell.style.color = 'green';
-                        }
-                        row.appendChild(satCell);
-                        row.appendChild(variationCell);
+            const sapCell = document.createElement('td');
 
-                        // Append the row to the table body
-                        validadorIvaTableBody.appendChild(row);
-                    }
+            sapCell.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(0);
+            row.appendChild(sapCell);
 
-                    if (item.ieps > 0) {
-                        const row = document.createElement('tr');
-                        row.classList.add('tr_style_validador_ieps_table');
+            const satCell = document.createElement('td');
+            satCell.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(tax_info.tax_info.vat_16);
+            row.appendChild(satCell);
 
-                        // Create and append cells to the row
-                        const sapCell = document.createElement('td');
-                        sapCell.textContent = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(item.amount_in_doc_curr_ieps);
-                        row.appendChild(sapCell);
-
-                        const satCell = document.createElement('td');
-                        satCell.textContent = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(item.ieps);
-                        row.appendChild(satCell);
-
-                        const variationCell = document.createElement('td');
-                        diff_ieps = item.amount_in_doc_curr_ieps - item.ieps
-                        variationCell.textContent = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(diff_ieps);
-                        if (diff_ieps < 0) {
-                            variationCell.style.color = 'red';
-                        } else {
-                            variationCell.style.color = 'green';
-                        }
-                        row.appendChild(satCell);
-                        row.appendChild(variationCell);
-
-                        // Append the row to the table body
-                        validadorIepsTableBody.appendChild(row);
-                    }
-                });
+            const variationCell = document.createElement('td');
+            diff_iva = tax_info.tax_info.amount_in_doc_curr_iva_traladado - tax_info.tax_info.vat_16
+            variationCell.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(diff_iva);
+            if (diff_iva < 0) {
+                variationCell.style.color = 'red';
+            } else {
+                variationCell.style.color = 'green';
             }
+            row.appendChild(satCell);
+            row.appendChild(variationCell);
+
+            // Append the row to the table body
+            validadorIvaTableBody.appendChild(row);
+
+            const rowIeps = document.createElement('tr');
+            rowIeps.classList.add('tr_style_validador_ieps_table');
+
+            // Create and append cells to the row
+            const sapCellIeps = document.createElement('td');
+            sapCellIeps.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(0);
+            rowIeps.appendChild(sapCellIeps);
+
+            const satCellIeps = document.createElement('td');
+            satCellIeps.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(tax_info.tax_info.ieps);
+            rowIeps.appendChild(satCellIeps);
+
+            const variationCellIeps = document.createElement('td');
+            diff_ieps = tax_info.tax_info.amount_in_doc_curr_ieps - tax_info.tax_info.ieps
+            variationCellIeps.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(diff_ieps);
+            if (diff_ieps < 0) {
+                variationCellIeps.style.color = 'red';
+            } else {
+                variationCellIeps.style.color = 'green';
+            }
+            rowIeps.appendChild(satCellIeps);
+            rowIeps.appendChild(variationCellIeps);
+
+            // Append the row to the table body
+            validadorIepsTableBody.appendChild(rowIeps);
+
 
             if (total_amount_transactions.total_amount_transactions > 0) {
                 totalValueIncome = document.getElementById("total-value-incomes")
@@ -339,56 +335,106 @@
 
                 tableBody.appendChild(totalRow);
 
-                const clientNames = income_expenses.income_expenses.map(item => item.client_name);
-                const incomeSums = income_expenses.income_expenses.map(item => item.sum);
-                const expenseAmounts = income_expenses.income_expenses.map(item => item.posting_amount);
-
-                const ctxVariationsChart = document.getElementById('variationBarsVertical').getContext('2d');
-                const gradientVariations = ctxVariationsChart.createLinearGradient(0, 0, 0, 400);
-                gradientVariations.addColorStop(0, "#00BCFF");
-                gradientVariations.addColorStop(1, "#89D329");
-
-
-                // Chart data
-                const chartData = {
-                    labels: clientNames,
-                    datasets: [
-                        {
-                            label: 'Ingresos',
-                            data: incomeSums,
-                            backgroundColor: gradientVariations,
-                            borderColor: '#00BCFF',
-                            borderWidth: 1,
-                        },
-                        {
-                            label: 'Cobros',
-                            data: expenseAmounts,
-                            backgroundColor: '#FF6384',
-                            borderColor: '#FF6384',
-                            borderWidth: 1,
-                        }
-                    ]
-                };
-
-                // Chart options
-                const chartOptions = {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                        }
-                    },
-                    indexAxis: 'y'
-                };
-
-                // Create the chart
-
-                new Chart(ctxVariationsChart, {
-                    type: 'bar',
-                    data: chartData,
-                    options: chartOptions
-                });
             }
+
+            const incomeOptions = [
+                'Ingresos vs Cobros'
+            ];
+            const ctxVariationsChart = document.getElementById('variationBarsVertical').getContext('2d');
+            const gradientVariations = ctxVariationsChart.createLinearGradient(0, 0, 0, 400);
+            gradientVariations.addColorStop(0, "#00BCFF");
+            gradientVariations.addColorStop(1, "#89D329");
+
+
+            // Chart data
+            const chartData = {
+                labels: incomeOptions,
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: [income_expenses.income_expenses.total_income],
+                        backgroundColor: gradientVariations,
+                        borderColor: '#00BCFF',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Cobros',
+                        data: [income_expenses.income_expenses.total_expenses],
+                        backgroundColor: '#FF6384',
+                        borderColor: '#FF6384',
+                        borderWidth: 1,
+                    }
+                ]
+            };
+
+            // Chart options
+            const chartOptions = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                    }
+                },
+                indexAxis: 'y'
+            };
+
+            // Create the chart
+
+            new Chart(ctxVariationsChart, {
+                type: 'bar',
+                data: chartData,
+                options: chartOptions
+            });
+
+            const clientNames = income_records_dicts.income_records_dicts.map(item => item.client);
+            const incomeSums = income_records_dicts.income_records_dicts.map(item => item.sum_total_amount);
+
+            const ctxIncomeChart = document.getElementById('ingresosBarsVertical').getContext('2d');
+            const gradientIncome = ctxIncomeChart.createLinearGradient(0, 0, 0, 400);
+            gradientVariations.addColorStop(0, "#00BCFF");
+            gradientVariations.addColorStop(1, "#89D329");
+
+            // Chart data
+            const chartDataIncome = {
+                labels: clientNames,
+                datasets: [
+                    {
+                        label: 'Cliente',
+                        data: clientNames,
+                        backgroundColor: gradientIncome,
+                        borderColor: '#00BCFF',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Ingreso',
+                        data: incomeSums,
+                        backgroundColor: '#FF6384',
+                        borderColor: '#FF6384',
+                        borderWidth: 1,
+                    }
+                ]
+            };
+
+            // Chart options
+            const chartOptionsIncome = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                    }
+                },
+                indexAxis: 'y'
+            };
+
+            // Create the chart
+
+            new Chart(ctxIncomeChart, {
+                type: 'bar',
+                data: chartDataIncome,
+                options: chartOptionsIncome
+            });
+
+
         }
     });
 
