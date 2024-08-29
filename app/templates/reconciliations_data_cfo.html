@@ -53,7 +53,7 @@
                     <th style="background-color: #0075a6; color: #FFFFFF;">Fecha de pago del banco</th>
                     <th style="background-color: #0075a6; color: #FFFFFF;">Monto Tranferido</th>
                     <th style="background-color: #0075a6; color: #FFFFFF;">Comentarios</th>
-                    <th style="background-color: #0075a6; color: #FFFFFF;">Diferencia entre Banco y SAT</th>
+                    <th style="background-color: #0075a6; color: #FFFFFF;">Estado conciliacion</th>
                 </tr>
             </thead>
             <tbody id="result-conciliations">
@@ -123,10 +123,11 @@
                     row.innerHTML += `<td>${item.value_date || ''}</td>`;
                     row.innerHTML += `<td>${item.posting_amount || ''}</td>`;
                     row.innerHTML += `<td>${item.comment || ''}</td>`;
-                    if (item.diff_bank_sat_number < 0) {
-                        row.innerHTML += `<td class='table-danger fw-bold'>${item.diff_bank_sat || ''}</td>`;
-                    } else {
-                        row.innerHTML += `<td>${item.diff_bank_sat || ''}</td>`;
+                    if (item.status_conciliation === 'Conciliado') {
+                        row.innerHTML += `<td class='table-success fw-bold'>${item.status_conciliation || ''}</td>`;
+                    }
+                    else {
+                        row.innerHTML += `<td class='table-danger fw-bold'>${item.status_conciliation || ''}</td>`;
                     }
                     tbody.appendChild(row);
                 });

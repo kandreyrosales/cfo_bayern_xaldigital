@@ -423,25 +423,6 @@ def dashboard_data():
         200,
     )
 
-    """
-    data_trasactions = ConciliationController.group_transactions(
-        bank_transactions_filtered
-    )
-
-    total_posting_amount_sum = sum(
-        [float(item["total_posting_amount"]) for item in data_trasactions]
-    )
-
-    total_transactions_sum = sum(
-        [item["total_transactions"] for item in data_trasactions]
-    )
-
-    
-    """
-
-    return jsonify([]), 200
-
-
 @app.route("/conciliaciones")
 # @token_required
 def reconciliations_data_cfo():
@@ -514,17 +495,16 @@ def get_filtered_data_conciliations():
             "calendar_filter_value_date_start_date", None
         )
 
-        # Format the dates to 'Y-m-d' before passing them to the query
-        calendar_filter_start_date = format_date(calendar_filter_start_date)
-        calendar_filter_end_date = format_date(calendar_filter_end_date, True)
-        calendar_filter_value_date_start_date = format_date(
-            calendar_filter_value_date_start_date
-        )
-
-        if calendar_filter_end_date:
-            filter_date = calendar_filter_end_date
+        if calendar_filter_start_date != "" and calendar_filter_end_date != "":
+            calendar_filter_start_date = format_date(calendar_filter_start_date)
+            calendar_filter_end_date = format_date(calendar_filter_end_date, True)
+            calendar_filter_value_date_start_date = format_date(
+                calendar_filter_value_date_start_date
+            )
         else:
             filter_date = datetime.now()
+            calendar_filter_start_date = filter_date.replace(day=1, hour=0, minute=0, second=0)
+            calendar_filter_end_date = filter_date.replace(day=1,  hour=0, minute=0, second=0)
 
         result, totals, sum_by_rfc = get_conciliations_view_data(
             calendar_filter_start_date=calendar_filter_start_date,
@@ -534,7 +514,7 @@ def get_filtered_data_conciliations():
             calendar_filter_value_date_start_date=calendar_filter_value_date_start_date,
         )
 
-        bank_records = get_transactions(filter_date)
+        bank_records = get_transactions(calendar_filter_start_date)
 
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
@@ -546,8 +526,12 @@ def get_filtered_data_conciliations():
             sum_rfc_data, bank_records
         )
 
-        full_data = list(
+        data_add_bank_info = list(
             map(lambda x: update_bank_info(x, bank_transactions_filtered), data)
+        )
+
+        full_data = list(
+            map(lambda x: update_item_with_out_bank_info(x, calendar_filter_start_date), data_add_bank_info)
         )
 
         column_names_totals = totals.keys()
@@ -584,14 +568,12 @@ def download_data_conciliations():
             "calendar_filter_value_date_start_date", None
         )
 
-        # Format the dates to 'Y-m-d' before passing them to the query
-        calendar_filter_start_date = format_date(calendar_filter_start_date)
-        calendar_filter_end_date = format_date(calendar_filter_end_date)
-        calendar_filter_value_date_start_date = format_date(
-            calendar_filter_value_date_start_date
-        )
-
-        if calendar_filter_start_date:
+        if calendar_filter_start_date != "" and calendar_filter_end_date != "":
+            calendar_filter_start_date = format_date(calendar_filter_start_date)
+            calendar_filter_end_date = format_date(calendar_filter_end_date, )
+            calendar_filter_value_date_start_date = format_date(
+                calendar_filter_value_date_start_date
+            )
             filter_date = calendar_filter_start_date
         else:
             filter_date = datetime.now()
@@ -681,7 +663,22 @@ def update_bank_info(item, bank_info_list) -> Dict:
             item["posting_amount_number"] = bank_info["posting_amount"]
             item["posting_amount"] = f"${bank_info['posting_amount']:,.2f}"
             item["comment"] = bank_info["comment"]
+            item["status_conciliation"] = "Conciliado"
             break
+    return item
+
+
+def update_item_with_out_bank_info(item, filter_date) -> Dict:
+    if 'status_conciliation' not in item:
+        today = datetime.now()
+        diff_date = relativedelta(today, filter_date)
+        months_difference = diff_date.years * 12 + diff_date.months
+
+        if months_difference >= 3:
+            item["status_conciliation"] = "Revision Manual"
+        else:
+            item["status_conciliation"] = "En Proceso de Conciliación"
+
     return item
 
 
