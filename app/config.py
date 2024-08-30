@@ -4,5 +4,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:root@localhost/postgres')
+    db_host = os.getenv("db_endpoint", "localhost")
+    db_name =  os.getenv("db_name", "postgres")
+    db_user = os.getenv("username_db", "postgres")
+    db_password = os.getenv("password_db", "root")
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{db_user}:{db_password}@{db_host}/{db_name}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
