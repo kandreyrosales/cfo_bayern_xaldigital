@@ -247,6 +247,7 @@ resource "aws_instance" "flask_ec2" {
       "sudo python3 get-pip.py",
       "sudo apt-get install -y python3-venv",  # Install python3-venv package for virtual environments
       "sudo apt install -y libpq-dev python3-dev",
+      "sudo apt-get update && sudo apt-get -y upgrade",
 
       "echo \"export AWS_ACCESS_KEY_ID=${var.accessKeyId}\" >> ~/.bashrc",
       "echo \"export AWS_SECRET_ACCESS_KEY=${var.secretAccessKey}\" >> ~/.bashrc",
