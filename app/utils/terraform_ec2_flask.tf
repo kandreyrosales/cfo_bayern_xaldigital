@@ -165,8 +165,8 @@ resource "aws_iam_role" "lambda_role_cfo" {
   })
 }
 
-resource "aws_iam_policy" "cognito_list_users_policy" {
-  name        = "cognito-list-users-policy"
+resource "aws_iam_policy" "cognito_list_users__cfo_policy" {
+  name        = "cognito-list-users-cfo-policy"
   description = "Allows Lambda execution role to list users in Cognito User Pool"
 
   policy = jsonencode({
@@ -181,9 +181,9 @@ resource "aws_iam_policy" "cognito_list_users_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "cognito_list_users_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "cognito_list_users__cfo_policy_attachment" {
   role       = aws_iam_role.lambda_role_cfo.name
-  policy_arn = aws_iam_policy.cognito_list_users_policy.arn
+  policy_arn = aws_iam_policy.cognito_list_users__cfo_policy.arn
 }
 
 
@@ -241,7 +241,7 @@ resource "aws_instance" "flask_ec2" {
   provisioner "remote-exec" {
     inline = [
       # Install required packages
-      "sudo apt-get update -y",
+      "sudo apt-get update && sudo apt-get -y upgrade",
       "sudo apt-get install -y python3 git",
       "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py",
       "sudo python3 get-pip.py",
@@ -306,12 +306,12 @@ resource "aws_instance" "flask_ec2" {
     Name = "cfo-bayer-Flask-Ubuntu"
   }
 
-  vpc_security_group_ids = [aws_security_group.flask_sg_cfo_bayer.id]
+  vpc_security_group_ids = [aws_security_group.flask_sg_cfo_cfo_bayer.id]
 
 }
 
-resource "aws_security_group" "flask_sg_cfo_bayer" {
-  name        = "flask_sg_cfo_bayer"
+resource "aws_security_group" "flask_sg_cfo_cfo_bayer" {
+  name        = "flask_sg_cfo_cfo_bayer"
   description = "Security group for Flask EC2 instance"
 
   // Ingress rule to allow HTTP traffic from anywhere
