@@ -1,6 +1,5 @@
 import os
 import io
-from collections import defaultdict
 from typing import Dict
 
 import jwt
@@ -22,16 +21,14 @@ from flask import (
     jsonify,
     make_response,
 )
-from app.controllers.conciliation import ConciliationController
+
 from app.controllers.upload_files import UploadFilesController
 from app.models import (
     get_conciliations_view_data,
     get_count_incomes,
     get_count_transactions,
-    get_eips_iva_conciliations_view_data,
     get_rfc_from_conciliations_view,
     get_clients_from_conciliations_view,
-    Bank,
     get_transactions,
 )
 
@@ -318,7 +315,7 @@ def send_reset_password_link():
 
 
 @app.route("/", methods=["GET"])
-# @token_required
+@token_required
 def index():
     result_rfc = get_rfc_from_conciliations_view()
     column_names_rfc = result_rfc.keys()
@@ -339,7 +336,7 @@ def index():
 
 
 @app.route("/get_dashboard_data", methods=["GET"])
-# @token_required
+@token_required
 def dashboard_data():
     calendar_filter_start_date = request.args.get("calendar_filter_start_date", None)
     calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
@@ -424,7 +421,7 @@ def dashboard_data():
     )
 
 @app.route("/conciliaciones")
-# @token_required
+@token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -702,69 +699,6 @@ def format_date(date_str, end_date: bool = False):
                 )
     return None
 
-
-def custom_values_for_insert(data_sheet, max_col: int):
-    # Prepare data for bulk insertion
-    data_collection = []
-    for row in data_sheet.iter_rows(
-        min_row=2, max_col=max_col
-    ):  # Start from the second row (data)
-        if row[0].value == "" or row[0].value is None:
-            continue
-        data_collection.append(
-            f"""{tuple(str(cell.value).replace("'", "") if cell.value is not None else '' for cell in row)}"""
-        )
-    return data_collection
-
-
-def connection_db():
-    try:
-        conn = psycopg2.connect(
-            dbname=db_name,
-            user=db_user,
-            password=db_password,
-            host=db_host.split(":")[0],
-            port=5432,
-        )
-        cur = conn.cursor()
-        return conn, cur
-    except Exception as e:
-        print(f"Error connecting to database: {e}")
-        exit()
-
-
-def get_query_rows(cur, conn, query):
-    try:
-        cur.execute(query)
-        rows = cur.fetchall()  # Fetch all rows
-        # Print fetched rows (optional)
-        return rows
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching data from PostgreSQL", error)
-    finally:
-        # Close the connection
-        if conn:
-            cur.close()
-            conn.close()
-        print("PostgreSQL connection is closed")
-
-
-def execute_query(cur, conn, query):
-    # Execute bulk insert using executemany
-    try:
-        cur.execute(query)
-        conn.commit()
-        print(f"Data inserted successfully into table")
-    except Exception as e:
-        print(f"Error inserting data: {e}")
-        conn.rollback()  # Rollback changes in case of errors
-
-
-@app.route("/vista_subir_archivo/")
-def uploadfile(extension):
-    return render_template("uploadfile.html", extension=extension)
-
-
 @app.route("/subir_info", methods=["GET", "POST"])
 def upload_banks_info():
     if request.method == "GET":
@@ -819,44 +753,10 @@ def upload_sat():
         )
 
 
-@app.route("/subir_archivo/<extension>", methods=["GET", "POST"])
-def subir_archivo(extension):
-    if request.method == "GET":
-        return render_template("uploadfile.html", extension=extension)
-
-    if "archivo" not in request.files:
-        error = "No se ha enviado ningún archivo"
-        return render_template("uploadfile.html", error=error, extension=extension)
-
-    archivo = request.files["archivo"]
-
-    if archivo.filename == "":
-        error = "No se ha seleccionado ningún archivo"
-        return render_template("uploadfile.html", error=error, extension=extension)
-
-    # Verificar si el archivo tiene la extensión permitida
-    if not archivo.filename.endswith(extension):
-        error = f"La extensión del archivo no está permitida. Se permiten solo archivos {extension}"
-        return render_template("uploadfile.html", error=error, extension=extension)
-
-    is_valid, error, data = UploadFilesController.valid_file(archivo, extension)
-
-    if not is_valid:
-        error = error
-        return render_template("uploadfile.html", error=error, extension=extension)
-
-    s3_client.upload_fileobj(archivo, S3_BUCKET_NAME, archivo.filename)
-
-    return render_template(
-        "uploadfile.html",
-        error=None,
-        extension=extension,
-        success="El archivo se ha cargado y se esta procesando en estos momentos",
-    )
 
 
 if __name__ == "__main__":
     init_app()
     # destroy_db()
-    # create_db()
-    # create_conciliations_view()
+    create_db()
+    create_conciliations_view()

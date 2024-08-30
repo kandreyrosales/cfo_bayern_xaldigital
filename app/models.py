@@ -3,7 +3,7 @@ from sqlalchemy import text
 from datetime import datetime
 from sqlalchemy import func
 
-
+'''Información de las tranferencias bancarias (archivo Cobradoras {mes} {año}..xlsx), se utiliza para la conciliación '''
 class Bank(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -32,6 +32,7 @@ class Bank(db.Model):
             db.session.commit()
 
 
+'''Información de las facturas del SAT (archivos xml), se utiliza para la conciliación'''
 class Sat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -70,6 +71,7 @@ class Sat(db.Model):
         with app.app_context():
             db.session.add(self)
             db.session.commit()
+
 
 
 class Sap(db.Model):
@@ -123,6 +125,10 @@ class BankStatement(db.Model):
             db.session.commit()
 
 
+'''Clase padre para la informacion de los archivo
+FBL3N (BHC Auxiliares IVA, IEPS y Retención IVA, BCS Auxiliares IVA, IEPS y Retención IVA) 
+que contine la informacion del iva trasladado, ieps
+'''
 class FBL3N(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
@@ -208,7 +214,8 @@ class BHCIVAOTROS(FBL3N):
     general_ledger_account = db.Column(db.String(250), nullable=True)
     __tablename__ = "bhc_iva_iva_otros"
 
-
+'''Información de los archivo BCS FBL5N 
+que contine la informacion de clearing_payment_policy, provision_policy_document '''
 class BCSFBL5N(db.Model):
     __tablename__ = "bcs_fbl5n"
 
@@ -467,11 +474,6 @@ def get_eips_iva_conciliations_view_data(
             params["calendar_filter_value_date_start_date"] = (
                 calendar_filter_value_date_start_date
             )
-
-        print(f"{calendar_filter_start_date} - {calendar_filter_end_date}")
-
-        print(query)
-        print(query_sum_total_incomes)
 
         result = db.session.execute(text(query), params)
         result_sum_total_incomes = db.session.execute(
