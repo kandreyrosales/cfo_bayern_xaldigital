@@ -317,6 +317,21 @@ def send_reset_password_link():
 @app.route("/", methods=["GET"])
 @token_required
 def index():
+    """
+       Renderiza la página principal de la aplicación.
+
+       Esta función maneja la solicitud GET a la ruta raíz ('/'). Recupera listas de RFCs y
+       clientes desde las vistas de conciliaciones y las pasa a la plantilla 'index.html'
+       junto con otros parámetros necesarios para la interfaz de usuario.
+
+       Decorators:
+           app.route: Define la ruta y el método HTTP asociado.
+           token_required: Protege la ruta, asegurando que el usuario esté autenticado.
+
+       Returns:
+           str: El HTML renderizado para la página principal, incluyendo listas de RFCs
+           y clientes, así como parámetros adicionales para la interacción del usuario.
+    """
     result_rfc = get_rfc_from_conciliations_view()
     column_names_rfc = result_rfc.keys()
     rfc_list = [dict(zip(column_names_rfc, row)) for row in result_rfc]
@@ -340,8 +355,8 @@ def index():
 def dashboard_data():
     calendar_filter_start_date = request.args.get("calendar_filter_start_date", None)
     calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
-    rfc_selector = request.args.get("rfc_selector", None)
-    customer_name_selector = request.args.get("customer_name_selector", None)
+    #rfc_selector = request.args.get("rfc_selector", None)
+    #customer_name_selector = request.args.get("customer_name_selector", None)
 
     if calendar_filter_start_date != "" and calendar_filter_end_date != "":
         calendar_filter_start_date = format_date(calendar_filter_start_date)
