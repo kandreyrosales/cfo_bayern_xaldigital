@@ -281,7 +281,7 @@ resource "aws_instance" "flask_ec2" {
       "Group=ubuntu",
       "WorkingDirectory=/home/ubuntu/flask_app/app",
       "Environment=\"PATH=/home/ubuntu/flask_app/venv/bin\"",
-      "ExecStart=/home/ubuntu/.local/bin/gunicorn -w 1 -b 0.0.0.0:5000 -e bucket_name=${var.bucket_name} -e region_aws=${var.region_aws} -e accessKeyId=${var.accessKeyId} -e secretAccessKey=${var.secretAccessKey} -e client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id} -e user_pool=${aws_cognito_user_pool.cfo_bayer.id} -e db_endpoint=${aws_db_instance.posgtres_rds.endpoint} -e db_name=${var.db_name} -e username_db=${var.username_db} -e password_db=${var.password_db} app:app",
+      "ExecStart=/home/ubuntu/.local/bin/gunicorn -w 1 -b 0.0.0.0:5000 -e bucket_name=${var.bucket_name} -e region_aws=${var.region_aws} -e accessKeyId=${var.accessKeyId} -e secretAccessKey=${var.secretAccessKey} -e client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id} -e user_pool=${aws_cognito_user_pool.cfo_bayer.id} -e db_endpoint=${aws_db_instance.posgtres_rds.endpoint} -e db_name=${var.db_name} -e username_db=${var.username_db} -e password_db=${var.password_db} run:app",
       "Restart=always",
 
       "[Install]",

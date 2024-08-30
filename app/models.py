@@ -3,8 +3,11 @@ from sqlalchemy import text
 from datetime import datetime
 from sqlalchemy import func
 
-'''Información de las tranferencias bancarias (archivo Cobradoras {mes} {año}..xlsx), se utiliza para la conciliación '''
+
 class Bank(db.Model):
+    """
+    Información de las tranferencias bancarias (archivo Cobradoras {mes} {año}..xlsx), se utiliza para la conciliación
+    """
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     bank_name = db.Column(db.String(250), nullable=False)
@@ -32,8 +35,10 @@ class Bank(db.Model):
             db.session.commit()
 
 
-'''Información de las facturas del SAT (archivos xml), se utiliza para la conciliación'''
 class Sat(db.Model):
+    """
+    Información de las facturas del SAT (archivos xml), se utiliza para la conciliación
+    """
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     cfdi_date = db.Column(db.DateTime, nullable=False)
@@ -95,6 +100,9 @@ class Sap(db.Model):
 
 
 class Dof(db.Model):
+    """
+    No se usa todavia, teniendo en cuenta que todas las transacciones son locales
+    """
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     exchange_rate = db.Column(db.Float, nullable=False)
@@ -125,11 +133,12 @@ class BankStatement(db.Model):
             db.session.commit()
 
 
-'''Clase padre para la informacion de los archivo
-FBL3N (BHC Auxiliares IVA, IEPS y Retención IVA, BCS Auxiliares IVA, IEPS y Retención IVA) 
-que contine la informacion del iva trasladado, ieps
-'''
 class FBL3N(db.Model):
+    """
+    Clase padre para la informacion de los archivo
+    FBL3N (BHC Auxiliares IVA, IEPS y Retención IVA, BCS Auxiliares IVA, IEPS y Retención IVA)
+    que contine la informacion del iva trasladado, ieps
+    """
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
     business_area = db.Column(db.String(250), nullable=True)
@@ -214,9 +223,12 @@ class BHCIVAOTROS(FBL3N):
     general_ledger_account = db.Column(db.String(250), nullable=True)
     __tablename__ = "bhc_iva_iva_otros"
 
-'''Información de los archivo BCS FBL5N 
-que contine la informacion de clearing_payment_policy, provision_policy_document '''
+
 class BCSFBL5N(db.Model):
+    """
+    Información de los archivo BCS FBL5N
+    que contine la informacion de clearing_payment_policy, provision_policy_document
+    """
     __tablename__ = "bcs_fbl5n"
 
     id = db.Column(db.Integer, primary_key=True)

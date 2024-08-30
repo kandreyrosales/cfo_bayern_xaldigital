@@ -5,7 +5,6 @@ pyjwt
 openpyxl
 psycopg2-binary
 pandas
-SQLAlchemy
 pytest
 requests
 XlsxWriter

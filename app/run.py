@@ -38,7 +38,7 @@ accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
 CLIENT_ID_COGNITO = os.getenv("client_id")
 USER_POOL_ID_COGNITO = os.getenv("user_pool")
-S3_BUCKET_NAME = os.getenv("s3_bucket_name", "test")
+S3_BUCKET_NAME = os.getenv("bucket_name")
 
 # boto3 clients
 cognito_client = boto3.client(
