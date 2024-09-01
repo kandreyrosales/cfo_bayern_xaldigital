@@ -31,14 +31,9 @@ from app.models import (
     get_clients_from_conciliations_view,
     get_transactions,
 )
+from app.utils.aws import CLIENT_ID_COGNITO, AWS_REGION_PREDICTIA, accessKeyId, secretAccessKey, USER_POOL_ID_COGNITO
 
-AWS_REGION_PREDICTIA = os.getenv("region_aws", "us-east-1")
-bucket_name = os.getenv("bucket_name")
-accessKeyId = os.getenv("accessKeyId")
-secretAccessKey = os.getenv("secretAccessKey")
-CLIENT_ID_COGNITO = os.getenv("client_id")
-USER_POOL_ID_COGNITO = os.getenv("user_pool")
-S3_BUCKET_NAME = os.getenv("bucket_name")
+print("CLIENT_ID_COGNITO", CLIENT_ID_COGNITO)
 
 # boto3 clients
 cognito_client = boto3.client(
