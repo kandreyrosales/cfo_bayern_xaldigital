@@ -99,115 +99,122 @@ def authenticate_user(username, password):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """
-    Accessing with Cognito using username and password.
-    After login is redirected to reset password and login again
+        Accessing with Cognito using username and password.
+        After login is redirected to reset password and login again
     """
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
 
         if not username or not password:
-            return jsonify(error="Nombre de usuario y Contraseña obligatorios"), 400
+            return render_template('login/login.html',
+                                   error="Nombre de usuario y Contraseña obligatorios")
 
         cognito_response = authenticate_user(username, password)
 
         reason = cognito_response.get("reason")
         if reason == "Usuario No Confirmado":
-            return jsonify(error=username), 400
+            return render_template('login/confirm_account_code.html', email=username)
         elif reason is not None:
-            return jsonify(error=reason), 400
+            return render_template('login/login.html', error=reason)
 
         auth_result = cognito_response.get("AuthenticationResult")
         if not auth_result:
-            return jsonify(error=cognito_response), 400
+            return render_template('login/login.html', error=cognito_response)
 
-        session["access_token"] = auth_result.get("AccessToken")
-        session["id_token"] = auth_result.get("IdToken")
-        return redirect(url_for("index"))
+        session['access_token'] = auth_result.get('AccessToken')
+        session['id_token'] = auth_result.get('IdToken')
+        return redirect(url_for('index'))
     else:
         return render_template(
-            "login/login.html", accessKeyId=accessKeyId, secretAccessKey=secretAccessKey
+            'login/login.html',
+            accessKeyId=accessKeyId,
+            secretAccessKey=secretAccessKey
         )
 
 
 @app.route("/registro", methods=["GET", "POST"])
 def signup():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        corporate_title = request.form["corp_title"]
-        contact_number = request.form["contact_number"]
-        user_id = request.form["worker_custom_id"]
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        corporate_title = request.form['corp_title']
+        contact_number = request.form['contact_number']
+        user_id = request.form['worker_custom_id']
         user_attributes = [
-            {"Name": "custom:corporate_title", "Value": corporate_title},
-            {"Name": "custom:contact_number", "Value": contact_number},
-            {"Name": "custom:user_id", "Value": user_id},
+            {
+                'Name': 'custom:corporate_title',
+                'Value': corporate_title
+            },
+            {
+                'Name': 'custom:contact_number',
+                'Value': contact_number
+            },
+            {
+                'Name': 'custom:user_id',
+                'Value': user_id
+            }
         ]
         try:
             response = cognito_client.sign_up(
                 ClientId=CLIENT_ID_COGNITO,
                 Username=username,
                 Password=password,
-                UserAttributes=user_attributes,
+                UserAttributes=user_attributes
             )
-            return render_template("login/confirm_account_code.html", email=username)
+            return render_template('login/confirm_account_code.html', email=username)
         except cognito_client.exceptions.NotAuthorizedException as e:
             # Handle authentication failure
-            return jsonify(error="Usuario no Autorizado para ejecutar esta acción"), 400
+            return render_template(
+                'login/signup.html',
+                error="Usuario no Autorizado para ejecutar esta acción")
         except cognito_client.exceptions.UsernameExistsException:
-            return jsonify(error="Ya existe una cuenta asociada a este correo"), 400
+            return render_template(
+                'login/signup.html',
+                error="Ya existe una cuenta asociada a este correo")
         except cognito_client.exceptions.InvalidPasswordException:
-            return (
-                jsonify(
-                    error="Crea una contraseña de al menos "
-                    "8 dígitos, más segura, usando al menos una letra mayúscula, "
-                    "un número y un carácter especial"
-                ),
-                400,
-            )
+            return render_template(
+                'login/signup.html',
+                error="Crea una contraseña de al menos 8 dígitos, más segura, usando al menos una letra mayúscula, "
+                      "un número y un carácter especial")
         except Exception as e:
-            return jsonify(error=f"Ha ocurrido el siguiente error: {e}"), 400
-
+            return render_template(
+                'login/signup.html',
+                error=f"Ha ocurrido el siguiente error: {e}")
     else:
-        return render_template("login/signup.html")
+        return render_template('login/signup.html')
 
 
 @app.route("/confirmar_cuenta", methods=["GET", "POST"])
 def confirm_account_code():
-    email = request.form["email_not_confirmed"]
-    email_code = request.form["custom_code"]
+    email = request.form['email_not_confirmed']
+    email_code = request.form['custom_code']
     if request.method == "POST":
         try:
             cognito_client.confirm_sign_up(
-                ClientId=CLIENT_ID_COGNITO, Username=email, ConfirmationCode=email_code
+                ClientId=CLIENT_ID_COGNITO,
+                Username=email,
+                ConfirmationCode=email_code
             )
-            return render_template("login/login.html")
+            return render_template('login/login.html')
         except cognito_client.exceptions.ExpiredCodeException as e:
             return render_template(
-                "login/confirm_account_code.html",
-                error="El código enviado a su correo ha expirado",
-                email=email,
-            )
+                'login/confirm_account_code.html',
+                error="El código enviado a su correo ha expirado", email=email)
         except cognito_client.exceptions.CodeMismatchException as e:
             return render_template(
-                "login/confirm_account_code.html",
-                error="El código no es válido",
-                email=email,
-            )
+                'login/confirm_account_code.html',
+                error="El código no es válido", email=email)
         except cognito_client.exceptions.TooManyFailedAttemptsException as e:
             return render_template(
-                "login/confirm_account_code.html",
-                error="Máximo de intentos superados para validar la cuenta",
-                email=email,
-            )
+                'login/confirm_account_code.html',
+                error="Máximo de intentos superados para validar la cuenta", email=email)
         except cognito_client.exceptions.UserNotFoundException as e:
             return render_template(
-                "login/confirm_account_code.html",
-                error="Error: Usuario no Encontrado o Eliminado",
-                email=email,
-            )
+                'login/confirm_account_code.html',
+                error="Error: Usuario no Encontrado o Eliminado", email=email)
     else:
-        return render_template("login/confirm_account_code.html", email=email)
+        return render_template('login/confirm_account_code.html', email=email)
 
 
 @app.route("/logout")
@@ -459,37 +466,6 @@ def reconciliations_data_cfo():
         rfc_list=rfc_list,
         client_list=client_list,
     )
-
-
-def generate_filter_sql(start_date, end_date, rfc, customer):
-    """
-    Smart query for Where statement using variables from the page
-    """
-    where_query = """WHERE """
-    query_date_range = f"""fecha BETWEEN '{start_date}' and '{end_date}' """
-    query_rfc = f""" rfc='{rfc}' """
-    query_customer = f""" cliente='{customer}' """
-
-    field_flag = False
-    if start_date and end_date:
-        field_flag = True
-        where_query += f"{query_date_range}"
-    if rfc and rfc != "all":
-        if field_flag:
-            where_query += f" AND {query_rfc}"
-        else:
-            where_query += f"{query_rfc}"
-        field_flag = True
-    if customer and customer != "all":
-        if field_flag:
-            where_query += f" AND {query_customer}"
-        else:
-            where_query += f"{query_customer}"
-            field_flag = True
-    if field_flag:
-        return where_query, True
-    return where_query, False
-
 
 @app.route("/get_filtered_data_conciliations", methods=["GET"])
 def get_filtered_data_conciliations():

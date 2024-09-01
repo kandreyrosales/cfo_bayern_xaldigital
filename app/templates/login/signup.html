@@ -46,10 +46,7 @@
         <div>
             <form
                     method="POST"
-                    action="{{ url_for('signup') }}"
-                    hx-post="{{ url_for('signup') }}"
-                    hx-target="#error-message"
-                    hx-swap="innerHTML">
+                    action="{{ url_for('signup') }}">
                 <div class="row">
                     <div class="form-group col">
                         <label for="username" class="form_text_login_signup">Correo Electrónico Corporativo</label>
@@ -92,19 +89,5 @@
     </div>
     <div id="error-message" style="display: none;"></div>
 </div>
-<script>
-    // Function to handle HTMX events and SweetAlert
-    document.body.addEventListener('htmx:afterRequest', function(event) {
-         if (event.detail.xhr.status >= 400) {
-            const response = JSON.parse(event.detail.xhr.responseText);
-            console.log(response)
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: response.error || 'Something went wrong! Please try again.'
-            });
-        }
-    });
-</script>
 </body>
 </html>

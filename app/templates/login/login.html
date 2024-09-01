@@ -46,12 +46,12 @@
             <p id="title_login" style="font-family: 'Inter';">Iniciar Sesión</p>
         </div>
         <div>
+            {% if error %}
+                <p style="color: red;">{{ error }}</p>
+            {% endif %}
             <form
                     method="POST" action="{{ url_for('login') }}"
-                    class="ms-3 me-3"
-                    hx-post="{{ url_for('login') }}"
-                    hx-target="#error-message"
-                    hx-swap="innerHTML">
+                    class="ms-3 me-3">
                 <div class="form-group" style="margin-bottom: 20px">
                     <label
                             for="username"
@@ -99,23 +99,7 @@
                 </div>
             </form>
         </div>
-        <div id="error-message" style="display: none;"></div>
     </div>
 </div>
-
-<script>
-    // Function to handle HTMX events and SweetAlert
-    document.body.addEventListener('htmx:afterRequest', function(event) {
-         if (event.detail.xhr.status >= 400) {
-            const response = JSON.parse(event.detail.xhr.responseText);
-            console.log(response)
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: response.error || 'Something went wrong! Please try again.'
-            });
-        }
-    });
-</script>
 </body>
 </html>
