@@ -153,7 +153,7 @@ def create_conciliations_view():
 
 
 def init_app():
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
 
 
 from app import models
