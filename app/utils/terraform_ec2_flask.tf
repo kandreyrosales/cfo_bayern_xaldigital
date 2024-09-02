@@ -165,8 +165,8 @@ resource "aws_iam_role" "lambda_role_cfo" {
   })
 }
 
-resource "aws_iam_policy" "cognito_list_users__cfo_policy" {
-  name        = "cognito-list-users-cfo-policy"
+resource "aws_iam_policy" "cognito_list_users_policy" {
+  name        = "cognito-list-users-policy"
   description = "Allows Lambda execution role to list users in Cognito User Pool"
 
   policy = jsonencode({
@@ -181,9 +181,9 @@ resource "aws_iam_policy" "cognito_list_users__cfo_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "cognito_list_users__cfo_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "cognito_list_users_policy_attachment" {
   role       = aws_iam_role.lambda_role_cfo.name
-  policy_arn = aws_iam_policy.cognito_list_users__cfo_policy.arn
+  policy_arn = aws_iam_policy.cognito_list_users_policy.arn
 }
 
 
@@ -268,34 +268,35 @@ resource "aws_instance" "flask_ec2" {
     "cd /home/ubuntu/flask_app",
     "python3 -m venv venv",
     "source venv/bin/activate",
+    "cd app/",
 
     # Install dependencies
-    "pip install -r app/requirements.txt",
+    "pip install -r requirements.txt",
 
-      "sudo ufw allow 5000",
+    "sudo ufw allow 5000",
 
-      # Create a systemd service for Gunicorn
-      "cat <<EOF | sudo tee /etc/systemd/system/flask_app.service",
-      "[Unit]",
-      "Description=Gunicorn instance to serve Flask application",
-      "After=network.target",
+    # Create a systemd service for Gunicorn
+    "cat <<EOF | sudo tee /etc/systemd/system/flask_app.service",
+    "[Unit]",
+    "Description=Gunicorn instance to serve Flask application",
+    "After=network.target",
 
-      "[Service]",
-      "User=ubuntu",
-      "Group=ubuntu",
-      "WorkingDirectory=/home/ubuntu/flask_app",
-      "Environment=\"PATH=/home/ubuntu/flask_app/venv/bin\"",
-      "ExecStart=/home/ubuntu/flask_app/venv/bin/python -m app.run -e bucket_name=${var.bucket_name} -e region_aws=${var.region_aws} -e accessKeyId=${var.accessKeyId} -e secretAccessKey=${var.secretAccessKey} -e client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id} -e user_pool=${aws_cognito_user_pool.cfo_bayer.id} -e db_endpoint=${aws_db_instance.posgtres_rds.endpoint} -e db_name=${var.db_name} -e username_db=${var.username_db} -e password_db=${var.password_db} app.run:app",
-      "Restart=always",
+    "[Service]",
+    "User=ubuntu",
+    "Group=ubuntu",
+    "WorkingDirectory=/home/ubuntu/flask_app/app",
+    "Environment=\"PATH=/home/ubuntu/flask_app/venv/bin\"",
+    "ExecStart=/home/ubuntu/.local/bin/gunicorn -w 1 -b 0.0.0.0:5000 -e bucket_name=${var.bucket_name} -e region_aws=${var.region_aws} -e accessKeyId=${var.accessKeyId} -e secretAccessKey=${var.secretAccessKey} -e client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id} -e user_pool=${aws_cognito_user_pool.cfo_bayer.id} -e db_endpoint=${aws_db_instance.posgtres_rds.endpoint} -e db_name=${var.db_name} -e username_db=${var.username_db} -e password_db=${var.password_db} run:app",
+    "Restart=always",
 
-      "[Install]",
-      "WantedBy=multi-user.target",
-      "EOF",
+    "[Install]",
+    "WantedBy=multi-user.target",
+    "EOF",
 
-      # Start and enable the Gunicorn service
-      "sudo systemctl daemon-reload",
-      "sudo systemctl start flask_app",
-      "sudo systemctl enable flask_app",
+    # Start and enable the Gunicorn service
+    "sudo systemctl daemon-reload",
+    "sudo systemctl start flask_app",
+    "sudo systemctl enable flask_app",
     ]
 
     connection {
@@ -310,12 +311,12 @@ resource "aws_instance" "flask_ec2" {
     Name = "cfo-bayer-Flask-Ubuntu"
   }
 
-  vpc_security_group_ids = [aws_security_group.flask_sg_cfo_cfo_bayer.id]
+  vpc_security_group_ids = [aws_security_group.flask_sg_cfo_bayer.id]
 
 }
 
-resource "aws_security_group" "flask_sg_cfo_cfo_bayer" {
-  name        = "flask_sg_cfo_cfo_bayer"
+resource "aws_security_group" "flask_sg_cfo_bayer" {
+  name        = "flask_sg_cfo_bayer"
   description = "Security group for Flask EC2 instance"
 
   // Ingress rule to allow HTTP traffic from anywhere
@@ -372,10 +373,10 @@ output "public_ip" {
 #   value = aws_lambda_function.lambdametrics.arn
 # }
 
-# output "USER_POOL_ID_COGNITO" {
-#   value = aws_cognito_user_pool.cfo_bayer.id
-# }
+output "USER_POOL_ID_COGNITO" {
+  value = aws_cognito_user_pool.cfo_bayer.id
+}
 
-# output "CLIENT_ID_COGNITO" {
-#   value = aws_cognito_user_pool_client.cfo_bayer_cognito_client.id
-# }
+output "CLIENT_ID_COGNITO" {
+  value = aws_cognito_user_pool_client.cfo_bayer_cognito_client.id
+}
