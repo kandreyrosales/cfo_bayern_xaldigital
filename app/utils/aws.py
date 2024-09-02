@@ -1,11 +1,10 @@
 import os
-
 import boto3
 
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
-CLIENT_ID_COGNITO = os.getenv("client_id")
+
 USER_POOL_ID_COGNITO = os.getenv("user_pool")
 S3_BUCKET_NAME = os.getenv("bucket_name")
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
