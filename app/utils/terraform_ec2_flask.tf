@@ -120,7 +120,7 @@ resource "aws_cognito_user_pool_client" "cfo_bayer_cognito_client" {
 #   role             = aws_iam_role.lambda_role.arn
 #   handler          = "lambda-metrics.lambda_handler"
 #   runtime          = "python3.12"
-#   filename         = data.archive_file.lambda_zip.output_path  # Path to the ZIP archive of Lambda function code
+#   filename         = data.archive_file.lambda_zip.output_path  # Path to the ZIP  archive of Lambda function code
 #   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 #   layers           = [var.lambda_layer_pandas]  # ARN of your Lambda layer
 
@@ -240,34 +240,37 @@ resource "aws_instance" "flask_ec2" {
 
   provisioner "remote-exec" {
     inline = [
-      # Install required packages
-      "sudo apt-get update && sudo apt-get -y upgrade",
-      "sudo apt-get install -y python3 git",
-      "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py",
-      "sudo python3 get-pip.py",
-      "sudo apt-get install -y python3-venv",  # Install python3-venv package for virtual environments
-      "sudo apt install -y libpq-dev python3-dev",
-      "sudo apt-get update && sudo apt-get -y upgrade",
+     # Install required packages
+    "export DEBIAN_FRONTEND=noninteractive",
+    "sudo apt-get update -y",
+    "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections",
+    "sudo apt-get -y dist-upgrade",
+    "sudo apt-get -y autoremove needrestart",
 
-      "echo \"export AWS_ACCESS_KEY_ID=${var.accessKeyId}\" >> ~/.bashrc",
-      "echo \"export AWS_SECRET_ACCESS_KEY=${var.secretAccessKey}\" >> ~/.bashrc",
-      "echo \"export AWS_REGION=${var.region_aws}\" >> ~/.bashrc",
-      "echo \"export client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id}\" >> ~/.bashrc",
-      "echo \"export user_pool=${aws_cognito_user_pool.cfo_bayer.id}\" >> ~/.bashrc",
-      "echo \"export db_endpoint=${aws_db_instance.posgtres_rds.endpoint}\" >> ~/.bashrc",
-      "echo \"export password_db=${var.password_db}\" >> ~/.bashrc",
+    "sudo apt-get install -y python3 python3-venv git",
+    "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py",
+    "sudo python3 get-pip.py",
+    "sudo apt-get install -y libpq-dev python3-dev",
+    "sudo apt-get update && sudo apt-get -y upgrade",
 
-      # Clone Flask application from GitHub
-      "git clone ${var.github_repo} /home/ubuntu/flask_app",
+    "echo \"export AWS_ACCESS_KEY_ID=${var.accessKeyId}\" >> ~/.bashrc",
+    "echo \"export AWS_SECRET_ACCESS_KEY=${var.secretAccessKey}\" >> ~/.bashrc",
+    "echo \"export AWS_REGION=${var.region_aws}\" >> ~/.bashrc",
+    "echo \"export client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id}\" >> ~/.bashrc",
+    "echo \"export user_pool=${aws_cognito_user_pool.cfo_bayer.id}\" >> ~/.bashrc",
+    "echo \"export db_endpoint=${aws_db_instance.posgtres_rds.endpoint}\" >> ~/.bashrc",
+    "echo \"export password_db=${var.password_db}\" >> ~/.bashrc",
 
-      # Create and activate virtual environment
-      "cd /home/ubuntu/flask_app",
-      "python3 -m venv venv",
-      "source venv/bin/activate",
-      "cd app/",
+    # Clone Flask application from GitHub
+    "git clone ${var.github_repo} /home/ubuntu/flask_app",
 
-      # Install dependencies
-      "pip install -r requirements.txt",
+    # Create and activate virtual environment
+    "cd /home/ubuntu/flask_app",
+    "python3 -m venv venv",
+    "source venv/bin/activate",
+
+    # Install dependencies
+    "pip install -r app/requirements.txt",
 
       "sudo ufw allow 5000",
 
@@ -280,9 +283,9 @@ resource "aws_instance" "flask_ec2" {
       "[Service]",
       "User=ubuntu",
       "Group=ubuntu",
-      "WorkingDirectory=/home/ubuntu/flask_app/app",
+      "WorkingDirectory=/home/ubuntu/flask_app",
       "Environment=\"PATH=/home/ubuntu/flask_app/venv/bin\"",
-      "ExecStart=/home/ubuntu/.local/bin/gunicorn -w 1 -b 0.0.0.0:5000 -e bucket_name=${var.bucket_name} -e region_aws=${var.region_aws} -e accessKeyId=${var.accessKeyId} -e secretAccessKey=${var.secretAccessKey} -e client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id} -e user_pool=${aws_cognito_user_pool.cfo_bayer.id} -e db_endpoint=${aws_db_instance.posgtres_rds.endpoint} -e db_name=${var.db_name} -e username_db=${var.username_db} -e password_db=${var.password_db} run:app",
+      "ExecStart=/home/ubuntu/flask_app/venv/bin/python -m app.run -e bucket_name=${var.bucket_name} -e region_aws=${var.region_aws} -e accessKeyId=${var.accessKeyId} -e secretAccessKey=${var.secretAccessKey} -e client_id=${aws_cognito_user_pool_client.cfo_bayer_cognito_client.id} -e user_pool=${aws_cognito_user_pool.cfo_bayer.id} -e db_endpoint=${aws_db_instance.posgtres_rds.endpoint} -e db_name=${var.db_name} -e username_db=${var.username_db} -e password_db=${var.password_db} app.run:app",
       "Restart=always",
 
       "[Install]",
