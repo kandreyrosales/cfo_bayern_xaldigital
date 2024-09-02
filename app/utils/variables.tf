@@ -28,7 +28,7 @@ variable "instance_type" {
 variable "ami" {
  type        = string
  description = "Linux Image from AWS"
- default     = "ami-0c7217cdde317cfec"
+ default     = "ami-0e86e20dae9224db8"
 }
 
 variable "bucket_name" {
