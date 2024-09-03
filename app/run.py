@@ -32,6 +32,7 @@ from app.models import (
     get_transactions,
 )
 
+
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
@@ -39,8 +40,6 @@ USER_POOL_ID_COGNITO = os.getenv("user_pool")
 S3_BUCKET_NAME = os.getenv("bucket_name")
 AWS_REGION_PREDICTIA = os.getenv("region_aws", 'us-east-1')
 CLIENT_ID_COGNITO = os.getenv("client_id")
-
-print("CLIENT_ID_COGNITO", CLIENT_ID_COGNITO)
 
 # boto3 clients
 cognito_client = boto3.client(
@@ -746,10 +745,14 @@ def upload_sat():
         )
 
 
-
+@app.route("create_db", methods=["GET"])
+def init_db():
+    create_db()
+    create_conciliations_view()
+    return jsonify(message="Base de datos creada"), 200
 
 if __name__ == "__main__":
-    init_app()
+    app.run()
     # destroy_db()
     create_db()
     create_conciliations_view()
