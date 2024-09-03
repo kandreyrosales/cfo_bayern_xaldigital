@@ -745,7 +745,7 @@ def upload_sat():
         )
 
 
-@app.route("create_db", methods=["GET"])
+@app.route("/create_db", methods=["GET"])
 def init_db():
     create_db()
     create_conciliations_view()
