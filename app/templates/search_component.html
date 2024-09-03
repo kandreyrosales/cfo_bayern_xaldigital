@@ -13,7 +13,7 @@
         <label for="rfc_selector" class="form-label filter_label mb-0" style="display: block">RFC</label>
         <select id="rfc_selector" name="rfc_selector" class="input_button form-control btn-outline-light btn-sm"
             style="width: 180px; height:35px !important">
-            <option value="">Selecciones un RFC</option>
+            <option value="">Selecciona un RFC</option>
             {% for rfc in rfc_list%}
             <option value="{{rfc.rfc}}">{{rfc.rfc}}</option>
             {% endfor %}
@@ -23,7 +23,7 @@
         <label class="form-label filter_label mb-0" style="display: block">Cliente</label>
         <select id="customer_name_selector" name="customer_name_selector"
             class="input_button form-control btn-outline-light btn-sm" style="width: 180px; height:35px !important">
-            <option value="">Selecciones un client</option>
+            <option value="">Selecciona un client</option>
             {% for client in client_list%}
             <option value="{{client.client_name}}">{{client.client_name}}</option>
             {% endfor %}

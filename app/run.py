@@ -699,7 +699,7 @@ def upload_banks_info():
         )
 
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=2) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(
                 UploadFilesController.upload_ban_info,
                 request.files,
@@ -718,7 +718,7 @@ def upload_banks_info():
 @app.route("/subir_info_sat_sap", methods=["POST"])
 def upload_sat_sap():
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(UploadFilesController.upload_sap_info, request.files)
         return (
             jsonify(
@@ -733,7 +733,7 @@ def upload_sat_sap():
 @app.route("/subir_info_sat", methods=["POST"])
 def upload_sat():
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(UploadFilesController.upload_sat_info, request.files)
         return (
             jsonify(
