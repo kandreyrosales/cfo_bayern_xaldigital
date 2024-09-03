@@ -723,8 +723,7 @@ def upload_sat_sap():
     if request.method == "POST":
         try:
             with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(UploadFilesController.upload_sap_info, request.files)
-                result = future.result()
+                executor.submit(UploadFilesController.upload_sap_info, request.files)
             return (
                 jsonify(
                     message="Se está cargando información de SAP. "
