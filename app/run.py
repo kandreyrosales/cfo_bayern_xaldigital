@@ -699,50 +699,60 @@ def upload_banks_info():
         )
 
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(
-                UploadFilesController.upload_ban_info,
-                request.files,
-                request.form["dof"],
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                executor.submit(
+                    UploadFilesController.upload_ban_info,
+                    request.files,
+                    request.form["dof"],
+                )
+            return (
+                jsonify(
+                    message="Ha comenzado el proceso de carga de la información bancaria. "
+                    "Por favor, espere unos minutos. El tiempo de "
+                    "carga depende del tamaño de los archivos."
+                ),
+                200,
             )
-        return (
-            jsonify(
-                message="Ha comenzado el proceso de carga de la información bancaria. "
-                "Por favor, espere unos minutos. El tiempo de "
-                "carga depende del tamaño de los archivos."
-            ),
-            200,
-        )
+        except Exception as e:
+            return jsonify(message=f"Error: {e}"), 500
 
 
 @app.route("/subir_info_sat_sap", methods=["POST"])
 def upload_sat_sap():
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(UploadFilesController.upload_sap_info, request.files)
-        return (
-            jsonify(
-                message="Se está cargando información de SAP. "
-                "Por favor, espere unos minutos. El tiempo de "
-                "carga depende del tamaño de los archivos."
-            ),
-            200,
-        )
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(UploadFilesController.upload_sap_info, request.files)
+                result = future.result()
+            return (
+                jsonify(
+                    message="Se está cargando información de SAP. "
+                    "Por favor, espere unos minutos. El tiempo de "
+                    "carga depende del tamaño de los archivos."
+                ),
+                200,
+            )
+        except Exception as e:
+            return jsonify(message=f"Error: {e}"), 500
 
 
 @app.route("/subir_info_sat", methods=["POST"])
 def upload_sat():
     if request.method == "POST":
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            executor.submit(UploadFilesController.upload_sat_info, request.files)
-        return (
-            jsonify(
-                message="Se está cargando información de SAT. "
-                "Por favor, espere unos minutos. El tiempo de "
-                "carga depende del tamaño de los archivos."
-            ),
-            200,
-        )
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                executor.submit(UploadFilesController.upload_sat_info, request.files)
+            return (
+                jsonify(
+                    message="Se está cargando información de SAT. "
+                    "Por favor, espere unos minutos. El tiempo de "
+                    "carga depende del tamaño de los archivos."
+                ),
+                200,
+            )
+        except Exception as e:
+            return jsonify(message=f"Error: {e}"), 500
 
 
 @app.route("/create_db", methods=["GET"])
