@@ -700,7 +700,7 @@ def upload_banks_info():
 
     if request.method == "POST":
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
+            with ThreadPoolExecutor(max_workers=3) as executor:
                 executor.submit(
                     UploadFilesController.upload_ban_info,
                     request.files,
@@ -722,7 +722,7 @@ def upload_banks_info():
 def upload_sat_sap():
     if request.method == "POST":
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
+            with ThreadPoolExecutor(max_workers=3) as executor:
                 executor.submit(UploadFilesController.upload_sap_info, request.files)
             return (
                 jsonify(
