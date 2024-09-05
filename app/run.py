@@ -487,13 +487,14 @@ def get_filtered_data_conciliations():
         if calendar_filter_start_date != "" and calendar_filter_end_date != "":
             calendar_filter_start_date = format_date(calendar_filter_start_date)
             calendar_filter_end_date = format_date(calendar_filter_end_date, True)
-            calendar_filter_value_date_start_date = format_date(
-                calendar_filter_value_date_start_date
-            )
-        else:
-            filter_date = datetime.now()
-            calendar_filter_start_date = filter_date.replace(day=1, hour=0, minute=0, second=0)
-            calendar_filter_end_date = filter_date.replace(day=1,  hour=0, minute=0, second=0)
+            calendar_filter_value_date_start_date=""
+
+        if (calendar_filter_value_date_start_date != ""
+              and (calendar_filter_start_date == "" and calendar_filter_end_date == "")):
+            calendar_filter_start_date = ""
+            calendar_filter_end_date = ""
+
+
 
         result, totals, sum_by_rfc = get_conciliations_view_data(
             calendar_filter_start_date=calendar_filter_start_date,
@@ -503,7 +504,7 @@ def get_filtered_data_conciliations():
             calendar_filter_value_date_start_date=calendar_filter_value_date_start_date,
         )
 
-        bank_records = get_transactions(calendar_filter_start_date)
+        bank_records = get_transactions(calendar_filter_start_date, calendar_filter_value_date_start_date)
 
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
@@ -559,13 +560,13 @@ def download_data_conciliations():
 
         if calendar_filter_start_date != "" and calendar_filter_end_date != "":
             calendar_filter_start_date = format_date(calendar_filter_start_date)
-            calendar_filter_end_date = format_date(calendar_filter_end_date, )
-            calendar_filter_value_date_start_date = format_date(
-                calendar_filter_value_date_start_date
-            )
-            filter_date = calendar_filter_start_date
-        else:
-            filter_date = datetime.now()
+            calendar_filter_end_date = format_date(calendar_filter_end_date, True)
+            calendar_filter_value_date_start_date = ""
+
+        if (calendar_filter_value_date_start_date != ""
+                and (calendar_filter_start_date == "" and calendar_filter_end_date == "")):
+            calendar_filter_start_date = ""
+            calendar_filter_end_date = ""
 
         result, totals, sum_by_rfc = get_conciliations_view_data(
             calendar_filter_start_date=calendar_filter_start_date,
@@ -575,7 +576,7 @@ def download_data_conciliations():
             calendar_filter_value_date_start_date=calendar_filter_value_date_start_date,
         )
 
-        bank_records = get_transactions(filter_date)
+        bank_records = get_transactions(calendar_filter_start_date, calendar_filter_value_date_start_date)
 
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
@@ -700,7 +701,7 @@ def upload_banks_info():
 
     if request.method == "POST":
         try:
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            with ThreadPoolExecutor(max_workers=1) as executor:
                 executor.submit(
                     UploadFilesController.upload_ban_info,
                     request.files,
@@ -722,7 +723,7 @@ def upload_banks_info():
 def upload_sat_sap():
     if request.method == "POST":
         try:
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            with ThreadPoolExecutor(max_workers=1) as executor:
                 executor.submit(UploadFilesController.upload_sap_info, request.files)
             return (
                 jsonify(
@@ -760,8 +761,14 @@ def init_db():
     create_conciliations_view()
     return jsonify(message="Base de datos creada"), 200
 
+
+@app.route("/delete_db", methods=["GET"])
+def delete_db():
+    destroy_db()
+    return jsonify(message="Base de datos eliminada"), 200
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
     # destroy_db()
     create_db()
     create_conciliations_view()
