@@ -286,7 +286,7 @@ resource "aws_instance" "flask_ec2" {
       "Environment=\"db_name=${var.db_name}\"",
       "Environment=\"bucket_name=${var.bucket_name}\"",
       "Environment=\"region_aws=${var.region_aws}\"",
-      "ExecStart=/home/ubuntu/flask_app/venv/bin/gunicorn -w 6 -k gthread -b 0.0.0.0:5000 -t 360 app.run:app",
+      "ExecStart=/home/ubuntu/flask_app/venv/bin/gunicorn -w 2 -k gthread -b 0.0.0.0:5000 -t 360 app.run:app",
       "Restart=always",
 
       "[Install]",

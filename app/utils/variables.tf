@@ -22,7 +22,7 @@ variable "cognito_pool_name" {
 variable "instance_type" {
  type        = string
  description = "AWS Instance Type"
- default     = "t2.micro"
+ default     = "t2.large"
 }
 
 variable "ami" {
