@@ -361,10 +361,13 @@ class UploadFilesController:
                     }
 
                     response = requests.put(url, headers=headers, data=file_content)
-
                     json_response = json.loads(response.text)
-                    logger.warning(json_response)
-                    default_value = ""
+
+                    # If the request times out, try again
+                    if json.loads(response.text).get("message") == "Endpoint request timed out":
+                        response = requests.put(url, headers=headers, data=file_content)
+                        json_response = json.loads(response.text)
+
 
                     """
                     Bulk insert sqlalquemist

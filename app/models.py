@@ -1,7 +1,12 @@
+from calendar import month
+
+from celery.bin.result import result
+
 from app import db, app
 from sqlalchemy import text
 from datetime import datetime
 from sqlalchemy import func
+from sqlalchemy import extract
 
 
 class Bank(db.Model):
@@ -404,7 +409,7 @@ def get_conciliations_view_data(
         query_rfc = "SELECT client_name, clearing_payment_policy, SUM(total_amount) from public.conciliations_view WHERE 1=1"
         params = {}
 
-        if calendar_filter_start_date and calendar_filter_end_date:
+        if calendar_filter_start_date != '' and calendar_filter_end_date != '':
             sub_query = " AND cfdi_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
             query += sub_query
             query_sum += sub_query
@@ -424,16 +429,19 @@ def get_conciliations_view_data(
             query_sum += sub_query
             query_rfc += sub_query
             params["customer_name_selector"] = customer_name_selector
-        if calendar_filter_value_date_start_date:
-            sub_query = " AND value_date >= :calendar_filter_value_date_start_date"
+        if calendar_filter_value_date_start_date != '':
+            date = calendar_filter_value_date_start_date.split("-")
+            year = date[0]
+            month = date[1]
+            sub_query = " AND EXTRACT(MONTH FROM cfdi_date) = :month AND EXTRACT(YEAR FROM cfdi_date) = :year"
             query += sub_query
             query_sum += sub_query
             query_rfc += sub_query
-            params["calendar_filter_value_date_start_date"] = (
-                calendar_filter_value_date_start_date
-            )
+            params["month"] = month
+            params["year"] = year
 
         query += " ORDER BY clearing_payment_policy"
+        print(query)
 
         query_rfc += " GROUP BY clearing_payment_policy, client_name"
 
@@ -508,21 +516,54 @@ def get_clients_from_conciliations_view():
         return result
 
 
-def get_transactions(date):
-    results = (
-        db.session.query(
-            Bank.bank_name,
-            Bank.comment,
-            Bank.value_date,
-            func.sum(Bank.posting_amount).label("total_posting_amount"),
-            Bank.ref,
+def get_transactions(date, month_year ):
+    if date != '':
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                Bank.comment,
+                Bank.value_date,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                Bank.ref,
+            )
+            .filter(Bank.value_date >= date)
+            .group_by(
+                Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
+            )
+            .all()
         )
-        .filter(Bank.value_date >= date)
-        .group_by(
-            Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
+    elif month_year != '':
+        year = month_year.split("-")[0]
+        month = month_year.split("-")[1]
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                Bank.comment,
+                Bank.value_date,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                Bank.ref,
+            )
+            .filter(extract('year', Bank.value_date) == year)
+            .filter(extract('month', Bank.value_date) >= month)
+            .group_by(
+                Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
+            )
+            .all()
         )
-        .all()
-    )
+    else:
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                Bank.comment,
+                Bank.value_date,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                Bank.ref,
+            )
+            .group_by(
+                Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
+            )
+            .all()
+        )
 
     return results
 
