@@ -263,7 +263,7 @@
                 }
                 if (event.detail.xhr.status === 200) {
                     Swal.fire({
-                        title: 'Success!',
+                        title: 'Carga exitosa!',
                         text: data.message || 'Files uploaded successfully.',
                         icon: 'success',
                         confirmButtonText: 'OK'
@@ -273,14 +273,14 @@
                         title: 'Error!',
                         text: data.message || 'Something went wrong.',
                         icon: 'error',
-                        confirmButtonText: 'Try Again'
+                        confirmButtonText: 'Intentalo de nuevo'
                     });
                 }
             });
         </script>
         <script>
             const fileInput = document.getElementById('sapInput');
-            const maxFiles = 11;
+            const maxFiles = 50;
 
             fileInput.addEventListener('change', (event) => {
               const files = event.target.files;
@@ -289,7 +289,7 @@
                         title: 'Error!',
                         text: `Solo puedes seleccionar un máximo de ${maxFiles} archivos`,
                         icon: 'error',
-                        confirmButtonText: 'Try Again'
+                        confirmButtonText: 'Intentalo de nuevo'
                     });
                 event.target.value = ''; // Limpia la selección de archivos
               }
