@@ -364,9 +364,19 @@ class UploadFilesController:
                     json_response = json.loads(response.text)
 
                     # If the request times out, try again
-                    if json.loads(response.text).get("message") == "Endpoint request timed out":
+                    count = 0
+                    while json.loads(response.text).get("message") == "Endpoint request timed out":
                         response = requests.put(url, headers=headers, data=file_content)
                         json_response = json.loads(response.text)
+                        count+= 1
+                        if count == 10 :
+                            json_response = {"urls": []}
+                            break
+
+
+                    #if json.loads(response.text).get("message") == "Endpoint request timed out":
+                    #    response = requests.put(url, headers=headers, data=file_content)
+                    #    json_response = json.loads(response.text)
 
 
                     """
