@@ -1,7 +1,4 @@
 from calendar import month
-
-from celery.bin.result import result
-
 from app import db, app
 from sqlalchemy import text
 from datetime import datetime
