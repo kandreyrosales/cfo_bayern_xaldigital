@@ -32,7 +32,6 @@ from app.models import (
     get_transactions,
 )
 
-
 bucket_name = os.getenv("bucket_name")
 accessKeyId = os.getenv("accessKeyId")
 secretAccessKey = os.getenv("secretAccessKey")
@@ -701,6 +700,14 @@ def upload_banks_info():
 
     if request.method == "POST":
         try:
+            file = request.files['banks']
+            file_size = len(file.read())
+            file_size_mb = file_size / (1024 * 1024)
+            if file_size_mb > 50:
+                return jsonify(
+                    message="El archivo es muy grande. Por favor, suba un archivo de máximo 50 MB."
+                ), 500
+            file.seek(0)
             with ThreadPoolExecutor(max_workers=1) as executor:
                 executor.submit(
                     UploadFilesController.upload_ban_info,
@@ -761,11 +768,6 @@ def init_db():
     create_conciliations_view()
     return jsonify(message="Base de datos creada"), 200
 
-
-@app.route("/delete_db", methods=["GET"])
-def delete_db():
-    destroy_db()
-    return jsonify(message="Base de datos eliminada"), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
