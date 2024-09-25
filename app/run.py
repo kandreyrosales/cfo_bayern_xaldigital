@@ -28,8 +28,9 @@ from app.models import (
     get_count_incomes,
     get_count_transactions,
     get_rfc_from_conciliations_view,
+    get_bank_information_view,
     get_clients_from_conciliations_view,
-    get_transactions,
+    get_transactions, get_bank_view_data, get_bank_accounts_view,
 )
 
 bucket_name = os.getenv("bucket_name")
@@ -350,6 +351,7 @@ def index():
     return render_template(
         "index.html",
         search=True,
+        search_component="",
         rfc_list=rfc_list,
         client_list=client_list,
         url="/get_dashboard_data",
@@ -461,10 +463,37 @@ def reconciliations_data_cfo():
     return render_template(
         "reconciliations_data_cfo.html",
         search=True,
+        search_component="search_component",
         url="/get_filtered_data_conciliations",
         target="#result-conciliations",
         rfc_list=rfc_list,
         client_list=client_list,
+    )
+
+
+@app.route("/bancos")
+@token_required
+def bank_information_view():
+    # try:
+    #     cognito_client.get_user(AccessToken=session.get("access_token"))
+    # except cognito_client.exceptions.UserNotFoundException as e:
+    #     return redirect(url_for('logout'))
+
+    bank_information = get_bank_information_view()
+    column_names_bank = bank_information.keys()
+    bank_list = [dict(zip(column_names_bank, row)) for row in bank_information]
+
+    account_list = get_bank_accounts_view()
+    account_list_extended = [row[0] for row in account_list]
+
+    return render_template(
+        "bank_data_cfo.html",
+        search=True,
+        search_component="search_component_bank",
+        url="/get_filtered_data_bank",
+        target="#result-bank",
+        bank_list=bank_list,
+        account_list=account_list_extended
     )
 
 @app.route("/get_filtered_data_conciliations", methods=["GET"])
@@ -539,6 +568,56 @@ def get_filtered_data_conciliations():
             "total_pages": (len(data) + page_size - 1) // page_size,
         }
         return jsonify(response), 200
+
+
+@app.route("/get_filtered_data_bank", methods=["GET"])
+def get_filtered_data_bank():
+    if request.method == "GET":
+        page = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 200))
+
+        calendar_filter_start_date = request.args.get(
+            "calendar_filter_start_date", None
+        )
+        calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
+        calendar_filter_value_date_start_date = request.args.get(
+            "calendar_filter_value_date_start_date", None
+        )
+
+        account_selector = request.args.get("account_selector", None)
+
+        if calendar_filter_start_date != "" and calendar_filter_end_date != "":
+            calendar_filter_start_date = format_date(calendar_filter_start_date)
+            calendar_filter_end_date = format_date(calendar_filter_end_date, True)
+            calendar_filter_value_date_start_date=""
+
+        if (calendar_filter_value_date_start_date != ""
+              and (calendar_filter_start_date == "" and calendar_filter_end_date == "")):
+            calendar_filter_start_date = ""
+            calendar_filter_end_date = ""
+
+        result = get_bank_view_data(
+            calendar_filter_start_date=calendar_filter_start_date,
+            calendar_filter_end_date=calendar_filter_end_date,
+            account_selector=account_selector
+        )
+
+        column_names = result.keys()
+        data = [dict(zip(column_names, row)) for row in result]
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_data = data[start:end]
+
+        response = {
+            "data": paginated_data,
+            "total": len(data),
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (len(data) + page_size - 1) // page_size,
+        }
+        return jsonify(response), 200
+
 
 
 @app.route("/download_data_conciliations", methods=["GET"])

@@ -447,6 +447,30 @@ def get_conciliations_view_data(
         result_sum_rfc = db.session.execute(text(query_rfc), params)
         return result, result_sum, result_sum_rfc
 
+def get_bank_view_data(
+    calendar_filter_start_date=None,
+    calendar_filter_end_date=None,
+    account_selector=None
+):
+    with app.app_context():
+        query = "SELECT TO_CHAR(CAST(created_at AS DATE), 'YYYY-MM-DD') as created_at, bank_name, account_number, number, TO_CHAR(CAST(book_date AS DATE), 'YYYY-MM-DD') as book_date, TO_CHAR(CAST(value_date AS DATE), 'YYYY-MM-DD') as value_date, posting_amount, payment_method, ref, addref, posting_text, payer, classification, comment, file_name FROM bank "
+        params = {}
+
+        if calendar_filter_start_date != '' and calendar_filter_end_date != '':
+            sub_query = " WHERE book_date BETWEEN :calendar_filter_start_date AND :calendar_filter_end_date"
+            query += sub_query
+            params["calendar_filter_start_date"] = calendar_filter_start_date
+            params["calendar_filter_end_date"] = calendar_filter_end_date
+        if account_selector:
+            if calendar_filter_start_date and calendar_filter_end_date:
+                sub_query = " AND bank_name = :account_selector"
+            else:
+                sub_query = " WHERE bank_name = :account_selector"
+            query += sub_query
+            params["account_selector"] = account_selector
+
+        result = db.session.execute(text(query), params)
+        return result
 
 def get_eips_iva_conciliations_view_data(
     calendar_filter_start_date=None,
@@ -502,6 +526,19 @@ def get_eips_iva_conciliations_view_data(
 def get_rfc_from_conciliations_view():
     with app.app_context():
         query = text("SELECT DISTINCT rfc FROM conciliations_view;")
+        result = db.session.execute(query)
+        return result
+
+
+def get_bank_information_view():
+    with app.app_context():
+        query = text("SELECT TO_CHAR(CAST(created_at AS DATE), 'YYYY-MM-DD') as created_at, bank_name, account_number, number, TO_CHAR(CAST(book_date AS DATE), 'YYYY-MM-DD') as book_date, TO_CHAR(CAST(value_date AS DATE), 'YYYY-MM-DD') as value_date, posting_amount, payment_method, ref, addref, posting_text, payer, classification, comment, file_name FROM bank")
+        result = db.session.execute(query)
+        return result
+
+def get_bank_accounts_view():
+    with app.app_context():
+        query = text("SELECT DISTINCT bank_name FROM bank")
         result = db.session.execute(query)
         return result
 

@@ -1,0 +1,25 @@
+<form class="d-flex" id="form-search" hx-get="{{url}}" hx-trigger="submit" hx-target="{{target}}" hx-swap="innerHTML">
+    <div class="form-group me-4">
+        <label for="calendar_filter_start_date" class="form-label filter_label mb-0">Fecha de Inicio</label>
+        <input type="date" name="calendar_filter_start_date" id="calendar_filter_start_date" lang="es-MX"
+            class="input_button form-control btn-outline-light btn-sm">
+    </div>
+    <div class="form-group me-4">
+        <label for="calendar_filter_start_date" class="form-label filter_label mb-0">Fecha de Fin</label>
+        <input type="date" name="calendar_filter_end_date" id="calendar_filter_end_date"
+            class="input_button form-control btn-outline-light btn-sm">
+    </div>
+    <div class="form-group me-4">
+        <label class="form-label filter_label mb-0" style="display: block">Numero de Cuenta</label>
+        <select id="account_selector" name="account_selector"
+            class="input_button form-control btn-outline-light btn-sm" style="width: 180px; height:35px !important">
+            <option value="">Selecciona cuenta</option>
+            {% for account in account_list%}
+            <option value="{{account}}">{{account}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group me-4 align-self-end">
+        <input type="submit" class="btn btn-light" value="Filtrar">
+    </div>
+</form>

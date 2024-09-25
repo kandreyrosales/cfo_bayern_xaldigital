@@ -18,15 +18,23 @@
         <!-- Navbar content -->
         <div class="collapse navbar-collapse justify-content-start" id="navbarSupportedContent">
             {% if search %}
-                <div>
-                    {% include 'search_component.html' %}
-                </div>
+                {% if search_component == 'search_component_bank' %}
+                    <div>
+                        {% include 'search_component_bank.html' %}
+                    </div>
+                {% else %}
+                    <div>
+                        {% include 'search_component.html' %}
+                    </div>
+                {% endif %}
             {% else %}
                 <div class="d-none d-lg-block"> <!-- Show on large screens and above -->
                     <h1 class="h4 text-white">{{ title }}</h1>
                 </div>
                 <div class="d-lg-none"> <!-- Show on medium screens and below -->
-                    <h1 class="h5 text-white">{{ title }}</h1>
-                {% endif %}
+                </div>
+                <h1 class="h5 text-white">{{ title }}</h1>
+            {% endif %}
         </div>
+    </div>
 </nav>
