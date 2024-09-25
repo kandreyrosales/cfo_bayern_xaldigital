@@ -45,105 +45,169 @@ def create_conciliations_view():
         # Then, create or replace the view
         create_view_query = text(
             """
-            CREATE OR REPLACE VIEW conciliations_view AS
-                SELECT 
-                    (
-                        SELECT bcs_fbl5n.account 
-                        FROM bcs_fbl5n 
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS account,
-                    sat.client_name,
-                    sat.rfc,
-                    TO_CHAR(sat.cfdi_date, 'DD/MM/YYYY') AS formatted_date_cfdi_date,
-                    sat.cfdi_date,
-                    sat.receipt_number,
-                    sat.fiscal_uuid,
-                    sat.product_or_service,
-                    sat.currency,
-                    format_price(sat.subtotal_me) AS formatted_subtotal_me,
-                    format_price(sat.discount_me) AS formatted_discount_me,
-                    format_price(sat.vat_16_me) AS formatted_vat_16_me,
-                    format_price(sat.ieps_me) AS formatted_ieps_me,
-                    format_price(sat.vat_withholding_4_me) AS formatted_vat_withholding_4_me,
-                    format_price(sat.vat_withholding_2_3_me) AS formatted_vat_withholding_2_3_me,
-                    format_price(sat.total_me) AS formatted_total_me,
-                    (
-                        SELECT bcs_fbl5n.clearing_document 
-                        FROM bcs_fbl5n 
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS clearing_payment_policy,
-                    (
-                        SELECT bcs_fbl5n.document_number 
-                        FROM bcs_fbl5n 
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS provision_policy_document,
-                    (
-                        SELECT bcs_fbl5n.eff_exchange_rate 
-                        FROM bcs_fbl5n 
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS t_c_dof,
-                    format_price(sat.subtotal_16) AS formatted_subtotal_16,
-                    format_price(sat.vat_16) AS formatted_vat_16,
-                    format_price(sat.vat_0) AS formatted_vat_0,
-                    format_price(sat.ieps) AS formatted_ieps,
-                    format_price(sat.total_amount) AS formatted_total_amount,
-                    format_price(sat.income_tax_withholding_me) AS formatted_income_tax_withholding_me,
-                    sat.subtotal_16,
-                    sat.vat_16,
-                    sat.vat_0,
-                    sat.ieps,
-                    sat.total_amount AS total_amount,
-                    sat.income_tax_withholding_me,
-                    sat.tax_rate,
-                    sat.payment_method,
-                    (
-                        SELECT bcs_fbl5n.invoice_reference 
-                        FROM bcs_fbl5n 
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    ) AS invoice_reference,
-                    format_price(sat.total_amount - (
-                        SELECT bcs_fbl5n.amount_in_local_currency 
-                        FROM bcs_fbl5n 
-                        WHERE bcs_fbl5n.reference = sat.receipt_number
-                        LIMIT 1
-                    )) AS diff_sat_sap,
-                    COALESCE(
-                        (
-                            SELECT bcs_ieps_2440020.amount_in_doc_curr
-                            FROM bcs_ieps_2440020
-                            WHERE bcs_ieps_2440020.clearing_document = (
-                                SELECT bcs_fbl5n.clearing_document 
-                                FROM bcs_fbl5n 
-                                WHERE bcs_fbl5n.reference = sat.receipt_number
-                                LIMIT 1
-                            )
-                            LIMIT 1
-                        ), 
-                        0
-                    ) AS amount_in_doc_curr_ieps,
-                    COALESCE(
-                        (
-                            SELECT bhc_iva_traladado_2440015.amount_in_doc_curr
-                            FROM bhc_iva_traladado_2440015
-                            WHERE bhc_iva_traladado_2440015.clearing_document = (
-                                SELECT bcs_fbl5n.clearing_document 
-                                FROM bcs_fbl5n 
-                                WHERE bcs_fbl5n.reference = sat.receipt_number
-                                LIMIT 1
-                            )
-                            LIMIT 1
-                        ), 
-                        0
-                    ) AS amount_in_doc_curr_iva_traladado
-                FROM 
-                    sat
-                WHERE 
-                    sat.payment_method = 'PUE' OR sat.payment_method = 'PPD';
+               CREATE OR REPLACE VIEW conciliations_view AS
+                   SELECT 
+                       COALESCE(
+                           (
+                               SELECT bcs_fbl5n.account 
+                               FROM bcs_fbl5n 
+                               WHERE bcs_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           ),
+                           (
+                               SELECT bhc_fbl5n.account 
+                               FROM bhc_fbl5n 
+                               WHERE bhc_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           )
+                       ) AS account,
+                       sat.client_name,
+                       sat.rfc,
+                       TO_CHAR(sat.cfdi_date, 'DD/MM/YYYY') AS formatted_date_cfdi_date,
+                       sat.cfdi_date,
+                       sat.receipt_number,
+                       sat.fiscal_uuid,
+                       sat.product_or_service,
+                       sat.currency,
+                       format_price(sat.subtotal_me) AS formatted_subtotal_me,
+                       format_price(sat.discount_me) AS formatted_discount_me,
+                       format_price(sat.vat_16_me) AS formatted_vat_16_me,
+                       format_price(sat.ieps_me) AS formatted_ieps_me,
+                       format_price(sat.vat_withholding_4_me) AS formatted_vat_withholding_4_me,
+                       format_price(sat.vat_withholding_2_3_me) AS formatted_vat_withholding_2_3_me,
+                       format_price(sat.total_me) AS formatted_total_me,
+                       COALESCE(
+                           (
+                               SELECT bcs_fbl5n.clearing_document 
+                               FROM bcs_fbl5n 
+                               WHERE bcs_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           ),
+                           (
+                               SELECT bhc_fbl5n.clearing_document 
+                               FROM bhc_fbl5n 
+                               WHERE bhc_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           )
+                       ) AS clearing_payment_policy,
+                       COALESCE(
+                           (
+                               SELECT bcs_fbl5n.document_number 
+                               FROM bcs_fbl5n 
+                               WHERE bcs_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           ),
+                           (
+                               SELECT bhc_fbl5n.document_number 
+                               FROM bhc_fbl5n 
+                               WHERE bhc_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           )
+                       ) AS provision_policy_document,
+                       COALESCE(
+                           (
+                               SELECT bcs_fbl5n.eff_exchange_rate 
+                               FROM bcs_fbl5n 
+                               WHERE bcs_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           ),
+                           (
+                               SELECT bhc_fbl5n.eff_exchange_rate 
+                               FROM bhc_fbl5n 
+                               WHERE bhc_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           )
+                       ) AS t_c_dof,
+                       format_price(sat.subtotal_16) AS formatted_subtotal_16,
+                       format_price(sat.vat_16) AS formatted_vat_16,
+                       format_price(sat.vat_0) AS formatted_vat_0,
+                       format_price(sat.ieps) AS formatted_ieps,
+                       format_price(sat.total_amount) AS formatted_total_amount,
+                       format_price(sat.income_tax_withholding_me) AS formatted_income_tax_withholding_me,
+                       sat.subtotal_16,
+                       sat.vat_16,
+                       sat.vat_0,
+                       sat.ieps,
+                       sat.total_amount AS total_amount,
+                       sat.income_tax_withholding_me,
+                       sat.tax_rate,
+                       sat.payment_method,
+                       COALESCE(
+                           (
+                               SELECT bcs_fbl5n.invoice_reference 
+                               FROM bcs_fbl5n 
+                               WHERE bcs_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           ),
+                           (
+                               SELECT bhc_fbl5n.invoice_reference 
+                               FROM bhc_fbl5n 
+                               WHERE bhc_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           )
+                       ) AS invoice_reference,
+                       format_price(sat.total_amount - COALESCE(
+                           (
+                               SELECT bcs_fbl5n.amount_in_local_currency 
+                               FROM bcs_fbl5n 
+                               WHERE bcs_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           ),
+                           (
+                               SELECT bhc_fbl5n.amount_in_local_currency 
+                               FROM bhc_fbl5n 
+                               WHERE bhc_fbl5n.reference = sat.receipt_number
+                               LIMIT 1
+                           )
+                       )) AS diff_sat_sap,
+                       COALESCE(
+                           (
+                               SELECT bcs_ieps_2440020.amount_in_doc_curr
+                               FROM bcs_ieps_2440020
+                               WHERE bcs_ieps_2440020.clearing_document = COALESCE(
+                                   (
+                                       SELECT bcs_fbl5n.clearing_document 
+                                       FROM bcs_fbl5n 
+                                       WHERE bcs_fbl5n.reference = sat.receipt_number
+                                       LIMIT 1
+                                   ),
+                                   (
+                                       SELECT bhc_fbl5n.clearing_document 
+                                       FROM bhc_fbl5n 
+                                       WHERE bhc_fbl5n.reference = sat.receipt_number
+                                       LIMIT 1
+                                   )
+                               )
+                               LIMIT 1
+                           ), 
+                           0
+                       ) AS amount_in_doc_curr_ieps,
+                       COALESCE(
+                           (
+                               SELECT bhc_iva_traladado_2440015.amount_in_doc_curr
+                               FROM bhc_iva_traladado_2440015
+                               WHERE bhc_iva_traladado_2440015.clearing_document = COALESCE(
+                                   (
+                                       SELECT bcs_fbl5n.clearing_document 
+                                       FROM bcs_fbl5n 
+                                       WHERE bcs_fbl5n.reference = sat.receipt_number
+                                       LIMIT 1
+                                   ),
+                                   (
+                                       SELECT bhc_fbl5n.clearing_document 
+                                       FROM bhc_fbl5n 
+                                       WHERE bhc_fbl5n.reference = sat.receipt_number
+                                       LIMIT 1
+                                   )
+                               )
+                               LIMIT 1
+                           ), 
+                           0
+                       ) AS amount_in_doc_curr_iva_traladado
+                   FROM 
+                       sat
+                   WHERE 
+                       sat.payment_method = 'PUE' OR sat.payment_method = 'PPD';
                """
         )
 
