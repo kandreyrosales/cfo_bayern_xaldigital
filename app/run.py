@@ -30,7 +30,7 @@ from app.models import (
     get_rfc_from_conciliations_view,
     get_bank_information_view,
     get_clients_from_conciliations_view,
-    get_transactions, get_bank_view_data, get_bank_accounts_view,
+    get_transactions, get_bank_view_data, get_bank_accounts_view, get_transactions_by_client,
 )
 
 bucket_name = os.getenv("bucket_name")
@@ -323,7 +323,7 @@ def send_reset_password_link():
 
 
 @app.route("/", methods=["GET"])
-@token_required
+#@token_required
 def index():
     """
        Renderiza la página principal de la aplicación.
@@ -360,7 +360,7 @@ def index():
 
 
 @app.route("/get_dashboard_data", methods=["GET"])
-@token_required
+#@token_required
 def dashboard_data():
     calendar_filter_start_date = request.args.get("calendar_filter_start_date", None)
     calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
@@ -445,7 +445,7 @@ def dashboard_data():
     )
 
 @app.route("/conciliaciones")
-@token_required
+#@token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -472,7 +472,7 @@ def reconciliations_data_cfo():
 
 
 @app.route("/bancos")
-@token_required
+#@token_required
 def bank_information_view():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -523,7 +523,6 @@ def get_filtered_data_conciliations():
             calendar_filter_end_date = ""
 
 
-
         result, totals, sum_by_rfc = get_conciliations_view_data(
             calendar_filter_start_date=calendar_filter_start_date,
             calendar_filter_end_date=calendar_filter_end_date,
@@ -533,6 +532,9 @@ def get_filtered_data_conciliations():
         )
 
         bank_records = get_transactions(calendar_filter_start_date, calendar_filter_value_date_start_date)
+
+        bank_records_clients = get_transactions_by_client(calendar_filter_start_date,
+                                                          calendar_filter_value_date_start_date)
 
         column_names = result.keys()
         data = [dict(zip(column_names, row)) for row in result]
@@ -544,20 +546,34 @@ def get_filtered_data_conciliations():
             sum_rfc_data, bank_records
         )
 
+        bank_transactions_client_filtered = filter_bank_transactions(
+            sum_rfc_data, bank_records_clients
+        )
+
         data_add_bank_info = list(
             map(lambda x: update_bank_info(x, bank_transactions_filtered), data)
+        )
+
+        data_add_bank_info_client = list(
+            map(lambda x: update_bank_info(x, bank_transactions_client_filtered), data)
+        )
+
+        full_data_client = list(
+            map(lambda x: update_item_with_out_bank_info(x, calendar_filter_start_date), data_add_bank_info_client)
         )
 
         full_data = list(
             map(lambda x: update_item_with_out_bank_info(x, calendar_filter_start_date), data_add_bank_info)
         )
 
+        full_data_combined = full_data_client + full_data
+
         column_names_totals = totals.keys()
         data_totals = [dict(zip(column_names_totals, row)) for row in totals]
 
         start = (page - 1) * page_size
         end = start + page_size
-        paginated_data = full_data[start:end]
+        paginated_data = full_data_combined[start:end]
 
         response = {
             "data": paginated_data,
@@ -847,9 +863,14 @@ def init_db():
     create_conciliations_view()
     return jsonify(message="Base de datos creada"), 200
 
+@app.route("/delete_db", methods=["GET"])
+def delete_db():
+    destroy_db()
+    return jsonify(message="Base de datos eliminada"), 200
+
 
 if __name__ == "__main__":
     app.run(debug=True)
-    # destroy_db()
-    create_db()
-    create_conciliations_view()
+    #destroy_db()
+    #create_db()
+    #create_conciliations_view()

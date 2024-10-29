@@ -27,6 +27,7 @@ class Bank(db.Model):
     comment = db.Column(db.String(250), nullable=True)
     s3_url = db.Column(db.String(250), nullable=True)
     file_name = db.Column(db.String(250), nullable=False)
+    client_name = db.Column(db.String(250), nullable=True)
 
     def __repr__(self):
         return f"<Banco {self.id}>"
@@ -52,7 +53,7 @@ class Sat(db.Model):
     vat_withholding_2_3_me = db.Column(db.Float, nullable=False, default=0)
     fiscal_uuid = db.Column(db.String(250), nullable=False)
     total_me = db.Column(db.Float, nullable=False, default=0)
-    product_or_service = db.Column(db.String(250), nullable=False)
+    product_or_service = db.Column(db.Text, nullable=False)
     subtotal_16 = db.Column(db.Float, nullable=False, default=0)
     currency = db.Column(db.String(250), nullable=False)
     vat_16 = db.Column(db.Float, nullable=False, default=0)
@@ -595,6 +596,58 @@ def get_transactions(date, month_year ):
             )
             .group_by(
                 Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref
+            )
+            .all()
+        )
+
+    return results
+
+
+def get_transactions_by_client(date, month_year ):
+    if date != '':
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                Bank.comment,
+                Bank.value_date,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                Bank.ref,
+            )
+            .filter(Bank.value_date >= date)
+            .group_by(
+                Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref, Bank.client_name
+            )
+            .all()
+        )
+    elif month_year != '':
+        year = month_year.split("-")[0]
+        month = month_year.split("-")[1]
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                Bank.comment,
+                Bank.value_date,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                Bank.ref,
+            )
+            .filter(extract('year', Bank.value_date) == year)
+            .filter(extract('month', Bank.value_date) >= month)
+            .group_by(
+                Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref, Bank.client_name
+            )
+            .all()
+        )
+    else:
+        results = (
+            db.session.query(
+                Bank.bank_name,
+                Bank.comment,
+                Bank.value_date,
+                func.sum(Bank.posting_amount).label("total_posting_amount"),
+                Bank.ref,
+            )
+            .group_by(
+                Bank.bank_name, Bank.value_date, Bank.comment, Bank.posting_amount, Bank.ref, Bank.client_name
             )
             .all()
         )

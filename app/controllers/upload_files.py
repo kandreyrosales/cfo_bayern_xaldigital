@@ -403,6 +403,7 @@ class UploadFilesController:
                                         comment=transaction.get("Reason of transfer"),
                                         payer=transaction.get("Payer"),
                                         posting_text=transaction.get("Posting Text"),
+                                        client_name=transaction.get("Client Name"),
                                         s3_url=s3_url,
                                         file_name=object_name,
                                     )
