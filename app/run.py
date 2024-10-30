@@ -323,7 +323,7 @@ def send_reset_password_link():
 
 
 @app.route("/", methods=["GET"])
-#@token_required
+@token_required
 def index():
     """
        Renderiza la página principal de la aplicación.
@@ -360,7 +360,7 @@ def index():
 
 
 @app.route("/get_dashboard_data", methods=["GET"])
-#@token_required
+@token_required
 def dashboard_data():
     calendar_filter_start_date = request.args.get("calendar_filter_start_date", None)
     calendar_filter_end_date = request.args.get("calendar_filter_end_date", None)
@@ -445,7 +445,7 @@ def dashboard_data():
     )
 
 @app.route("/conciliaciones")
-#@token_required
+@token_required
 def reconciliations_data_cfo():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
@@ -472,7 +472,7 @@ def reconciliations_data_cfo():
 
 
 @app.route("/bancos")
-#@token_required
+@token_required
 def bank_information_view():
     # try:
     #     cognito_client.get_user(AccessToken=session.get("access_token"))
