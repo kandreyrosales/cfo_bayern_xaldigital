@@ -363,6 +363,8 @@ class UploadFilesController:
                     response = requests.put(url, headers=headers, data=file_content)
                     json_response = json.loads(response.text)
 
+                    print(json_response)
+
                     # If the request times out, try again
                     count = 0
                     while json.loads(response.text).get("message") == "Endpoint request timed out":
@@ -403,7 +405,7 @@ class UploadFilesController:
                                         comment=transaction.get("Reason of transfer"),
                                         payer=transaction.get("Payer"),
                                         posting_text=transaction.get("Posting Text"),
-                                        client_name=transaction.get("Client Name"),
+                                        client_name=transaction.get("Cliente"),
                                         s3_url=s3_url,
                                         file_name=object_name,
                                     )
